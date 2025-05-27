@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { DollarSign, Users, TrendingUp, Activity, Leaf, Settings, FileText, Sparkles, ArrowRight, Briefcase, AlertTriangle, BarChart3, DivideCircle } from "lucide-react";
+import { DollarSign, Users, Activity, Leaf, Settings, FileText, Sparkles, ArrowRight, Briefcase, AlertTriangle, BarChart3, DivideCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast"; // Added for Customer Health button
 
 const ONBOARDING_SEEN_KEY = 'climabill_has_seen_onboarding';
 
@@ -59,6 +60,7 @@ export default function DashboardPage() {
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true); 
   const [revenueTimeframe, setRevenueTimeframe] = useState("6m");
   const [revenueChartData, setRevenueChartData] = useState(initialRevenueDataSixMonths);
+  const { toast } = useToast(); // Added
 
   useEffect(() => {
     setIsMounted(true);
@@ -96,6 +98,13 @@ export default function DashboardPage() {
     setIsFirstTimeUser(false);
   };
 
+  const handleViewHealthDetails = () => { // Added
+    toast({
+      title: "Feature in Development",
+      description: "Detailed customer health analytics are coming soon!",
+    });
+  };
+
   const overviewMetrics = [
     {
       title: "Total Revenue",
@@ -115,7 +124,7 @@ export default function DashboardPage() {
       title: "AI Churn Prediction",
       value: churnPrediction,
       change: "Risk in next 30 days",
-      icon: AlertTriangle,
+      icon: AlertTriangle, // Updated icon
       iconColor: "text-destructive",
     },
     {
@@ -189,22 +198,22 @@ export default function DashboardPage() {
           </Card>
           <Card className="shadow-lg">
             <CardHeader>
-              <Skeleton className="h-6 w-1/2 mb-1 rounded-md" />
-              <Skeleton className="h-4 w-3/4 rounded-md" />
+              <Skeleton className="h-6 w-1/2 mb-1 rounded-md" /> {/* Eco Impact Title */}
+              <Skeleton className="h-4 w-3/4 rounded-md" /> {/* Eco Impact Desc */}
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center space-y-3">
-              <Skeleton className="h-16 w-16 rounded-full" />
+              <Skeleton className="h-16 w-16 rounded-full" /> {/* Main Icon */}
               <div className="text-center w-full">
-                <Skeleton className="h-8 w-1/3 mx-auto mb-1 rounded-md" />
-                <Skeleton className="h-3 w-1/2 mx-auto rounded-md" />
+                <Skeleton className="h-8 w-1/3 mx-auto mb-1 rounded-md" /> {/* Emissions Value */}
+                <Skeleton className="h-3 w-1/2 mx-auto rounded-md" /> {/* Emissions Label */}
               </div>
               <div className="text-center w-full">
-                <Skeleton className="h-6 w-1/4 mx-auto mb-1 rounded-md" />
-                <Skeleton className="h-3 w-1/3 mx-auto rounded-md" />
+                <Skeleton className="h-6 w-1/4 mx-auto mb-1 rounded-md" /> {/* Offset Value */}
+                <Skeleton className="h-3 w-1/3 mx-auto rounded-md" /> {/* Offset Label */}
               </div>
                <div className="text-center w-full pt-1">
-                <Skeleton className="h-5 w-1/3 mx-auto mb-1 rounded-md" />
-                <Skeleton className="h-3 w-1/2 mx-auto rounded-md" />
+                <Skeleton className="h-5 w-1/3 mx-auto mb-1 rounded-md" /> {/* Avg CO2 Value */}
+                <Skeleton className="h-3 w-1/2 mx-auto rounded-md" /> {/* Avg CO2 Label */}
               </div>
             </CardContent>
           </Card>
@@ -222,8 +231,8 @@ export default function DashboardPage() {
           </Card>
           <Card className="shadow-lg"> 
             <CardHeader>
-              <Skeleton className="h-6 w-1/2 mb-1 rounded-md" />
-              <Skeleton className="h-4 w-3/4 rounded-md" />
+              <Skeleton className="h-6 w-1/2 mb-1 rounded-md" /> {/* Customer Health Title */}
+              <Skeleton className="h-4 w-3/4 rounded-md" /> {/* Customer Health Desc */}
             </CardHeader>
             <CardContent className="space-y-3">
               {[...Array(3)].map((_, i) => (
@@ -232,7 +241,7 @@ export default function DashboardPage() {
                   <Skeleton className="h-4 w-1/4 rounded-md" />
                 </div>
               ))}
-              <Skeleton className="h-10 w-full mt-2 rounded-md" />
+              <Skeleton className="h-10 w-full mt-2 rounded-md" /> {/* Button Placeholder */}
             </CardContent>
           </Card>
         </div>
@@ -325,11 +334,12 @@ export default function DashboardPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-xl text-foreground flex items-center">
-             <BarChart3 className="mr-2 h-5 w-5 text-accent" /> Eco Impact Snapshot</CardTitle>
+             <BarChart3 className="mr-2 h-5 w-5 text-accent" /> {/* Updated icon */}
+              Eco Impact Snapshot</CardTitle>
             <CardDescription>Your current carbon footprint status.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center space-y-3">
-             <BarChart3 className="h-16 w-16 text-accent" />
+             <BarChart3 className="h-16 w-16 text-accent" /> {/* Updated icon */}
             <div className="text-center">
               <p className="text-3xl font-bold text-foreground">{monthlyEmissions} tCO₂e</p>
               <p className="text-sm text-muted-foreground">Estimated monthly emissions</p>
@@ -340,7 +350,7 @@ export default function DashboardPage() {
             </div>
             <div className="text-center pt-1">
               <p className="text-lg font-semibold text-muted-foreground flex items-center justify-center">
-                <DivideCircle className="mr-1.5 h-4 w-4 text-muted-foreground/80" /> 
+                <DivideCircle className="mr-1.5 h-4 w-4 text-muted-foreground/80" /> {/* Added icon */}
                 {avgCo2PerInvoice} kg CO₂e
               </p>
               <p className="text-xs text-muted-foreground">Avg. per Invoice (simulated)</p>
@@ -438,7 +448,7 @@ export default function DashboardPage() {
               <span className="text-sm text-muted-foreground">Healthy</span>
               <span className="text-sm font-semibold text-accent">183 Customers</span>
             </div>
-            <Button variant="outline" size="sm" className="w-full mt-2">View Health Details</Button>
+            <Button variant="outline" size="sm" className="w-full mt-2" onClick={handleViewHealthDetails}>View Health Details</Button>
           </CardContent>
         </Card>
 
@@ -446,3 +456,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
