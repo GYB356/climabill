@@ -8,11 +8,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save, BellRing, Leaf, ShieldCheck, Sparkles, DatabaseZap, Trash2, CreditCard, Edit3, XCircle, Globe } from "lucide-react";
+import { Save, BellRing, Leaf, ShieldCheck, Sparkles, DatabaseZap, Trash2, CreditCard, Edit3, XCircle, Globe, Users, Link2, PlusCircle, Settings2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 
 const reminderOptions = [
@@ -36,6 +38,18 @@ const currentSubscription = {
     "Optional \"Green Tier\" auto-donation"
   ]
 };
+
+const mockTeamMembers = [
+  { id: "user1", name: "Alice Wonderland", email: "alice@example.com", role: "Admin", avatar: "https://placehold.co/40x40.png", dataAiHint: "woman smiling" },
+  { id: "user2", name: "Bob The Builder", email: "bob@example.com", role: "Editor", avatar: "https://placehold.co/40x40.png", dataAiHint: "man glasses"  },
+  { id: "user3", name: "Charlie Brown", email: "charlie@example.com", role: "Viewer", avatar: "https://placehold.co/40x40.png", dataAiHint: "person neutral"  },
+];
+
+const mockIntegrations = [
+  { id: "qbo", name: "QuickBooks Online", logo: "https://placehold.co/32x32.png", dataAiHint: "accounting software", connected: true },
+  { id: "xero", name: "Xero", logo: "https://placehold.co/32x32.png", dataAiHint: "finance app", connected: false },
+  { id: "slack", name: "Slack", logo: "https://placehold.co/32x32.png", dataAiHint: "communication tool", connected: false },
+];
 
 
 export default function SettingsPage() {
@@ -106,6 +120,20 @@ export default function SettingsPage() {
       title: "Cancel Subscription Requested",
       description: "Subscription cancellation process initiated (placeholder action).",
       variant: "destructive"
+    });
+  };
+
+  const handleInviteUser = () => {
+    toast({
+      title: "Invite User Clicked",
+      description: "User invitation functionality is a placeholder.",
+    });
+  };
+  
+  const handleIntegrationConnect = (integrationName: string, isConnected: boolean) => {
+     toast({
+      title: `${isConnected ? 'Disconnecting' : 'Connecting'} ${integrationName}`,
+      description: `This is a placeholder action for ${integrationName}.`,
     });
   };
 
@@ -187,8 +215,7 @@ export default function SettingsPage() {
                         </div>
                         <Skeleton className="h-6 w-11 rounded-full bg-muted" />
                     </div>
-                    {/* Simplified skeleton for conditional input */}
-                     <div className="space-y-2 pl-4 border-l-2 border-accent ml-1">
+                    <div className="space-y-2 pl-4 border-l-2 border-accent ml-1">
                            <Skeleton className="h-5 w-1/3 mb-1 rounded-md bg-muted" />
                            <Skeleton className="h-10 w-full md:w-[280px] rounded-md bg-muted" />
                            <Skeleton className="h-3 w-3/4 rounded-md bg-muted" />
@@ -202,6 +229,57 @@ export default function SettingsPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            <Card className="shadow-lg"> {/* Team Management Skeleton */}
+                <CardHeader>
+                    <CardTitle className="text-xl text-foreground flex items-center">
+                        <Skeleton className="mr-2 h-5 w-5 rounded-full" />
+                        <Skeleton className="h-6 w-3/4 rounded-md" />
+                    </CardTitle>
+                    <Skeleton className="h-4 w-full rounded-md" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Skeleton className="h-10 w-full md:w-1/3 rounded-md self-end" />
+                    <div className="rounded-md border">
+                        <Skeleton className="h-12 w-full rounded-t-md" /> {/* Table Header */}
+                        {[1,2,3].map(i => (
+                            <div key={i} className="flex items-center p-3 border-t">
+                                <Skeleton className="h-10 w-10 rounded-full mr-3" />
+                                <div className="flex-1 space-y-1.5">
+                                    <Skeleton className="h-4 w-3/5 rounded-md" />
+                                    <Skeleton className="h-3 w-4/5 rounded-md" />
+                                </div>
+                                <Skeleton className="h-4 w-1/5 rounded-md" />
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+            
+            <Card className="shadow-lg"> {/* Integrations Skeleton */}
+                <CardHeader>
+                    <CardTitle className="text-xl text-foreground flex items-center">
+                        <Skeleton className="mr-2 h-5 w-5 rounded-full" />
+                        <Skeleton className="h-6 w-3/4 rounded-md" />
+                    </CardTitle>
+                    <Skeleton className="h-4 w-full rounded-md" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {[1,2,3].map(i => (
+                        <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center gap-3">
+                                <Skeleton className="h-8 w-8 rounded-md" />
+                                <div className="space-y-1">
+                                    <Skeleton className="h-4 w-32 rounded-md" />
+                                    <Skeleton className="h-3 w-24 rounded-md" />
+                                </div>
+                            </div>
+                            <Skeleton className="h-9 w-24 rounded-md" />
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+
 
             <Card className="shadow-lg">
                 <CardHeader>
@@ -295,7 +373,6 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
-
 
       <Card className="shadow-lg">
         <CardHeader>
@@ -400,6 +477,98 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+       <Card className="shadow-lg">
+        <CardHeader className="flex flex-row justify-between items-center">
+          <div>
+            <CardTitle className="text-xl text-foreground flex items-center">
+                <Users className="mr-2 h-5 w-5 text-primary" />
+                Team Management
+            </CardTitle>
+            <CardDescription>Manage team members and their access permissions.</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleInviteUser}>
+            <PlusCircle className="mr-2 h-4 w-4"/> Invite User
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">Avatar</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {mockTeamMembers.map((member) => (
+                <TableRow key={member.id}>
+                  <TableCell>
+                    <Avatar>
+                      <AvatarImage src={member.avatar} alt={member.name} data-ai-hint={member.dataAiHint} />
+                      <AvatarFallback>{member.name.substring(0,1)}</AvatarFallback>
+                    </Avatar>
+                  </TableCell>
+                  <TableCell className="font-medium">{member.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{member.email}</TableCell>
+                  <TableCell>
+                     <Select defaultValue={member.role}>
+                        <SelectTrigger className="w-[120px] h-8 text-xs">
+                            <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Admin">Admin</SelectItem>
+                            <SelectItem value="Editor">Editor</SelectItem>
+                            <SelectItem value="Viewer">Viewer</SelectItem>
+                        </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => toast({title: `Editing ${member.name}`, description: "Placeholder action."})}>
+                      <Settings2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-lg">
+        <CardHeader>
+            <CardTitle className="text-xl text-foreground flex items-center">
+                <Link2 className="mr-2 h-5 w-5 text-primary" />
+                Integrations
+            </CardTitle>
+            <CardDescription>Connect ClimaBill with your other favorite tools.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            {mockIntegrations.map(integration => (
+                <div key={integration.id} className="flex items-center justify-between p-3 border rounded-lg bg-background hover:bg-muted/50">
+                    <div className="flex items-center gap-3">
+                        <img src={integration.logo} alt={`${integration.name} logo`} className="h-8 w-8 rounded-md object-contain" data-ai-hint={integration.dataAiHint} />
+                        <div>
+                            <p className="font-medium text-foreground">{integration.name}</p>
+                            <p className={`text-xs ${integration.connected ? 'text-accent' : 'text-muted-foreground'}`}>
+                                {integration.connected ? 'Connected' : 'Not Connected'}
+                            </p>
+                        </div>
+                    </div>
+                    <Button 
+                        variant={integration.connected ? "outline" : "default"} 
+                        size="sm" 
+                        onClick={() => handleIntegrationConnect(integration.name, integration.connected)}
+                    >
+                        {integration.connected ? 'Disconnect' : 'Connect'}
+                    </Button>
+                </div>
+            ))}
+        </CardContent>
+      </Card>
+
+
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-xl text-foreground flex items-center">
@@ -484,3 +653,4 @@ export default function SettingsPage() {
   );
 }
 
+    

@@ -14,7 +14,8 @@ import {
   Lightbulb,
   BarChart3, 
   ReceiptText, 
-  Trees, // Added for Learn Sustainability
+  Trees, 
+  BarChartHorizontalBig, // Added for Reports
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -45,6 +46,7 @@ const navItems = [
       { href: "/invoices", label: "Template Selection", icon: FileText, exactMatch: true }, 
     ]
   },
+  { href: "/reports", label: "Reporting", icon: BarChartHorizontalBig }, // Added Reports
   { href: "/smart-discounts", label: "Smart Discounts", icon: Sparkles },
   { href: "/text-summarizer", label: "Text Summarizer", icon: NotebookText },
   { href: "/invoice-item-suggester", label: "Item Suggester", icon: Lightbulb },
@@ -200,3 +202,5 @@ export function AppNavigation() {
     </>
   );
 }
+
+    
