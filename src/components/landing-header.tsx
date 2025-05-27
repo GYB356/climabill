@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ClimaBillLogo } from '@/components/icons';
-import { Github, Menu } from 'lucide-react'; // Assuming Menu for mobile nav later
+import { Github, Menu } from 'lucide-react'; 
 
 const APP_ROUTES_PREFIXES = [
   '/dashboard',

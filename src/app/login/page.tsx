@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ClimaBillLogo } from '@/components/icons';
+import { Github } from 'lucide-react'; // Assuming Google icon is handled or not needed for this button
 
 export default function LoginPage() {
   return (
@@ -39,7 +40,12 @@ export default function LoginPage() {
               <Link href="/dashboard">Login</Link>
             </Button>
             <Button variant="outline" className="w-full">
+              {/* Placeholder for Google Icon or just text */}
               Login with Google
+            </Button>
+            <Button variant="outline" className="w-full">
+              <Github className="mr-2 h-4 w-4" />
+              Login with GitHub
             </Button>
           </CardContent>
         </Card>
