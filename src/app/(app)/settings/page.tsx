@@ -8,10 +8,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save, BellRing, Leaf, ShieldCheck, Sparkles, DatabaseZap, Trash2, CreditCard, Edit3, XCircle } from "lucide-react";
+import { Save, BellRing, Leaf, ShieldCheck, Sparkles, DatabaseZap, Trash2, CreditCard, Edit3, XCircle, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 const reminderOptions = [
   { id: "7days", label: "7 days before deadline" },
@@ -43,6 +45,7 @@ export default function SettingsPage() {
   const [carbonOffsetAmount, setCarbonOffsetAmount] = useState("5.00");
   const [enableGreenTier, setEnableGreenTier] = useState(false);
   const [enableMFA, setEnableMFA] = useState(false);
+  const [defaultCurrency, setDefaultCurrency] = useState("USD");
   const { toast } = useToast();
 
   const [isMounted, setIsMounted] = useState(false);
@@ -67,6 +70,7 @@ export default function SettingsPage() {
       carbonOffsetAmount,
       enableGreenTier,
       enableMFA,
+      defaultCurrency,
     });
     toast({
       title: "Settings Saved!",
@@ -128,7 +132,7 @@ export default function SettingsPage() {
                         <Skeleton className="h-4 w-1/3 mb-2 rounded-md" /> {/* Price */}
                         <Skeleton className="h-3 w-2/3 mb-3 rounded-md" /> {/* Next Billing */}
                         <div className="space-y-2">
-                           {[...Array(3)].map(i => <Skeleton key={i} className="h-3 w-full rounded-md bg-muted" />)}
+                           {[...Array(3)].map((_,i) => <Skeleton key={i} className="h-3 w-full rounded-md bg-muted" />)}
                         </div>
                         <div className="flex gap-2 mt-4">
                             <Skeleton className="h-9 w-1/2 rounded-md bg-muted" />
@@ -183,13 +187,12 @@ export default function SettingsPage() {
                         </div>
                         <Skeleton className="h-6 w-11 rounded-full bg-muted" />
                     </div>
-                    {enableCarbonOffset && (
-                        <div className="space-y-2 pl-4 border-l-2 border-accent ml-1">
+                    {/* Simplified skeleton for conditional input */}
+                     <div className="space-y-2 pl-4 border-l-2 border-accent ml-1">
                            <Skeleton className="h-5 w-1/3 mb-1 rounded-md bg-muted" />
                            <Skeleton className="h-10 w-full md:w-[280px] rounded-md bg-muted" />
                            <Skeleton className="h-3 w-3/4 rounded-md bg-muted" />
-                        </div>
-                    )}
+                    </div>
                     <div className="flex items-center justify-between space-x-3 rounded-md border p-4 bg-muted/10 mt-4">
                         <div className="space-y-1.5 flex-1">
                             <Skeleton className="h-5 w-2/3 rounded-md bg-muted" />
@@ -216,6 +219,20 @@ export default function SettingsPage() {
                         </div>
                         <Skeleton className="h-6 w-11 rounded-full bg-muted" />
                     </div>
+                </CardContent>
+            </Card>
+
+            <Card className="shadow-lg"> {/* Localization Skeleton */}
+                <CardHeader>
+                    <CardTitle className="text-xl text-foreground flex items-center">
+                        <Skeleton className="mr-2 h-5 w-5 rounded-full" />
+                        <Skeleton className="h-6 w-3/4 rounded-md" />
+                    </CardTitle>
+                    <Skeleton className="h-4 w-full rounded-md" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Skeleton className="h-5 w-1/3 mb-2 rounded-md" />
+                    <Skeleton className="h-10 w-full md:w-[280px] rounded-md" />
                 </CardContent>
             </Card>
 
@@ -413,6 +430,35 @@ export default function SettingsPage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-xl text-foreground flex items-center">
+            <Globe className="mr-2 h-5 w-5 text-primary" />
+            Localization Settings
+          </CardTitle>
+          <CardDescription>Set your preferred regional settings.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="default-currency" className="text-base font-medium">Default Currency</Label>
+            <p className="text-sm text-muted-foreground mb-2">Select the default currency for your billing and reports.</p>
+            <Select value={defaultCurrency} onValueChange={setDefaultCurrency}>
+              <SelectTrigger className="w-full md:w-[280px]" id="default-currency">
+                <SelectValue placeholder="Select currency" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="USD">USD - United States Dollar</SelectItem>
+                <SelectItem value="EUR">EUR - Euro</SelectItem>
+                <SelectItem value="GBP">GBP - British Pound Sterling</SelectItem>
+                <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
+                <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-xl text-foreground flex items-center">
             <DatabaseZap className="mr-2 h-5 w-5 text-primary" />
             Data Management
           </CardTitle>
@@ -437,3 +483,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

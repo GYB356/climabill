@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Info, Leaf, Cloud, BarChart3, History, DollarSign, Zap, ExternalLink } from "lucide-react";
+import { Info, Leaf, Cloud, BarChart3, History, DollarSign, Zap, ExternalLink, Award, ShieldHalf, Rocket } from "lucide-react";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
   Select,
@@ -89,6 +89,12 @@ const mockOffsetProjects = [
   },
 ];
 
+const mockAchievements = [
+  { id: "ach1", name: "Eco Pioneer", description: "Made your first carbon offset contribution!", icon: Award, achieved: true },
+  { id: "ach2", name: "Green Guardian", description: "Offset 10 tCO₂e this year.", icon: ShieldHalf, achieved: true },
+  { id: "ach3", name: "Climate Champion", description: "Maintained a carbon neutral footprint for 3 months.", icon: Rocket, achieved: false },
+];
+
 export default function CarbonFootprintPage() {
   const [chartData, setChartData] = useState(initialChartDataSixMonths);
   const [timeframe, setTimeframe] = useState("6m");
@@ -111,12 +117,9 @@ export default function CarbonFootprintPage() {
     if (!isMounted) return;
 
     const generateInitialData = () => {
-      const months = timeframe === "12m"
-        ? ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-        : ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-      
-      return months.map(month => ({
-        month,
+      const baseData = timeframe === "12m" ? initialChartDataTwelveMonths : initialChartDataSixMonths;
+      return baseData.map(item => ({
+        ...item,
         ...generateNewDataValues(),
       }));
     };
@@ -197,7 +200,7 @@ export default function CarbonFootprintPage() {
                 <Skeleton className="h-[350px] w-full rounded-md" />
             </CardContent>
         </Card>
-        <Card className="shadow-lg">
+        <Card className="shadow-lg"> {/* Skeleton for Contribution History */}
           <CardHeader>
             <Skeleton className="h-6 w-56 mb-1" />
             <Skeleton className="h-4 w-72" />
@@ -218,7 +221,22 @@ export default function CarbonFootprintPage() {
             <Skeleton className="h-9 w-full mt-2 rounded-md" />
           </CardContent>
         </Card>
-         <Card className="shadow-lg">
+        <Card className="shadow-lg"> {/* Skeleton for Achievements */}
+          <CardHeader>
+            <Skeleton className="h-6 w-56 mb-1" />
+            <Skeleton className="h-4 w-72" />
+          </CardHeader>
+          <CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1,2,3].map(i => (
+              <div key={i} className="flex flex-col items-center p-4 border rounded-lg bg-muted/30 space-y-2">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-3 w-full" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+         <Card className="shadow-lg"> {/* Skeleton for Offset Projects */}
             <CardHeader>
                 <Skeleton className="h-6 w-56 mb-1" />
                 <Skeleton className="h-4 w-72" />
@@ -381,6 +399,26 @@ export default function CarbonFootprintPage() {
         </CardContent>
       </Card>
 
+      <Card className="shadow-lg">
+        <CardHeader>
+            <CardTitle className="text-xl text-foreground flex items-center">
+                <Zap className="mr-2 h-6 w-6 text-primary" />
+                Sustainability Achievements
+            </CardTitle>
+            <CardDescription>Track your progress and earn badges for your eco-friendly actions.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {mockAchievements.map(achievement => (
+                <div key={achievement.id} 
+                     className={`flex flex-col items-center text-center p-4 border rounded-lg shadow-sm space-y-2 ${achievement.achieved ? 'bg-accent/10 border-accent/50' : 'bg-muted/30'}`}>
+                    <achievement.icon className={`h-10 w-10 mb-2 ${achievement.achieved ? 'text-accent' : 'text-muted-foreground/70'}`} />
+                    <h3 className={`font-semibold ${achievement.achieved ? 'text-accent-foreground' : 'text-foreground'}`}>{achievement.name}</h3>
+                    <p className={`text-xs ${achievement.achieved ? 'text-muted-foreground' : 'text-muted-foreground/80'}`}>{achievement.description}</p>
+                    {!achievement.achieved && <p className="text-xs text-muted-foreground/60">(Not yet achieved)</p>}
+                </div>
+            ))}
+        </CardContent>
+      </Card>
 
       <Card className="shadow-lg">
         <CardHeader>
@@ -430,3 +468,4 @@ export default function CarbonFootprintPage() {
     </div>
   );
 }
+
