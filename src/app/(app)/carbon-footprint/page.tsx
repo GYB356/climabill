@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Info, Leaf, Cloud, BarChart3, History, DollarSign, Zap, ExternalLink, Award, ShieldHalf, Rocket, TrendingUp, Lightbulb, Filter, ListFilter } from "lucide-react";
+import { Info, Leaf, Cloud, BarChart3, History, DollarSign, Zap, ExternalLink, Award, ShieldHalf, Rocket, TrendingUp, Lightbulb, Filter, ListFilter, KeyRound } from "lucide-react";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
   Select,
@@ -262,9 +262,14 @@ export default function CarbonFootprintPage() {
                 <Skeleton className="h-6 w-64 mb-1" />
                 <Skeleton className="h-4 w-full" />
             </CardHeader>
-            <CardContent className="space-y-2">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-5/6" />
+            <CardContent className="space-y-3">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                    <Skeleton className="h-8 w-1/3" />
+                    <Skeleton className="h-5 w-5 rounded-full" />
+                    <Skeleton className="h-8 w-1/3" />
+                </div>
+                <Skeleton className="h-10 w-full rounded-md bg-muted" />
+                <Skeleton className="h-3 w-2/3 mx-auto" />
             </CardContent>
         </Card>
         {/* Sustainability Recommendations Skeleton */}

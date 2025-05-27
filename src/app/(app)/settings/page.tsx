@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -8,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save, BellRing, Leaf, ShieldCheck, Sparkles, DatabaseZap, Trash2, CreditCard, Edit3, XCircle, Globe, Users, Link2, PlusCircle, Settings2, Palette, Languages } from "lucide-react";
+import { Save, BellRing, Leaf, ShieldCheck, Sparkles, DatabaseZap, Trash2, CreditCard, Edit3, XCircle, Globe, Users, Link2, PlusCircle, Settings2, Palette, Languages, KeyRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -148,6 +149,13 @@ export default function SettingsPage() {
      toast({
       title: `${isConnected ? 'Disconnecting' : 'Connecting'} ${integrationName}`,
       description: `This is a placeholder action for ${integrationName}.`,
+    });
+  };
+
+  const handleGenerateApiKey = () => {
+    toast({
+      title: "API Key Generation Requested",
+      description: "This is a placeholder for API key generation.",
     });
   };
 
@@ -321,6 +329,22 @@ export default function SettingsPage() {
                     ))}
                 </CardContent>
             </Card>
+
+            {/* API Key Management Skeleton */}
+            <Card className="shadow-lg">
+                 <CardHeader>
+                    <CardTitle className="text-xl text-foreground flex items-center">
+                        <Skeleton className="mr-2 h-5 w-5 rounded-full" />
+                        <Skeleton className="h-6 w-3/4 rounded-md" />
+                    </CardTitle>
+                    <Skeleton className="h-4 w-full rounded-md" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-10 w-full md:w-1/3 rounded-md" />
+                </CardContent>
+            </Card>
+
 
             {/* Security Settings Skeleton */}
             <Card className="shadow-lg">
@@ -651,7 +675,29 @@ export default function SettingsPage() {
             ))}
         </CardContent>
       </Card>
-
+      
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-xl text-foreground flex items-center">
+            <KeyRound className="mr-2 h-5 w-5 text-primary" />
+            API Key Management
+          </CardTitle>
+          <CardDescription>Manage API keys for third-party integrations and custom development.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Your API keys allow external services to access your ClimaBill data. Treat them like passwords and keep them secure.
+            (This is a placeholder UI. No actual keys are generated or stored.)
+          </p>
+          {/* Placeholder for existing keys list */}
+          <div className="p-4 border rounded-md bg-muted/50 text-center">
+            <p className="text-sm text-muted-foreground">No API keys generated yet.</p>
+          </div>
+          <Button variant="outline" onClick={handleGenerateApiKey}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Generate New API Key
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card className="shadow-lg">
         <CardHeader>
@@ -753,3 +799,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
