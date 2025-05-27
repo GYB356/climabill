@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast"; // Added for Customer Health button
+import { useToast } from "@/hooks/use-toast";
 
 const ONBOARDING_SEEN_KEY = 'climabill_has_seen_onboarding';
 
@@ -60,7 +60,7 @@ export default function DashboardPage() {
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true); 
   const [revenueTimeframe, setRevenueTimeframe] = useState("6m");
   const [revenueChartData, setRevenueChartData] = useState(initialRevenueDataSixMonths);
-  const { toast } = useToast(); // Added
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsMounted(true);
@@ -98,7 +98,7 @@ export default function DashboardPage() {
     setIsFirstTimeUser(false);
   };
 
-  const handleViewHealthDetails = () => { // Added
+  const handleViewHealthDetails = () => {
     toast({
       title: "Feature in Development",
       description: "Detailed customer health analytics are coming soon!",
@@ -124,7 +124,7 @@ export default function DashboardPage() {
       title: "AI Churn Prediction",
       value: churnPrediction,
       change: "Risk in next 30 days",
-      icon: AlertTriangle, // Updated icon
+      icon: AlertTriangle,
       iconColor: "text-destructive",
     },
     {
@@ -334,12 +334,12 @@ export default function DashboardPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-xl text-foreground flex items-center">
-             <BarChart3 className="mr-2 h-5 w-5 text-accent" /> {/* Updated icon */}
+             <Leaf className="mr-2 h-5 w-5 text-accent" />
               Eco Impact Snapshot</CardTitle>
             <CardDescription>Your current carbon footprint status.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center space-y-3">
-             <BarChart3 className="h-16 w-16 text-accent" /> {/* Updated icon */}
+             <Leaf className="h-16 w-16 text-accent" />
             <div className="text-center">
               <p className="text-3xl font-bold text-foreground">{monthlyEmissions} tCO₂e</p>
               <p className="text-sm text-muted-foreground">Estimated monthly emissions</p>
@@ -350,7 +350,7 @@ export default function DashboardPage() {
             </div>
             <div className="text-center pt-1">
               <p className="text-lg font-semibold text-muted-foreground flex items-center justify-center">
-                <DivideCircle className="mr-1.5 h-4 w-4 text-muted-foreground/80" /> {/* Added icon */}
+                <DivideCircle className="mr-1.5 h-4 w-4 text-muted-foreground/80" />
                 {avgCo2PerInvoice} kg CO₂e
               </p>
               <p className="text-xs text-muted-foreground">Avg. per Invoice (simulated)</p>
