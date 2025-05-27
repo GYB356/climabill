@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { Separator } from '@/components/ui/separator';
 
 const ONBOARDING_SEEN_KEY = 'climabill_has_seen_onboarding';
 
@@ -57,6 +58,7 @@ export default function DashboardPage() {
   const [offsetPercentage, setOffsetPercentage] = useState<string>("0%");
   const [churnPrediction, setChurnPrediction] = useState<string>("0%");
   const [avgCo2PerInvoice, setAvgCo2PerInvoice] = useState<string>("0.0");
+  const [netMonthlyImpact, setNetMonthlyImpact] = useState<string>("0.00");
   const [isMounted, setIsMounted] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true); 
   const [revenueTimeframe, setRevenueTimeframe] = useState("30d");
@@ -73,14 +75,19 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (isMounted) {
-      const randomEmissions = (Math.random() * 2 + 0.5).toFixed(2); 
-      const randomOffset = Math.floor(Math.random() * 50 + 5);   
+      const randomEmissions = parseFloat((Math.random() * 2 + 0.5).toFixed(2)); 
+      const randomOffsetPercent = Math.floor(Math.random() * 50 + 5);   
       const randomChurn = (Math.random() * 10 + 2).toFixed(1); // 2.0 to 12.0%
       const randomAvgCo2 = (Math.random() * 4 + 1).toFixed(1); // 1.0 to 5.0 kg CO2e
-      setMonthlyEmissions(randomEmissions);
-      setOffsetPercentage(`${randomOffset}%`);
+      
+      setMonthlyEmissions(randomEmissions.toFixed(2));
+      setOffsetPercentage(`${randomOffsetPercent}%`);
       setChurnPrediction(`${randomChurn}%`);
       setAvgCo2PerInvoice(randomAvgCo2);
+
+      const offsetAmount = randomEmissions * (randomOffsetPercent / 100);
+      const netImpact = randomEmissions - offsetAmount;
+      setNetMonthlyImpact(netImpact.toFixed(2));
     }
   }, [isMounted]);
 
@@ -217,6 +224,10 @@ export default function DashboardPage() {
                <div className="text-center w-full pt-1">
                 <Skeleton className="h-5 w-1/3 mx-auto mb-1 rounded-md" /> {/* Avg CO2 Value */}
                 <Skeleton className="h-3 w-1/2 mx-auto rounded-md" /> {/* Avg CO2 Label */}
+              </div>
+              <div className="text-center w-full pt-2 border-t mt-2">
+                <Skeleton className="h-6 w-1/3 mx-auto mt-2 mb-1 rounded-md" /> {/* Net Impact Value */}
+                <Skeleton className="h-3 w-1/2 mx-auto rounded-md" /> {/* Net Impact Label */}
               </div>
             </CardContent>
           </Card>
@@ -357,6 +368,11 @@ export default function DashboardPage() {
                 {avgCo2PerInvoice} kg CO₂e
               </p>
               <p className="text-xs text-muted-foreground">Avg. per Invoice (simulated)</p>
+            </div>
+            <Separator className="my-2 w-3/4" />
+            <div className="text-center">
+              <p className="text-2xl font-bold text-primary">{netMonthlyImpact} tCO₂e</p>
+              <p className="text-xs text-muted-foreground">Net Monthly Impact</p>
             </div>
           </CardContent>
         </Card>
