@@ -1,14 +1,14 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image"; // Added for Avatar
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save, BellRing, Leaf, ShieldCheck, Sparkles, DatabaseZap, Trash2, CreditCard, Edit3, XCircle, Globe, Users, Link2, PlusCircle, Settings2 } from "lucide-react";
+import { Save, BellRing, Leaf, ShieldCheck, Sparkles, DatabaseZap, Trash2, CreditCard, Edit3, XCircle, Globe, Users, Link2, PlusCircle, Settings2, Palette, Languages } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -46,9 +46,9 @@ const mockTeamMembers = [
 ];
 
 const mockIntegrations = [
-  { id: "qbo", name: "QuickBooks Online", logo: "https://placehold.co/32x32.png", dataAiHint: "accounting software", connected: true },
-  { id: "xero", name: "Xero", logo: "https://placehold.co/32x32.png", dataAiHint: "finance app", connected: false },
-  { id: "slack", name: "Slack", logo: "https://placehold.co/32x32.png", dataAiHint: "communication tool", connected: false },
+  { id: "qbo", name: "QuickBooks Online", logo: "https://placehold.co/32x32.png", dataAiHint: "accounting software", connected: true, description: "Sync invoices and payments." },
+  { id: "xero", name: "Xero", logo: "https://placehold.co/32x32.png", dataAiHint: "finance app", connected: false, description: "Automate financial reporting." },
+  { id: "slack", name: "Slack", logo: "https://placehold.co/32x32.png", dataAiHint: "communication tool", connected: true, description: "Get billing notifications." },
 ];
 
 
@@ -60,6 +60,10 @@ export default function SettingsPage() {
   const [enableGreenTier, setEnableGreenTier] = useState(false);
   const [enableMFA, setEnableMFA] = useState(false);
   const [defaultCurrency, setDefaultCurrency] = useState("USD");
+  const [preferredLanguage, setPreferredLanguage] = useState("en");
+  const [brandColor, setBrandColor] = useState("#306754"); // Default to primary theme color
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
   const { toast } = useToast();
 
   const [isMounted, setIsMounted] = useState(false);
@@ -76,6 +80,14 @@ export default function SettingsPage() {
     );
   };
 
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      setLogoPreview(URL.createObjectURL(file));
+      toast({ title: "Logo Uploaded (Preview)", description: `${file.name} selected. Actual upload requires backend.`});
+    }
+  };
+
   const handleSaveChanges = () => {
     console.log({
       paymentDeadlineDays,
@@ -85,10 +97,13 @@ export default function SettingsPage() {
       enableGreenTier,
       enableMFA,
       defaultCurrency,
+      preferredLanguage,
+      brandColor,
+      logoUploaded: !!logoPreview,
     });
     toast({
       title: "Settings Saved!",
-      description: "Your preferences have been updated successfully.",
+      description: "Your preferences have been updated successfully (simulated).",
     });
   };
 
@@ -112,7 +127,6 @@ export default function SettingsPage() {
       title: "Change Plan Clicked",
       description: "Redirecting to pricing page (placeholder action).",
     });
-    // In a real app, you might redirect to /#pricing or a dedicated upgrade page
   };
 
   const handleCancelSubscription = () => {
@@ -146,6 +160,7 @@ export default function SettingsPage() {
                 <Skeleton className="h-4 w-72 rounded-md" />
             </div>
 
+            {/* Subscription Management Skeleton */}
             <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle className="text-xl text-foreground flex items-center">
@@ -156,9 +171,9 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div>
-                        <Skeleton className="h-5 w-1/2 mb-1 rounded-md" /> {/* Plan Name */}
-                        <Skeleton className="h-4 w-1/3 mb-2 rounded-md" /> {/* Price */}
-                        <Skeleton className="h-3 w-2/3 mb-3 rounded-md" /> {/* Next Billing */}
+                        <Skeleton className="h-5 w-1/2 mb-1 rounded-md" />
+                        <Skeleton className="h-4 w-1/3 mb-2 rounded-md" />
+                        <Skeleton className="h-3 w-2/3 mb-3 rounded-md" />
                         <div className="space-y-2">
                            {[...Array(3)].map((_,i) => <Skeleton key={i} className="h-3 w-full rounded-md bg-muted" />)}
                         </div>
@@ -170,6 +185,7 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
+            {/* Payment Reminders Skeleton */}
             <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle className="text-xl text-foreground flex items-center">
@@ -199,6 +215,7 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
+            {/* Eco Contributions Skeleton */}
             <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle className="text-xl text-foreground flex items-center">
@@ -215,7 +232,7 @@ export default function SettingsPage() {
                         </div>
                         <Skeleton className="h-6 w-11 rounded-full bg-muted" />
                     </div>
-                    <div className="space-y-2 pl-4 border-l-2 border-accent ml-1">
+                     <div className="space-y-2 pl-4 border-l-2 border-accent ml-1">
                            <Skeleton className="h-5 w-1/3 mb-1 rounded-md bg-muted" />
                            <Skeleton className="h-10 w-full md:w-[280px] rounded-md bg-muted" />
                            <Skeleton className="h-3 w-3/4 rounded-md bg-muted" />
@@ -230,7 +247,31 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
-            <Card className="shadow-lg"> {/* Team Management Skeleton */}
+            {/* Branding Customization Skeleton */}
+            <Card className="shadow-lg">
+                <CardHeader>
+                    <CardTitle className="text-xl text-foreground flex items-center">
+                        <Skeleton className="mr-2 h-5 w-5 rounded-full" />
+                        <Skeleton className="h-6 w-3/4 rounded-md" />
+                    </CardTitle>
+                    <Skeleton className="h-4 w-full rounded-md" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                        <Skeleton className="h-5 w-1/4 mb-1 rounded-md" />
+                        <Skeleton className="h-10 w-full md:w-1/2 rounded-md" />
+                        <Skeleton className="h-3 w-3/4 rounded-md" />
+                    </div>
+                     <div className="space-y-2">
+                        <Skeleton className="h-5 w-1/3 mb-1 rounded-md" />
+                        <Skeleton className="h-10 w-16 rounded-md" />
+                        <Skeleton className="h-3 w-1/2 rounded-md" />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Team Management Skeleton */}
+            <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle className="text-xl text-foreground flex items-center">
                         <Skeleton className="mr-2 h-5 w-5 rounded-full" />
@@ -256,7 +297,8 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
             
-            <Card className="shadow-lg"> {/* Integrations Skeleton */}
+            {/* Integrations Skeleton */}
+            <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle className="text-xl text-foreground flex items-center">
                         <Skeleton className="mr-2 h-5 w-5 rounded-full" />
@@ -280,7 +322,7 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
-
+            {/* Security Settings Skeleton */}
             <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle className="text-xl text-foreground flex items-center">
@@ -300,7 +342,8 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
-            <Card className="shadow-lg"> {/* Localization Skeleton */}
+            {/* Localization Skeleton */}
+            <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle className="text-xl text-foreground flex items-center">
                         <Skeleton className="mr-2 h-5 w-5 rounded-full" />
@@ -309,11 +352,18 @@ export default function SettingsPage() {
                     <Skeleton className="h-4 w-full rounded-md" />
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <Skeleton className="h-5 w-1/3 mb-2 rounded-md" />
-                    <Skeleton className="h-10 w-full md:w-[280px] rounded-md" />
+                    <div>
+                        <Skeleton className="h-5 w-1/3 mb-2 rounded-md" />
+                        <Skeleton className="h-10 w-full md:w-[280px] rounded-md" />
+                    </div>
+                     <div>
+                        <Skeleton className="h-5 w-1/3 mb-2 rounded-md" />
+                        <Skeleton className="h-10 w-full md:w-[280px] rounded-md" />
+                    </div>
                 </CardContent>
             </Card>
 
+            {/* Data Management Skeleton */}
             <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle className="text-xl text-foreground flex items-center">
@@ -477,6 +527,40 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-xl text-foreground flex items-center">
+            <Palette className="mr-2 h-5 w-5 text-primary" />
+            Branding Customization
+          </CardTitle>
+          <CardDescription>Customize the look and feel of your billing portal and invoices.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <Label htmlFor="logo-upload" className="text-base font-medium">Upload Your Logo</Label>
+            <p className="text-sm text-muted-foreground mb-2">Recommended format: PNG or SVG, max 2MB.</p>
+            <Input id="logo-upload" type="file" accept="image/png, image/svg+xml" onChange={handleLogoUpload} className="w-full md:w-1/2" />
+            {logoPreview && (
+              <div className="mt-3 p-2 border rounded-md inline-block bg-muted">
+                <Image src={logoPreview} alt="Logo preview" width={100} height={40} className="max-h-10 object-contain" />
+              </div>
+            )}
+          </div>
+           <div>
+            <Label htmlFor="brand-color" className="text-base font-medium">Primary Brand Color</Label>
+             <p className="text-sm text-muted-foreground mb-2">This color will be used for accents and highlights.</p>
+            <Input 
+              id="brand-color" 
+              type="color" 
+              value={brandColor} 
+              onChange={(e) => setBrandColor(e.target.value)} 
+              className="w-16 h-10 p-1"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+
        <Card className="shadow-lg">
         <CardHeader className="flex flex-row justify-between items-center">
           <div>
@@ -548,11 +632,11 @@ export default function SettingsPage() {
             {mockIntegrations.map(integration => (
                 <div key={integration.id} className="flex items-center justify-between p-3 border rounded-lg bg-background hover:bg-muted/50">
                     <div className="flex items-center gap-3">
-                        <img src={integration.logo} alt={`${integration.name} logo`} className="h-8 w-8 rounded-md object-contain" data-ai-hint={integration.dataAiHint} />
+                        <Image src={integration.logo} alt={`${integration.name} logo`} width={32} height={32} className="h-8 w-8 rounded-md object-contain" data-ai-hint={integration.dataAiHint} />
                         <div>
                             <p className="font-medium text-foreground">{integration.name}</p>
                             <p className={`text-xs ${integration.connected ? 'text-accent' : 'text-muted-foreground'}`}>
-                                {integration.connected ? 'Connected' : 'Not Connected'}
+                                {integration.connected ? 'Connected' : 'Not Connected'} - <span className="text-muted-foreground/80">{integration.description}</span>
                             </p>
                         </div>
                     </div>
@@ -561,7 +645,7 @@ export default function SettingsPage() {
                         size="sm" 
                         onClick={() => handleIntegrationConnect(integration.name, integration.connected)}
                     >
-                        {integration.connected ? 'Disconnect' : 'Connect'}
+                        {integration.connected ? 'Manage' : 'Connect'}
                     </Button>
                 </div>
             ))}
@@ -599,12 +683,12 @@ export default function SettingsPage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-xl text-foreground flex items-center">
-            <Globe className="mr-2 h-5 w-5 text-primary" />
+            <Globe className="mr-2 h-5 w-5 text-primary" /> {/* Main Icon */}
             Localization Settings
           </CardTitle>
           <CardDescription>Set your preferred regional settings.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div>
             <Label htmlFor="default-currency" className="text-base font-medium">Default Currency</Label>
             <p className="text-sm text-muted-foreground mb-2">Select the default currency for your billing and reports.</p>
@@ -618,6 +702,23 @@ export default function SettingsPage() {
                 <SelectItem value="GBP">GBP - British Pound Sterling</SelectItem>
                 <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
                 <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+           <div>
+            <Label htmlFor="preferred-language" className="text-base font-medium flex items-center">
+             <Languages className="mr-2 h-4 w-4 text-muted-foreground"/> Preferred Language
+            </Label>
+            <p className="text-sm text-muted-foreground mb-2">Select the language for the application interface.</p>
+            <Select value={preferredLanguage} onValueChange={setPreferredLanguage}>
+              <SelectTrigger className="w-full md:w-[280px]" id="preferred-language">
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">English (US)</SelectItem>
+                <SelectItem value="es">Español (Spanish)</SelectItem>
+                <SelectItem value="fr">Français (French)</SelectItem>
+                <SelectItem value="de">Deutsch (German)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -652,5 +753,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    

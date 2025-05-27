@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, PlayCircle, Star, Sparkles, Leaf, LayoutDashboard, Package, Zap, Briefcase, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, PlayCircle, Star, Sparkles, Leaf, LayoutDashboard, Package, Zap, Briefcase, CheckCircle, ChevronLeft, ChevronRight, CreditCard, Landmark, Ticket } from 'lucide-react';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,13 +20,17 @@ import {
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
+
 
 const tourSlides = [
   {
     title: "Welcome to ClimaBill!",
     description: "Discover how ClimaBill helps you manage billing efficiently while tracking your carbon footprint. This quick tour will guide you through the key features.",
     imageUrl: "https://placehold.co/1200x675.png",
-    dataAiHint: "welcome screen app"
+    dataAiHint: "welcome screen app user interface"
   },
   {
     title: "AI-Powered Insights",
@@ -60,12 +64,20 @@ const pricingPlans = [
   { tier: 'Enterprise', price: '199', icon: Briefcase, features: ['All Pro Features', 'Custom AI Models', 'Unlimited Invoices', 'Dedicated Account Manager', 'Includes "Green Tier" auto-donation'], dataAiHint: "enterprise plan" },
 ];
 
+const paymentMethods = [
+    { id: "cc", name: "Credit Card", icon: CreditCard },
+    { id: "paypal", name: "PayPal", icon: Ticket }, // Changed Paypal to Ticket
+    { id: "bank", name: "Bank Transfer", icon: Landmark },
+];
+
 export default function HomePage() {
   const [currentTourSlide, setCurrentTourSlide] = useState(0);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<(typeof pricingPlans)[0] | null>(null);
   const [enableCarbonOffsetCheckout, setEnableCarbonOffsetCheckout] = useState(true);
   const [carbonOffsetAmountCheckout, setCarbonOffsetAmountCheckout] = useState("5.00");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(paymentMethods[0].id);
+  const [optForPaymentPlan, setOptForPaymentPlan] = useState(false);
   const [currentDate, setCurrentDate] = useState("");
 
   useEffect(() => {
@@ -131,25 +143,25 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Interactive Tour Placeholder */}
+      {/* Interactive Tour */}
       <section className="py-16 bg-secondary/30">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-foreground mb-8">See ClimaBill in Action</h2>
-          <Dialog onOpenChange={() => setCurrentTourSlide(0)}> {/* Reset slide on open/close */}
+          <Dialog onOpenChange={(open) => { if (!open) setCurrentTourSlide(0); }}> 
             <DialogTrigger asChild>
               <div className="aspect-video bg-muted rounded-lg shadow-xl max-w-3xl mx-auto flex items-center justify-center relative overflow-hidden cursor-pointer group">
                 <Image
-                  src="https://placehold.co/1280x720.png"
+                  src={tourSlides[0].imageUrl}
                   alt="ClimaBill Demo Thumbnail"
                   fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  objectFit="cover"
-                  data-ai-hint="app screen"
-                  className="group-hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  data-ai-hint={tourSlides[0].dataAiHint}
+                  priority
                 />
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center flex-col group-hover:bg-black/40 transition-colors duration-300">
                   <PlayCircle className="w-20 h-20 text-white/80 group-hover:text-white transition-colors duration-300 mb-2 group-hover:scale-110 transform" />
-                  <p className="mt-2 text-white/90 text-lg font-semibold">Watch Demo / Take Tour</p>
+                  <p className="mt-2 text-white/90 text-lg font-semibold">Take Product Tour</p>
                 </div>
               </div>
             </DialogTrigger>
@@ -242,7 +254,7 @@ export default function HomePage() {
 
       {selectedPlan && (
         <Dialog open={isCheckoutModalOpen} onOpenChange={setIsCheckoutModalOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle className="text-2xl">Checkout Summary</DialogTitle>
               <DialogDescription>
@@ -258,6 +270,29 @@ export default function HomePage() {
                 <span className="text-muted-foreground">Price:</span>
                 <span className="font-semibold text-foreground">${selectedPlan.price}/month</span>
               </div>
+
+              <Separator className="my-4" />
+
+              <div>
+                <Label className="text-base font-medium mb-2 block">Payment Method</Label>
+                <RadioGroup value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {paymentMethods.map((method) => (
+                    <Label
+                      key={method.id}
+                      htmlFor={`payment-${method.id}`}
+                      className={`flex flex-col items-center justify-center rounded-md border-2 p-3 hover:bg-accent/10 cursor-pointer
+                                  ${selectedPaymentMethod === method.id ? "border-primary bg-accent/5" : "border-muted"}`}
+                    >
+                      <RadioGroupItem value={method.id} id={`payment-${method.id}`} className="sr-only" />
+                      <method.icon className={`h-7 w-7 mb-1 ${selectedPaymentMethod === method.id ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <span className={`text-xs font-medium ${selectedPaymentMethod === method.id ? 'text-primary' : 'text-muted-foreground'}`}>{method.name}</span>
+                    </Label>
+                  ))}
+                </RadioGroup>
+              </div>
+
+              <Separator className="my-4" />
+
               <div className="border-t pt-4 mt-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="carbon-offset-checkout" className="flex items-center gap-2">
@@ -285,6 +320,17 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
+              
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox id="payment-plan-opt-in" checked={optForPaymentPlan} onCheckedChange={(checked) => setOptForPaymentPlan(checked as boolean)} />
+                <Label htmlFor="payment-plan-opt-in" className="text-sm font-normal cursor-pointer">
+                  Request 3-month payment plan (if eligible, subject to approval)
+                </Label>
+              </div>
+
+
+              <Separator className="my-4" />
+
               <div className="border-t pt-4 mt-4 flex justify-between items-baseline">
                 <span className="text-lg font-semibold text-foreground">Total Due Today:</span>
                 <span className="text-2xl font-bold text-primary">
@@ -295,7 +341,7 @@ export default function HomePage() {
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsCheckoutModalOpen(false)}>Cancel</Button>
               <Button type="button" onClick={() => { alert('Proceeding to payment... (Placeholder)'); setIsCheckoutModalOpen(false); }}>
-                Proceed to Payment (Placeholder)
+                <CreditCard className="mr-2 h-4 w-4" /> Proceed to Payment (Placeholder)
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -1,4 +1,3 @@
-
 "use client"; // This page uses client-side state for the chart
 
 import { useState, useEffect, useCallback } from "react";
@@ -7,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Info, Leaf, Cloud, BarChart3, History, DollarSign, Zap, ExternalLink, Award, ShieldHalf, Rocket } from "lucide-react";
+import { Info, Leaf, Cloud, BarChart3, History, DollarSign, Zap, ExternalLink, Award, ShieldHalf, Rocket, TrendingUp, Lightbulb } from "lucide-react";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
   Select,
@@ -95,6 +94,14 @@ const mockAchievements = [
   { id: "ach3", name: "Climate Champion", description: "Maintained a carbon neutral footprint for 3 months.", icon: Rocket, achieved: false },
 ];
 
+const mockEcoRecommendations = [
+    "Optimize cloud instances: Choose right-sized instances and shut down unused ones.",
+    "Utilize serverless architectures where possible to reduce idle server energy.",
+    "Select cloud regions powered by renewable energy or with lower carbon intensity.",
+    "Implement efficient data storage strategies: archive old data, use tiered storage.",
+    "Encourage energy-saving practices for remote work setups.",
+];
+
 export default function CarbonFootprintPage() {
   const [chartData, setChartData] = useState(initialChartDataSixMonths);
   const [timeframe, setTimeframe] = useState("6m");
@@ -174,6 +181,7 @@ export default function CarbonFootprintPage() {
             <Skeleton className="h-6 w-12 rounded-full" />
           </div>
         </div>
+        {/* Metric Cards Skeleton */}
         <div className="grid gap-6 md:grid-cols-3">
           {[1,2,3].map(i => (
             <Card key={i} className="shadow-lg">
@@ -188,6 +196,7 @@ export default function CarbonFootprintPage() {
             </Card>
           ))}
         </div>
+        {/* Emissions Chart Skeleton */}
          <Card className="shadow-xl">
             <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
@@ -200,7 +209,8 @@ export default function CarbonFootprintPage() {
                 <Skeleton className="h-[350px] w-full rounded-md" />
             </CardContent>
         </Card>
-        <Card className="shadow-lg"> {/* Skeleton for Contribution History */}
+        {/* Contribution History Skeleton */}
+        <Card className="shadow-lg">
           <CardHeader>
             <Skeleton className="h-6 w-56 mb-1" />
             <Skeleton className="h-4 w-72" />
@@ -221,7 +231,8 @@ export default function CarbonFootprintPage() {
             <Skeleton className="h-9 w-full mt-2 rounded-md" />
           </CardContent>
         </Card>
-        <Card className="shadow-lg"> {/* Skeleton for Achievements */}
+        {/* Achievements Skeleton */}
+        <Card className="shadow-lg">
           <CardHeader>
             <Skeleton className="h-6 w-56 mb-1" />
             <Skeleton className="h-4 w-72" />
@@ -236,7 +247,34 @@ export default function CarbonFootprintPage() {
             ))}
           </CardContent>
         </Card>
-         <Card className="shadow-lg"> {/* Skeleton for Offset Projects */}
+        {/* Sustainability Benchmarking Skeleton */}
+        <Card className="shadow-lg">
+            <CardHeader>
+                <Skeleton className="h-6 w-64 mb-1" />
+                <Skeleton className="h-4 w-full" />
+            </CardHeader>
+            <CardContent className="space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-5/6" />
+            </CardContent>
+        </Card>
+        {/* Sustainability Recommendations Skeleton */}
+        <Card className="shadow-lg">
+            <CardHeader>
+                <Skeleton className="h-6 w-64 mb-1" />
+                <Skeleton className="h-4 w-full" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+                {[1,2,3].map(i => (
+                     <div key={i} className="flex items-start gap-2 p-2 border-b border-dashed">
+                        <Skeleton className="h-5 w-5 rounded-full mt-1" />
+                        <Skeleton className="h-4 w-full" />
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
+        {/* Offset Projects Skeleton */}
+         <Card className="shadow-lg"> 
             <CardHeader>
                 <Skeleton className="h-6 w-56 mb-1" />
                 <Skeleton className="h-4 w-72" />
@@ -420,9 +458,48 @@ export default function CarbonFootprintPage() {
         </CardContent>
       </Card>
 
+       <Card className="shadow-lg">
+        <CardHeader>
+            <CardTitle className="text-xl text-foreground flex items-center">
+                <TrendingUp className="mr-2 h-6 w-6 text-primary" />
+                Your Impact vs. Peers
+            </CardTitle>
+            <CardDescription>See how your sustainability efforts compare (mock data).</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 text-center">
+            <p className="text-lg text-muted-foreground">
+                Your estimated monthly emissions are <span className="font-semibold text-primary">1.85 tCO₂e</span>.
+            </p>
+            <p className="text-md text-accent-foreground bg-accent/10 p-3 rounded-md">
+                This is <span className="font-bold">15% lower</span> than the average for businesses of your size in your industry!
+            </p>
+            <p className="text-xs text-muted-foreground">Keep up the great work! Explore our Eco-Tips for more ideas.</p>
+        </CardContent>
+      </Card>
+
       <Card className="shadow-lg">
         <CardHeader>
-            <CardTitle className="text-xl text-foreground">Carbon Offset Preferences & Projects</CardTitle>
+            <CardTitle className="text-xl text-foreground flex items-center">
+                <Lightbulb className="mr-2 h-6 w-6 text-primary" />
+                Personalized Eco-Tips
+            </CardTitle>
+            <CardDescription>Recommendations to further reduce your environmental impact.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <ul className="space-y-3">
+                {mockEcoRecommendations.map((tip, index) => (
+                    <li key={index} className="flex items-start gap-3 p-3 border-b border-dashed last:border-b-0">
+                        <Leaf className="h-5 w-5 text-accent shrink-0 mt-1" />
+                        <span className="text-sm text-muted-foreground">{tip}</span>
+                    </li>
+                ))}
+            </ul>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-lg">
+        <CardHeader>
+            <CardTitle className="text-xl text-foreground">Carbon Offset Preferences &amp; Projects</CardTitle>
             <CardDescription>Manage your contributions and explore certified offset projects.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -468,4 +545,3 @@ export default function CarbonFootprintPage() {
     </div>
   );
 }
-

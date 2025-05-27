@@ -1,13 +1,19 @@
-
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart3, PieChart, TrendingUp, Users, FileText, BarChartHorizontalBig } from "lucide-react";
+import { BarChart3, PieChart, TrendingUp, Users, FileText, BarChartHorizontalBig, Filter, CalendarDays, Download, Settings2, Leaf } from "lucide-react";
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar, PieChart as RechartsPieChart, Pie, Cell } from "recharts";
 import { ChartContainer, ChartTooltipContent, ChartConfig } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { DatePickerWithRange } from "@/components/date-picker-with-range"; // Assuming this component exists
+import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
+
 
 const mockRevenueData = [
   { month: "Jan", revenue: 4000, expenses: 2400 },
@@ -52,12 +58,45 @@ const invoiceStatusChartConfig = {
   Overdue: { label: "Overdue", color: "hsl(var(--chart-3))" },
 } satisfies ChartConfig;
 
+const sustainabilityReportOptions = [
+    { id: "emissions_overview", label: "Emissions Overview" },
+    { id: "offset_effectiveness", label: "Offset Effectiveness" },
+    { id: "source_breakdown", label: "Emissions by Source" },
+    { id: "period_comparison", label: "Period-over-Period Comparison" },
+];
+
 
 export default function ReportsPage() {
   const [isMounted, setIsMounted] = useState(false);
+  const [selectedReportOptions, setSelectedReportOptions] = useState<string[]>(["emissions_overview", "offset_effectiveness"]);
+  const { toast } = useToast();
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const handleReportOptionChange = (optionId: string) => {
+    setSelectedReportOptions(prev =>
+      prev.includes(optionId)
+        ? prev.filter(id => id !== optionId)
+        : [...prev, optionId]
+    );
+  };
+
+  const handleGenerateReport = () => {
+    if (selectedReportOptions.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "No Options Selected",
+            description: "Please select at least one data point for your report.",
+        });
+        return;
+    }
+    toast({
+        title: "Report Generation Started (Simulated)",
+        description: `Generating sustainability report with: ${selectedReportOptions.join(', ')}. This is a placeholder.`,
+    });
+  };
 
   if (!isMounted) {
     return (
@@ -66,6 +105,7 @@ export default function ReportsPage() {
           <Skeleton className="h-8 w-48 mb-2" />
           <Skeleton className="h-4 w-72" />
         </div>
+        {/* Chart Cards Skeleton */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[1,2,3].map(i => (
             <Card key={i} className="shadow-lg">
@@ -79,6 +119,7 @@ export default function ReportsPage() {
             </Card>
           ))}
         </div>
+        {/* Table Card Skeleton */}
          <Card className="shadow-lg">
           <CardHeader>
             <Skeleton className="h-6 w-1/2 mb-1" />
@@ -90,6 +131,31 @@ export default function ReportsPage() {
             </div>
           </CardContent>
         </Card>
+        {/* Custom Report Generator Skeleton */}
+        <Card className="shadow-lg">
+            <CardHeader>
+                <Skeleton className="h-6 w-3/4 mb-1" />
+                <Skeleton className="h-4 w-full" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div>
+                    <Skeleton className="h-5 w-1/4 mb-2" />
+                    <Skeleton className="h-10 w-full md:w-2/3" /> {/* Date Picker Placeholder */}
+                </div>
+                <div>
+                    <Skeleton className="h-5 w-1/3 mb-2" />
+                    <div className="grid grid-cols-2 gap-3">
+                        {[1,2,3,4].map(i => (
+                            <div key={i} className="flex items-center space-x-2">
+                                <Skeleton className="h-4 w-4 rounded-sm" />
+                                <Skeleton className="h-4 w-3/4" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <Skeleton className="h-10 w-full md:w-1/3" /> {/* Button Placeholder */}
+            </CardContent>
+        </Card>
       </div>
     );
   }
@@ -100,7 +166,7 @@ export default function ReportsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center">
           <BarChartHorizontalBig className="mr-3 h-8 w-8 text-primary" />
-          Reports & Analytics
+          Reports &amp; Analytics
         </h1>
         <p className="text-muted-foreground">
           Detailed insights into your billing, carbon footprint, and more. (Placeholder data)
@@ -211,8 +277,44 @@ export default function ReportsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <Card className="shadow-lg">
+        <CardHeader>
+            <CardTitle className="text-xl text-foreground flex items-center">
+                <Leaf className="mr-2 h-5 w-5 text-primary" /> Custom Sustainability Report
+            </CardTitle>
+            <CardDescription>Generate a detailed report on your sustainability metrics.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            <div>
+                <Label htmlFor="report-date-range" className="text-base font-medium">Report Date Range</Label>
+                <DatePickerWithRange className="mt-1 w-full md:w-auto" id="report-date-range" /> 
+                 {/* Assuming DatePickerWithRange is a component you have or will create */}
+            </div>
+            <div>
+                <Label className="text-base font-medium">Data Points to Include</Label>
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 rounded-md border p-4 bg-background">
+                    {sustainabilityReportOptions.map(option => (
+                        <div key={option.id} className="flex items-center space-x-2">
+                            <Checkbox
+                                id={`report-opt-${option.id}`}
+                                checked={selectedReportOptions.includes(option.id)}
+                                onCheckedChange={() => handleReportOptionChange(option.id)}
+                            />
+                            <Label htmlFor={`report-opt-${option.id}`} className="font-normal text-sm cursor-pointer">
+                                {option.label}
+                            </Label>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </CardContent>
+        <CardFooter>
+            <Button onClick={handleGenerateReport} disabled={selectedReportOptions.length === 0}>
+                <Download className="mr-2 h-4 w-4" /> Generate Report (Simulated)
+            </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
-
-    
