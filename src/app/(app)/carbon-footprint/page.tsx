@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast"; // Added
 
 const initialChartDataSixMonths = [
   { month: "Jan", emissions: 0, offset: 0 },
@@ -55,6 +56,7 @@ export default function CarbonFootprintPage() {
   const [timeframe, setTimeframe] = useState("6m");
   const [enableRealtime, setEnableRealtime] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
+  const { toast } = useToast(); // Added
 
   useEffect(() => {
     setIsMounted(true);
@@ -103,6 +105,13 @@ export default function CarbonFootprintPage() {
 
   const totalEmissions = chartData.reduce((sum, item) => sum + item.emissions, 0);
   const totalOffset = chartData.reduce((sum, item) => sum + item.offset, 0);
+
+  const handleContributeNow = () => { // Added handler
+    toast({
+      title: "Thank You!",
+      description: "Your one-time contribution to offset projects is appreciated. (Feature in development)",
+    });
+  };
 
   if (!isMounted) {
     return (
@@ -265,7 +274,7 @@ export default function CarbonFootprintPage() {
               <Label htmlFor="one-time-offset" className="text-base font-medium">One-time Offset Contribution</Label>
               <p className="text-sm text-muted-foreground">Make an additional contribution to offset projects.</p>
             </div>
-            <Button variant="outline">Contribute Now</Button>
+            <Button variant="outline" onClick={handleContributeNow}>Contribute Now</Button> {/* Added onClick */}
           </div>
         </CardContent>
       </Card>
