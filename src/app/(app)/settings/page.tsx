@@ -108,7 +108,7 @@ export default function SettingsPage() {
                         </div>
                         <Skeleton className="h-6 w-11 rounded-full bg-muted" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2"> {/* Placeholder for potentially visible amount input */}
                         <Skeleton className="h-5 w-1/3 mb-1 rounded-md bg-muted" />
                         <Skeleton className="h-10 w-full md:w-[280px] rounded-md bg-muted" />
                         <Skeleton className="h-3 w-3/4 rounded-md bg-muted" />
