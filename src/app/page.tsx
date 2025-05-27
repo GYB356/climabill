@@ -90,16 +90,14 @@ export default function HomePage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="p-6 aspect-video bg-black flex items-center justify-center">
-                {/* Placeholder for actual video embed */}
                 <Image
-                  src="https://placehold.co/1280x720/1f2937/ffffff.png?text=Video+Player+Placeholder" // Darker placeholder for video
+                  src="https://placehold.co/1280x720/333333/FFFFFF.png?text=Video+Player+Placeholder" 
                   alt="Demo Video Player Placeholder"
                   width={1280}
                   height={720}
                   className="rounded-md"
-                  data-ai-hint="video player"
+                  data-ai-hint="video player interface"
                 />
-                {/* <p className="text-muted-foreground text-lg">Interactive demo video coming soon!</p> */}
               </div>
             </DialogContent>
           </Dialog>
@@ -116,12 +114,12 @@ export default function HomePage() {
               { name: "Sarah L. - Freelance Designer", quote: "The AI invoice item suggester is a lifesaver, and my clients love the clean, modern templates. Plus, the carbon tracking is a great touch." },
               { name: "EcoHarvest Ltd. - Sustainability Lead", quote: "Finally, a billing platform that aligns with our sustainable values. The carbon footprint tracking and offset options are fantastic for our reporting." },
             ].map((testimonial, index) => (
-              <div key={index} className="p-6 bg-card border rounded-lg shadow-lg">
+              <div key={index} className="p-6 bg-card border rounded-lg shadow-lg flex flex-col">
                 <div className="flex mb-2">
                   {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 text-accent fill-accent" />)}
                 </div>
-                <p className="text-muted-foreground mb-4 italic">"{testimonial.quote}"</p>
-                <p className="font-semibold text-card-foreground text-right">- {testimonial.name}</p>
+                <p className="text-muted-foreground mb-4 italic flex-grow">"{testimonial.quote}"</p>
+                <p className="font-semibold text-card-foreground text-right mt-auto">- {testimonial.name}</p>
               </div>
             ))}
           </div>
