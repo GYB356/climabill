@@ -1,7 +1,9 @@
 
+"use client";
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, PlayCircle, Star, Sparkles, Leaf, LayoutDashboard, Package, Zap, Briefcase, CheckCircle } from 'lucide-react';
+import { ArrowRight, PlayCircle, Star, Sparkles, Leaf, LayoutDashboard, Package, Zap, Briefcase, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,9 +14,77 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
+import { useState, useEffect } from 'react';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+
+const tourSlides = [
+  {
+    title: "Welcome to ClimaBill!",
+    description: "Discover how ClimaBill helps you manage billing efficiently while tracking your carbon footprint. This quick tour will guide you through the key features.",
+    imageUrl: "https://placehold.co/1200x675.png",
+    dataAiHint: "welcome screen app"
+  },
+  {
+    title: "AI-Powered Insights",
+    description: "Leverage smart suggestions for invoice items, dynamic discounts based on usage, and concise text summarization, all powered by AI.",
+    imageUrl: "https://placehold.co/1200x675.png",
+    dataAiHint: "dashboard analytics AI"
+  },
+  {
+    title: "Carbon Footprint Tracking",
+    description: "Monitor your estimated carbon emissions, see your offset contributions, and manage your environmental impact directly within the platform.",
+    imageUrl: "https://placehold.co/1200x675.png",
+    dataAiHint: "carbon chart environment"
+  },
+  {
+    title: "Seamless Billing Management",
+    description: "Choose from modern invoice templates, set up automated reminders, and get a clear overview of your billing on the dashboard.",
+    imageUrl: "https://placehold.co/1200x675.png",
+    dataAiHint: "invoice template app"
+  },
+  {
+    title: "Ready to Get Started?",
+    description: "Sign up today to experience smarter, greener billing with ClimaBill. Explore the dashboard or configure your settings to begin.",
+    imageUrl: "https://placehold.co/1200x675.png",
+    dataAiHint: "call to action app"
+  },
+];
+
+const pricingPlans = [
+  { tier: 'Basic', price: '29', icon: Package, features: ['AI Invoice Item Suggester', 'Basic Carbon Tracking', '100 Invoices/mo'], dataAiHint: "basic plan" },
+  { tier: 'Pro', price: '79', icon: Zap, features: ['Smart Discounts AI', 'Advanced Carbon Offsetting', '500 Invoices/mo', 'Priority Support', 'Optional "Green Tier" auto-donation'], highlighted: true, dataAiHint: "pro plan" },
+  { tier: 'Enterprise', price: '199', icon: Briefcase, features: ['All Pro Features', 'Custom AI Models', 'Unlimited Invoices', 'Dedicated Account Manager', 'Includes "Green Tier" auto-donation'], dataAiHint: "enterprise plan" },
+];
 
 export default function HomePage() {
+  const [currentTourSlide, setCurrentTourSlide] = useState(0);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<(typeof pricingPlans)[0] | null>(null);
+  const [enableCarbonOffsetCheckout, setEnableCarbonOffsetCheckout] = useState(true);
+  const [carbonOffsetAmountCheckout, setCarbonOffsetAmountCheckout] = useState("5.00");
+  const [currentDate, setCurrentDate] = useState("");
+
+  useEffect(() => {
+    setCurrentDate(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
+  }, []);
+
+  const handleNextSlide = () => {
+    setCurrentTourSlide((prev) => Math.min(prev + 1, tourSlides.length - 1));
+  };
+
+  const handlePrevSlide = () => {
+    setCurrentTourSlide((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleOpenCheckoutModal = (plan: (typeof pricingPlans)[0]) => {
+    setSelectedPlan(plan);
+    setIsCheckoutModalOpen(true);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -61,44 +131,60 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Demo Video Placeholder */}
+      {/* Interactive Tour Placeholder */}
       <section className="py-16 bg-secondary/30">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-foreground mb-8">See ClimaBill in Action</h2>
-          <Dialog>
+          <Dialog onOpenChange={() => setCurrentTourSlide(0)}> {/* Reset slide on open/close */}
             <DialogTrigger asChild>
               <div className="aspect-video bg-muted rounded-lg shadow-xl max-w-3xl mx-auto flex items-center justify-center relative overflow-hidden cursor-pointer group">
                 <Image
                   src="https://placehold.co/1280x720.png"
-                  alt="ClimaBill Demo Video Thumbnail"
-                  layout="fill"
+                  alt="ClimaBill Demo Thumbnail"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   objectFit="cover"
                   data-ai-hint="app screen"
                   className="group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center flex-col group-hover:bg-black/40 transition-colors duration-300">
                   <PlayCircle className="w-20 h-20 text-white/80 group-hover:text-white transition-colors duration-300 mb-2 group-hover:scale-110 transform" />
-                  <p className="mt-2 text-white/90 text-lg font-semibold">Watch Demo</p>
+                  <p className="mt-2 text-white/90 text-lg font-semibold">Watch Demo / Take Tour</p>
                 </div>
               </div>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[800px] p-0">
-              <DialogHeader className="p-6 pb-0">
-                <DialogTitle className="text-2xl">ClimaBill Demo Video</DialogTitle>
+              <DialogHeader className="p-6 pb-2">
+                <DialogTitle className="text-2xl">{tourSlides[currentTourSlide].title}</DialogTitle>
                 <DialogDescription>
-                  See how ClimaBill can revolutionize your billing and sustainability efforts.
+                  {tourSlides[currentTourSlide].description}
                 </DialogDescription>
               </DialogHeader>
-              <div className="p-6 aspect-video bg-black flex items-center justify-center">
+              <div className="p-6 pt-2 aspect-video bg-black flex items-center justify-center">
                 <Image
-                  src="https://placehold.co/1280x720/333333/FFFFFF.png?text=Video+Player+Placeholder" 
-                  alt="Demo Video Player Placeholder"
-                  width={1280}
-                  height={720}
-                  className="rounded-md"
-                  data-ai-hint="video player interface"
+                  src={tourSlides[currentTourSlide].imageUrl}
+                  alt={tourSlides[currentTourSlide].title}
+                  width={1200}
+                  height={675}
+                  className="rounded-md object-contain max-h-full"
+                  data-ai-hint={tourSlides[currentTourSlide].dataAiHint}
                 />
               </div>
+              <DialogFooter className="p-6 pt-2 flex justify-between items-center">
+                <Button variant="outline" onClick={handlePrevSlide} disabled={currentTourSlide === 0}>
+                  <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">Slide {currentTourSlide + 1} of {tourSlides.length}</span>
+                {currentTourSlide < tourSlides.length - 1 ? (
+                  <Button onClick={handleNextSlide}>
+                    Next <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+                ) : (
+                  <DialogClose asChild>
+                    <Button>Finish Tour</Button>
+                  </DialogClose>
+                )}
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
@@ -110,9 +196,9 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-center text-foreground mb-12">Loved by Businesses Like Yours</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { name: "Alex P. - SaaS Founder", quote: "ClimaBill revolutionized how we handle subscriptions and helped us highlight our eco-commitment! The AI suggestions save us hours." },
-              { name: "Sarah L. - Freelance Designer", quote: "The AI invoice item suggester is a lifesaver, and my clients love the clean, modern templates. Plus, the carbon tracking is a great touch." },
-              { name: "EcoHarvest Ltd. - Sustainability Lead", quote: "Finally, a billing platform that aligns with our sustainable values. The carbon footprint tracking and offset options are fantastic for our reporting." },
+              { name: "Alex P. - SaaS Founder", quote: "ClimaBill revolutionized how we handle subscriptions and helped us highlight our eco-commitment! The AI suggestions save us hours.", dataAiHint: "person office" },
+              { name: "Sarah L. - Freelance Designer", quote: "The AI invoice item suggester is a lifesaver, and my clients love the clean, modern templates. Plus, the carbon tracking is a great touch.", dataAiHint: "designer workspace" },
+              { name: "EcoHarvest Ltd. - Sustainability Lead", quote: "Finally, a billing platform that aligns with our sustainable values. The carbon footprint tracking and offset options are fantastic for our reporting.", dataAiHint: "nature meeting" },
             ].map((testimonial, index) => (
               <div key={index} className="p-6 bg-card border rounded-lg shadow-lg flex flex-col">
                 <div className="flex mb-2">
@@ -131,11 +217,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-foreground mb-12">Simple, Transparent Pricing</h2>
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { tier: 'Basic', price: '29', icon: Package, features: ['AI Invoice Item Suggester', 'Basic Carbon Tracking', '100 Invoices/mo'] },
-              { tier: 'Pro', price: '79', icon: Zap, features: ['Smart Discounts AI', 'Advanced Carbon Offsetting', '500 Invoices/mo', 'Priority Support', 'Optional "Green Tier" auto-donation'], highlighted: true },
-              { tier: 'Enterprise', price: '199', icon: Briefcase, features: ['All Pro Features', 'Custom AI Models', 'Unlimited Invoices', 'Dedicated Account Manager', 'Includes "Green Tier" auto-donation'] },
-            ].map(plan => (
+            {pricingPlans.map(plan => (
               <div key={plan.tier} className={`p-8 bg-card border rounded-lg shadow-lg flex flex-col ${plan.highlighted ? 'border-primary ring-2 ring-primary' : 'border-border'}`}>
                 <plan.icon className={`w-12 h-12 mx-auto mb-4 ${plan.highlighted ? 'text-primary' : 'text-accent'}`} />
                 <h3 className="text-2xl font-semibold mb-2 text-foreground">{plan.tier}</h3>
@@ -148,7 +230,7 @@ export default function HomePage() {
                     </li>
                   ))}
                 </ul>
-                <Button size="lg" variant={plan.highlighted ? 'default' : 'outline'} className="w-full mt-auto">
+                <Button size="lg" variant={plan.highlighted ? 'default' : 'outline'} className="w-full mt-auto" onClick={() => handleOpenCheckoutModal(plan)}>
                   Get Started
                 </Button>
               </div>
@@ -158,6 +240,68 @@ export default function HomePage() {
         </div>
       </section>
 
+      {selectedPlan && (
+        <Dialog open={isCheckoutModalOpen} onOpenChange={setIsCheckoutModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-2xl">Checkout Summary</DialogTitle>
+              <DialogDescription>
+                You're subscribing to the <span className="font-semibold text-primary">{selectedPlan.tier}</span> plan.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Plan:</span>
+                <span className="font-semibold text-foreground">{selectedPlan.tier}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Price:</span>
+                <span className="font-semibold text-foreground">${selectedPlan.price}/month</span>
+              </div>
+              <div className="border-t pt-4 mt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="carbon-offset-checkout" className="flex items-center gap-2">
+                    <Leaf className="h-5 w-5 text-accent" />
+                    Add Carbon Offset
+                  </Label>
+                  <Switch
+                    id="carbon-offset-checkout"
+                    checked={enableCarbonOffsetCheckout}
+                    onCheckedChange={setEnableCarbonOffsetCheckout}
+                  />
+                </div>
+                {enableCarbonOffsetCheckout && (
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="carbon-offset-amount-checkout" className="text-sm text-muted-foreground whitespace-nowrap">Offset Amount:</Label>
+                    <Input
+                      id="carbon-offset-amount-checkout"
+                      type="number"
+                      value={carbonOffsetAmountCheckout}
+                      onChange={(e) => setCarbonOffsetAmountCheckout(e.target.value)}
+                      className="h-8"
+                      placeholder="5.00"
+                    />
+                     <span className="text-sm text-muted-foreground">USD</span>
+                  </div>
+                )}
+              </div>
+              <div className="border-t pt-4 mt-4 flex justify-between items-baseline">
+                <span className="text-lg font-semibold text-foreground">Total Due Today:</span>
+                <span className="text-2xl font-bold text-primary">
+                  ${(parseFloat(selectedPlan.price) + (enableCarbonOffsetCheckout ? parseFloat(carbonOffsetAmountCheckout) || 0 : 0)).toFixed(2)}
+                </span>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsCheckoutModalOpen(false)}>Cancel</Button>
+              <Button type="button" onClick={() => { alert('Proceeding to payment... (Placeholder)'); setIsCheckoutModalOpen(false); }}>
+                Proceed to Payment (Placeholder)
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* Contact Section Placeholder */}
       <section id="contact" className="py-16 bg-background">
         <div className="container mx-auto px-4 max-w-xl text-center">
@@ -165,10 +309,10 @@ export default function HomePage() {
           <p className="text-muted-foreground mb-8">
             Have questions or need a custom solution? We're here to help.
           </p>
-          <form className="space-y-6">
-            <Input type="text" placeholder="Your Name" className="bg-card" />
-            <Input type="email" placeholder="Your Email" className="bg-card" />
-            <Textarea placeholder="Your Message" className="bg-card min-h-[120px]" />
+          <form className="space-y-6" onSubmit={(e) => {e.preventDefault(); alert('Message sent! (Placeholder)'); (e.target as HTMLFormElement).reset();}}>
+            <Input type="text" placeholder="Your Name" className="bg-card" required />
+            <Input type="email" placeholder="Your Email" className="bg-card" required />
+            <Textarea placeholder="Your Message" className="bg-card min-h-[120px]" required />
             <Button size="lg" type="submit">Send Message</Button>
           </form>
         </div>
@@ -178,8 +322,8 @@ export default function HomePage() {
       <section id="privacy" className="py-12 bg-muted/30">
         <div className="container mx-auto px-4 max-w-3xl">
           <h2 className="text-2xl font-bold text-foreground mb-4">Privacy Policy</h2>
-          <p className="text-muted-foreground mb-2">Last updated: {new Date().toLocaleDateString()}</p>
-          <p className="text-muted-foreground">Details about how we handle your data will go here. For now, this is a placeholder.</p>
+          <p className="text-muted-foreground mb-2">Last updated: {currentDate}</p>
+          <p className="text-muted-foreground">This is a placeholder for ClimaBill's privacy policy. In a real application, this section would detail how user data is collected, used, stored, and protected, in compliance with regulations like GDPR and CCPA. It would cover aspects such as data minimization, user consent, data subject rights (access, rectification, erasure), data security measures, cookie usage, and information about third-party data processors. Users would be informed about their rights and how to exercise them.</p>
         </div>
       </section>
 
@@ -187,8 +331,8 @@ export default function HomePage() {
       <section id="terms" className="py-12 bg-background">
         <div className="container mx-auto px-4 max-w-3xl">
           <h2 className="text-2xl font-bold text-foreground mb-4">Terms of Service</h2>
-          <p className="text-muted-foreground mb-2">Effective date: {new Date().toLocaleDateString()}</p>
-          <p className="text-muted-foreground">Our terms and conditions for using ClimaBill will be detailed here. This is currently a placeholder.</p>
+          <p className="text-muted-foreground mb-2">Effective date: {currentDate}</p>
+          <p className="text-muted-foreground">This is a placeholder for ClimaBill's terms of service. A comprehensive ToS would outline the agreement between ClimaBill and its users. It would cover user responsibilities, acceptable use policies, payment terms, subscription details, limitations of liability, intellectual property rights, dispute resolution mechanisms, and conditions for account termination. This document is crucial for setting expectations and legal boundaries for the use of the ClimaBill platform.</p>
         </div>
       </section>
 
