@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { CalendarIcon, Save, BellRing, Leaf } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton"; // Added Skeleton
 
 const reminderOptions = [
   { id: "7days", label: "7 days before deadline" },
@@ -23,16 +24,17 @@ const reminderOptions = [
 ];
 
 export default function SettingsPage() {
-  const [paymentDeadline, setPaymentDeadline] = useState<Date | undefined>(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)); // Default 15 days from now
+  const [paymentDeadline, setPaymentDeadline] = useState<Date | undefined>(undefined); 
   const [selectedReminders, setSelectedReminders] = useState<string[]>(["3days", "1day"]);
   const [enableCarbonOffset, setEnableCarbonOffset] = useState(true);
   const [carbonOffsetAmount, setCarbonOffsetAmount] = useState("5.00");
   const { toast } = useToast();
 
-  // Effect to prevent hydration mismatch for default date
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
     setIsMounted(true);
+    // Set default date only after mounting to avoid hydration mismatch
+    setPaymentDeadline(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)); 
   }, []);
 
 
@@ -45,7 +47,6 @@ export default function SettingsPage() {
   };
 
   const handleSaveChanges = () => {
-    // Here you would typically send the settings to your backend
     console.log({
       paymentDeadline,
       selectedReminders,
@@ -59,31 +60,30 @@ export default function SettingsPage() {
   };
   
   if (!isMounted) {
-    // Basic loading state to prevent hydration mismatch & show content is loading
     return (
-        <div className="space-y-8 animate-pulse">
+        <div className="space-y-8">
             <div>
-                <div className="h-8 bg-muted rounded w-1/4 mb-2"></div>
-                <div className="h-4 bg-muted rounded w-1/2"></div>
+                <Skeleton className="h-8 w-48 mb-2 rounded-md" />
+                <Skeleton className="h-4 w-72 rounded-md" />
             </div>
 
             <Card className="shadow-lg">
                 <CardHeader>
-                    <div className="h-6 bg-muted rounded w-3/4 mb-1"></div>
-                    <div className="h-4 bg-muted rounded w-full"></div>
+                    <Skeleton className="h-6 w-3/4 mb-1 rounded-md flex items-center" />
+                    <Skeleton className="h-4 w-full rounded-md" />
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div>
-                        <div className="h-4 bg-muted rounded w-1/3 mb-2"></div>
-                        <div className="h-10 bg-muted rounded w-full md:w-[280px]"></div>
+                        <Skeleton className="h-5 w-1/3 mb-2 rounded-md" />
+                        <Skeleton className="h-10 w-full md:w-[280px] rounded-md" />
                     </div>
                     <div>
-                        <div className="h-4 bg-muted rounded w-1/3 mb-2"></div>
-                        <div className="space-y-3 rounded-md border p-4 bg-muted/50">
+                        <Skeleton className="h-5 w-1/3 mb-2 rounded-md" />
+                        <div className="space-y-3 rounded-md border p-4 bg-muted/10">
                             {[...Array(4)].map((_, i) => (
                                 <div key={i} className="flex items-center space-x-3">
-                                    <div className="h-4 w-4 bg-muted rounded-sm"></div>
-                                    <div className="h-4 bg-muted rounded w-1/2"></div>
+                                    <Skeleton className="h-4 w-4 rounded-sm bg-muted" />
+                                    <Skeleton className="h-4 flex-1 rounded-md bg-muted" />
                                 </div>
                             ))}
                         </div>
@@ -93,29 +93,28 @@ export default function SettingsPage() {
 
             <Card className="shadow-lg">
                 <CardHeader>
-                    <div className="h-6 bg-muted rounded w-3/4 mb-1"></div>
-                    <div className="h-4 bg-muted rounded w-full"></div>
+                  <Skeleton className="h-6 w-3/4 mb-1 rounded-md flex items-center" />
+                  <Skeleton className="h-4 w-full rounded-md" />
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="flex items-center justify-between space-x-3 rounded-md border p-4 bg-muted/50">
+                    <div className="flex items-center justify-between space-x-3 rounded-md border p-4 bg-muted/10">
                         <div className="space-y-1.5 flex-1">
-                            <div className="h-5 bg-muted rounded w-2/3"></div>
-                            <div className="h-3 bg-muted rounded w-full"></div>
+                            <Skeleton className="h-5 w-2/3 rounded-md bg-muted" />
+                            <Skeleton className="h-3 w-full rounded-md bg-muted" />
                         </div>
-                        <div className="h-6 w-11 bg-muted rounded-full"></div>
+                        <Skeleton className="h-6 w-11 rounded-full bg-muted" />
                     </div>
-                    {enableCarbonOffset && ( /* Keep this logic for layout purposes if needed, or adjust skeleton */
-                        <div className="space-y-2">
-                            <div className="h-4 bg-muted rounded w-1/3 mb-1"></div>
-                            <div className="h-10 bg-muted rounded w-full md:w-[280px]"></div>
-                            <div className="h-3 bg-muted rounded w-3/4"></div>
-                        </div>
-                    )}
+                    {/* Conditional skeleton for offset amount - assuming enableCarbonOffset is true initially for skeleton */}
+                    <div className="space-y-2">
+                        <Skeleton className="h-5 w-1/3 mb-1 rounded-md bg-muted" />
+                        <Skeleton className="h-10 w-full md:w-[280px] rounded-md bg-muted" />
+                        <Skeleton className="h-3 w-3/4 rounded-md bg-muted" />
+                    </div>
                 </CardContent>
             </Card>
             
             <div className="flex justify-end">
-                <div className="h-11 bg-muted rounded-md w-40"></div>
+                <Skeleton className="h-11 w-44 rounded-md bg-muted" />
             </div>
         </div>
     );
