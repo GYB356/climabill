@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Info, Leaf, Cloud, BarChart3, History, DollarSign } from "lucide-react";
+import { Info, Leaf, Cloud, BarChart3, History, DollarSign, Zap, ExternalLink } from "lucide-react";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
   Select,
@@ -19,6 +19,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
 
 const initialChartDataSixMonths = [
   { month: "Jan", emissions: 0, offset: 0 },
@@ -56,6 +57,36 @@ const mockContributionHistory = [
   { id: "1", date: "2024-05-15", amount: 25.00, project: "Amazon Rainforest Preservation", status: "Completed" },
   { id: "2", date: "2024-04-20", amount: 15.50, project: "African Savanna Carbon Capture", status: "Completed" },
   { id: "3", date: "2024-03-10", amount: 30.00, project: "Global Reforestation Initiative", status: "Completed" },
+];
+
+const mockOffsetProjects = [
+  {
+    id: "proj1",
+    name: "Verified Reforestation Initiative",
+    description: "Support tree planting in degraded lands. Each contribution helps restore ecosystems and sequester CO2.",
+    type: "Reforestation",
+    imageUrl: "https://placehold.co/600x400.png",
+    dataAiHint: "forest trees",
+    minContribution: 10,
+  },
+  {
+    id: "proj2",
+    name: "Renewable Energy Development",
+    description: "Fund the development of wind and solar projects, reducing reliance on fossil fuels.",
+    type: "Renewable Energy",
+    imageUrl: "https://placehold.co/600x400.png",
+    dataAiHint: "wind turbine",
+    minContribution: 15,
+  },
+  {
+    id: "proj3",
+    name: "Direct Air Capture Technology",
+    description: "Invest in innovative technologies that directly remove CO2 from the atmosphere.",
+    type: "Technology",
+    imageUrl: "https://placehold.co/600x400.png",
+    dataAiHint: "carbon capture",
+    minContribution: 25,
+  },
 ];
 
 export default function CarbonFootprintPage() {
@@ -113,10 +144,10 @@ export default function CarbonFootprintPage() {
   const totalEmissions = chartData.reduce((sum, item) => sum + item.emissions, 0);
   const totalOffset = chartData.reduce((sum, item) => sum + item.offset, 0);
 
-  const handleContributeNow = () => {
+  const handleContributeNow = (projectName?: string) => {
     toast({
       title: "Thank You!",
-      description: "Your one-time contribution to offset projects is appreciated. (Feature in development)",
+      description: `Your contribution to ${projectName || 'offset projects'} is appreciated. (Feature in development)`,
     });
   };
 
@@ -192,16 +223,32 @@ export default function CarbonFootprintPage() {
                 <Skeleton className="h-6 w-56 mb-1" />
                 <Skeleton className="h-4 w-72" />
             </CardHeader>
-            <CardContent className="space-y-4">
-              {[1,2].map(i => (
-                <div key={i} className="flex items-center justify-between p-4 border rounded-lg bg-background">
+            <CardContent className="space-y-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1,2,3].map(i => (
+                        <Card key={i} className="flex flex-col">
+                            <Skeleton className="aspect-video w-full rounded-t-md" />
+                            <CardHeader className="pb-2">
+                                <Skeleton className="h-5 w-3/4 mb-1" />
+                                <Skeleton className="h-3 w-1/2" />
+                            </CardHeader>
+                            <CardContent className="flex-grow">
+                                <Skeleton className="h-3 w-full mb-1" />
+                                <Skeleton className="h-3 w-5/6" />
+                            </CardContent>
+                            <CardFooter>
+                                <Skeleton className="h-9 w-full" />
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg bg-background mt-4">
                   <div className="flex-1 space-y-1.5">
                     <Skeleton className="h-5 w-2/3" />
                     <Skeleton className="h-3 w-full" />
                   </div>
-                  { i === 1 ? <Skeleton className="h-6 w-11 rounded-full" /> : <Skeleton className="h-10 w-32 rounded-md" /> }
+                  <Skeleton className="h-6 w-11 rounded-full" />
                 </div>
-              ))}
             </CardContent>
         </Card>
       </div>
@@ -337,26 +384,51 @@ export default function CarbonFootprintPage() {
 
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-xl text-foreground">Carbon Offset Preferences</CardTitle>
-          <CardDescription>Manage your contributions to carbon offset projects.</CardDescription>
+            <CardTitle className="text-xl text-foreground">Carbon Offset Preferences & Projects</CardTitle>
+            <CardDescription>Manage your contributions and explore certified offset projects.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-background">
-            <div>
-              <Label htmlFor="auto-offset" className="text-base font-medium">Automatic Carbon Offset</Label>
-              <p className="text-sm text-muted-foreground">Enable to automatically offset a percentage of your emissions.</p>
+        <CardContent className="space-y-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {mockOffsetProjects.map(project => (
+                    <Card key={project.id} className="flex flex-col shadow-md hover:shadow-lg transition-shadow">
+                         <div className="relative aspect-video w-full rounded-t-md overflow-hidden">
+                            <Image 
+                                src={project.imageUrl} 
+                                alt={project.name} 
+                                fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                className="object-cover"
+                                data-ai-hint={project.dataAiHint}
+                            />
+                        </div>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-lg">{project.name}</CardTitle>
+                            <CardDescription className="text-xs pt-1">{project.type}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-grow">
+                            <p className="text-sm text-muted-foreground line-clamp-3">{project.description}</p>
+                        </CardContent>
+                        <CardFooter className="flex-col items-start gap-2">
+                            <p className="text-xs text-muted-foreground">Min. Contribution: ${project.minContribution.toFixed(2)}</p>
+                            <Button variant="outline" className="w-full" onClick={() => handleContributeNow(project.name)}>
+                                <Leaf className="mr-2 h-4 w-4 text-accent"/> Contribute to this Project
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                ))}
             </div>
-            <Switch id="auto-offset" />
-          </div>
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-background">
-            <div>
-              <Label htmlFor="one-time-offset" className="text-base font-medium">One-time Offset Contribution</Label>
-              <p className="text-sm text-muted-foreground">Make an additional contribution to offset projects.</p>
+            <Separator />
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-background">
+              <div>
+                <Label htmlFor="auto-offset" className="text-base font-medium">Automatic Carbon Offset</Label>
+                <p className="text-sm text-muted-foreground">Enable to automatically offset a percentage of your emissions.</p>
+              </div>
+              <Switch id="auto-offset" />
             </div>
-            <Button variant="outline" onClick={handleContributeNow}>Contribute Now</Button>
-          </div>
         </CardContent>
       </Card>
     </div>
   );
 }
+
+    

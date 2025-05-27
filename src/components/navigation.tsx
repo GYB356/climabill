@@ -12,8 +12,9 @@ import {
   Menu,
   NotebookText,
   Lightbulb,
-  BarChart3, // Added for Carbon Footprint
-  ReceiptText, // Added for Sample Invoice
+  BarChart3, 
+  ReceiptText, 
+  Trees, // Added for Learn Sustainability
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -41,13 +42,14 @@ const navItems = [
     icon: FileText,
     subItems: [
       { href: "/invoices/sample-invoice", label: "View Sample Invoice", icon: ReceiptText },
-      { href: "/invoices", label: "Template Selection", icon: FileText, exactMatch: true }, // For template selection page
+      { href: "/invoices", label: "Template Selection", icon: FileText, exactMatch: true }, 
     ]
   },
   { href: "/smart-discounts", label: "Smart Discounts", icon: Sparkles },
   { href: "/text-summarizer", label: "Text Summarizer", icon: NotebookText },
   { href: "/invoice-item-suggester", label: "Item Suggester", icon: Lightbulb },
   { href: "/carbon-footprint", label: "Carbon Footprint", icon: BarChart3 },
+  { href: "/learn-sustainability", label: "Learn Sustainability", icon: Trees },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
@@ -197,6 +199,5 @@ export function AppNavigation() {
     </>
   );
 }
-
 
     
