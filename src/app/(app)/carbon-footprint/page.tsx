@@ -1,3 +1,4 @@
+
 "use client"; // This page uses client-side state for the chart
 
 import { useState, useEffect, useCallback } from "react";
@@ -6,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Info, Leaf, Cloud, BarChart3, History, DollarSign, Zap, ExternalLink, Award, ShieldHalf, Rocket, TrendingUp, Lightbulb } from "lucide-react";
+import { Info, Leaf, Cloud, BarChart3, History, DollarSign, Zap, ExternalLink, Award, ShieldHalf, Rocket, TrendingUp, Lightbulb, Filter, ListFilter } from "lucide-react";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
   Select,
@@ -21,21 +22,21 @@ import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 
 const initialChartDataSixMonths = [
-  { month: "Jan", emissions: 0, offset: 0 },
-  { month: "Feb", emissions: 0, offset: 0 },
-  { month: "Mar", emissions: 0, offset: 0 },
-  { month: "Apr", emissions: 0, offset: 0 },
-  { month: "May", emissions: 0, offset: 0 },
-  { month: "Jun", emissions: 0, offset: 0 },
+  { month: "Jan", emissions: 0, offset: 0, source: "Compute" },
+  { month: "Feb", emissions: 0, offset: 0, source: "Storage" },
+  { month: "Mar", emissions: 0, offset: 0, source: "Network" },
+  { month: "Apr", emissions: 0, offset: 0, source: "Compute" },
+  { month: "May", emissions: 0, offset: 0, source: "Storage" },
+  { month: "Jun", emissions: 0, offset: 0, source: "Other" },
 ];
 
 const initialChartDataTwelveMonths = [
-  { month: "Jan", emissions: 0, offset: 0 }, { month: "Feb", emissions: 0, offset: 0 },
-  { month: "Mar", emissions: 0, offset: 0 }, { month: "Apr", emissions: 0, offset: 0 },
-  { month: "May", emissions: 0, offset: 0 }, { month: "Jun", emissions: 0, offset: 0 },
-  { month: "Jul", emissions: 0, offset: 0 }, { month: "Aug", emissions: 0, offset: 0 },
-  { month: "Sep", emissions: 0, offset: 0 }, { month: "Oct", emissions: 0, offset: 0 },
-  { month: "Nov", emissions: 0, offset: 0 }, { month: "Dec", emissions: 0, offset: 0 },
+  { month: "Jan", emissions: 0, offset: 0, source: "Compute" }, { month: "Feb", emissions: 0, offset: 0, source: "Storage" },
+  { month: "Mar", emissions: 0, offset: 0, source: "Network" }, { month: "Apr", emissions: 0, offset: 0, source: "Compute" },
+  { month: "May", emissions: 0, offset: 0, source: "Storage" }, { month: "Jun", emissions: 0, offset: 0, source: "Other" },
+  { month: "Jul", emissions: 0, offset: 0, source: "Compute" }, { month: "Aug", emissions: 0, offset: 0, source: "Network" },
+  { month: "Sep", emissions: 0, offset: 0, source: "Storage" }, { month: "Oct", emissions: 0, offset: 0, source: "Compute" },
+  { month: "Nov", emissions: 0, offset: 0, source: "Other" }, { month: "Dec", emissions: 0, offset: 0, source: "Network" },
 ];
 
 
@@ -107,6 +108,8 @@ export default function CarbonFootprintPage() {
   const [timeframe, setTimeframe] = useState("6m");
   const [enableRealtime, setEnableRealtime] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
+  const [filterSource, setFilterSource] = useState("all");
+  const [sortOrder, setSortOrder] = useState("month_asc");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -114,9 +117,11 @@ export default function CarbonFootprintPage() {
   }, []);
 
   const generateNewDataValues = useCallback(() => {
+    const sources = ["Compute", "Storage", "Network", "Other"];
     return {
       emissions: parseFloat((Math.random() * 5 + 1).toFixed(2)), // 1 to 6 tCO₂e
       offset: parseFloat((Math.random() * 2).toFixed(2)),      // 0 to 2 tCO₂e
+      source: sources[Math.floor(Math.random() * sources.length)],
     };
   }, []);
 
@@ -203,7 +208,11 @@ export default function CarbonFootprintPage() {
                     <Skeleton className="h-6 w-48 mb-1" />
                     <Skeleton className="h-4 w-64" />
                 </div>
-                <Skeleton className="h-10 w-full sm:w-[180px] rounded-md" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-10 w-full sm:w-[150px] rounded-md" />
+                  <Skeleton className="h-10 w-full sm:w-[150px] rounded-md" />
+                  <Skeleton className="h-10 w-full sm:w-[150px] rounded-md" />
+                </div>
             </CardHeader>
             <CardContent>
                 <Skeleton className="h-[350px] w-full rounded-md" />
@@ -357,23 +366,50 @@ export default function CarbonFootprintPage() {
       </div>
 
       <Card className="shadow-xl">
-        <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-          <div>
+        <CardHeader className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div className="flex-1">
             <CardTitle className="text-xl text-foreground flex items-center">
               <BarChart3 className="mr-2 h-6 w-6 text-primary" />
-              Emissions Over Time
+              Emissions &amp; Offset Data
             </CardTitle>
-            <CardDescription>Monthly breakdown of emissions and offsets.</CardDescription>
+            <CardDescription>Monthly breakdown of emissions and offsets. (Mock data, filtering/sorting is UI only)</CardDescription>
           </div>
-          <Select value={timeframe} onValueChange={setTimeframe}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Select timeframe" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="6m">Last 6 Months</SelectItem>
-              <SelectItem value="12m">Last 12 Months</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+            <Select value={timeframe} onValueChange={setTimeframe}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Select timeframe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="6m">Last 6 Months</SelectItem>
+                <SelectItem value="12m">Last 12 Months</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterSource} onValueChange={setFilterSource}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                 <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Filter by source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sources</SelectItem>
+                <SelectItem value="compute">Compute</SelectItem>
+                <SelectItem value="storage">Storage</SelectItem>
+                <SelectItem value="network">Network</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <ListFilter className="mr-2 h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="month_asc">Month (Asc)</SelectItem>
+                <SelectItem value="month_desc">Month (Desc)</SelectItem>
+                <SelectItem value="emissions_asc">Emissions (Low-High)</SelectItem>
+                <SelectItem value="emissions_desc">Emissions (High-Low)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[350px] w-full">
@@ -545,3 +581,5 @@ export default function CarbonFootprintPage() {
     </div>
   );
 }
+
+    

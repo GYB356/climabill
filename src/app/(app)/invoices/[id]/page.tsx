@@ -6,14 +6,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { ClimaBillLogo } from "@/components/icons";
-import { Download, Mail, Printer, Sparkles, Lightbulb, Leaf, Info } from "lucide-react"; // Added Info
+import { Download, Mail, Printer, Sparkles, Lightbulb, Leaf, Info, Globe } from "lucide-react"; 
 import Link from "next/link";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"; // Added Tooltip components
+} from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState } from "react";
+
 
 // Mock data for the sample invoice
 const invoiceData = {
@@ -42,6 +51,7 @@ const invoiceData = {
   notes: "Thank you for your business! We appreciate your commitment to sustainability.",
   paymentTerms: "Net 30 Days. Late payments are subject to a 1.5% monthly interest.",
   carbonOffsetContribution: 25.00, // Optional
+  currency: "USD", // Default currency
 };
 
 invoiceData.subtotal = invoiceData.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
@@ -52,6 +62,8 @@ invoiceData.total = invoiceData.subtotal + invoiceData.taxAmount + (invoiceData.
 export default function SampleInvoicePage({ params }: { params: { id: string } }) {
   // In a real app, you'd fetch invoice data based on params.id
   // For this prototype, we use static mock data if params.id is 'sample-invoice'
+  const [invoiceCurrency, setInvoiceCurrency] = useState(invoiceData.currency);
+
   if (params.id !== "sample-invoice") {
     return (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)]">
@@ -83,6 +95,21 @@ export default function SampleInvoicePage({ params }: { params: { id: string } }
         <div className="text-right mt-4 sm:mt-0">
           <h1 className="text-3xl font-bold text-foreground mb-1">INVOICE</h1>
           <p className="text-muted-foreground">#{invoiceData.id}</p>
+           <div className="mt-2">
+            <Select value={invoiceCurrency} onValueChange={setInvoiceCurrency}>
+              <SelectTrigger className="w-[150px] h-8 text-xs">
+                <Globe className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
+                <SelectValue placeholder="Select currency" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="USD">USD</SelectItem>
+                <SelectItem value="EUR">EUR</SelectItem>
+                <SelectItem value="GBP">GBP</SelectItem>
+                <SelectItem value="CAD">CAD</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">Invoice Currency</p>
+          </div>
         </div>
       </div>
 
@@ -114,8 +141,8 @@ export default function SampleInvoicePage({ params }: { params: { id: string } }
               <TableRow className="bg-muted/50">
                 <TableHead className="w-[60%] sm:w-[50%]">Description</TableHead>
                 <TableHead className="text-right">Qty</TableHead>
-                <TableHead className="text-right">Unit Price</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">Unit Price ({invoiceCurrency})</TableHead>
+                <TableHead className="text-right">Amount ({invoiceCurrency})</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -158,7 +185,7 @@ export default function SampleInvoicePage({ params }: { params: { id: string } }
                 </TableRow>
               )}
               <TableRow className="border-t-2 border-primary">
-                <TableCell colSpan={3} className="text-right text-lg font-bold text-primary pt-4">Total Amount Due</TableCell>
+                <TableCell colSpan={3} className="text-right text-lg font-bold text-primary pt-4">Total Amount Due ({invoiceCurrency})</TableCell>
                 <TableCell className="text-right text-lg font-bold text-primary pt-4">${invoiceData.total.toFixed(2)}</TableCell>
               </TableRow>
             </TableFooter>
@@ -210,3 +237,5 @@ export default function SampleInvoicePage({ params }: { params: { id: string } }
     </div>
   );
 }
+
+    
