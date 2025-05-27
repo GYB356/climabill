@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { CheckCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast"; // Added
 
 const templates = [
   { id: "modern", name: "Modern Minimalist", description: "Clean lines, focuses on readability.", imageUrl: "https://placehold.co/400x560.png", dataAiHint: "invoice minimalist" },
@@ -17,6 +19,19 @@ const templates = [
 
 export default function InvoiceTemplatesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(templates[0].id);
+  const { toast } = useToast(); // Added
+
+  const handleSaveSelection = () => {
+    const currentTemplate = templates.find(t => t.id === selectedTemplate);
+    if (currentTemplate) {
+      toast({
+        title: "Template Selected!",
+        description: `You've selected the "${currentTemplate.name}" template.`,
+      });
+      // In a real application, you would save this preference to a backend or state management.
+      console.log("Selected template saved:", currentTemplate.name);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -25,7 +40,7 @@ export default function InvoiceTemplatesPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Invoice Templates</h1>
           <p className="text-muted-foreground">Choose a template that best represents your brand.</p>
         </div>
-        <Button size="lg">
+        <Button size="lg" onClick={handleSaveSelection}> {/* Added onClick */}
           <CheckCircle className="mr-2 h-5 w-5" />
           Save Selection
         </Button>
