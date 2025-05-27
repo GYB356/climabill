@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save, BellRing, Leaf, ShieldCheck, Sparkles } from "lucide-react"; // Added Sparkles for Green Tier
+import { Save, BellRing, Leaf, ShieldCheck, Sparkles, DatabaseZap, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -24,7 +24,7 @@ export default function SettingsPage() {
   const [selectedReminders, setSelectedReminders] = useState<string[]>(["3days", "1day"]);
   const [enableCarbonOffset, setEnableCarbonOffset] = useState(true);
   const [carbonOffsetAmount, setCarbonOffsetAmount] = useState("5.00");
-  const [enableGreenTier, setEnableGreenTier] = useState(false); // New state for Green Tier
+  const [enableGreenTier, setEnableGreenTier] = useState(false);
   const [enableMFA, setEnableMFA] = useState(false);
   const { toast } = useToast();
 
@@ -48,7 +48,7 @@ export default function SettingsPage() {
       selectedReminders,
       enableCarbonOffset,
       carbonOffsetAmount,
-      enableGreenTier, // Log new state
+      enableGreenTier,
       enableMFA,
     });
     toast({
@@ -56,6 +56,22 @@ export default function SettingsPage() {
       description: "Your preferences have been updated successfully.",
     });
   };
+
+  const handleDataExport = () => {
+    toast({
+      title: "Data Export Requested",
+      description: "Your data export request has been received. This is a placeholder action.",
+    });
+  };
+
+  const handleAccountDeletion = () => {
+    toast({
+      title: "Account Deletion Requested",
+      description: "Your account deletion request has been received. This is a placeholder action.",
+      variant: "destructive",
+    });
+  };
+
 
   if (!isMounted) {
     return (
@@ -110,12 +126,13 @@ export default function SettingsPage() {
                         </div>
                         <Skeleton className="h-6 w-11 rounded-full bg-muted" />
                     </div>
-                    <div className="space-y-2">
-                        <Skeleton className="h-5 w-1/3 mb-1 rounded-md bg-muted" />
-                        <Skeleton className="h-10 w-full md:w-[280px] rounded-md bg-muted" />
-                        <Skeleton className="h-3 w-3/4 rounded-md bg-muted" />
-                    </div>
-                    {/* Skeleton for Green Tier */}
+                    {enableCarbonOffset && (
+                        <div className="space-y-2 pl-4 border-l-2 border-accent ml-1">
+                           <Skeleton className="h-5 w-1/3 mb-1 rounded-md bg-muted" />
+                           <Skeleton className="h-10 w-full md:w-[280px] rounded-md bg-muted" />
+                           <Skeleton className="h-3 w-3/4 rounded-md bg-muted" />
+                        </div>
+                    )}
                     <div className="flex items-center justify-between space-x-3 rounded-md border p-4 bg-muted/10 mt-4">
                         <div className="space-y-1.5 flex-1">
                             <Skeleton className="h-5 w-2/3 rounded-md bg-muted" />
@@ -142,6 +159,20 @@ export default function SettingsPage() {
                         </div>
                         <Skeleton className="h-6 w-11 rounded-full bg-muted" />
                     </div>
+                </CardContent>
+            </Card>
+
+            <Card className="shadow-lg">
+                <CardHeader>
+                    <CardTitle className="text-xl text-foreground flex items-center">
+                        <Skeleton className="mr-2 h-5 w-5 rounded-full" />
+                        <Skeleton className="h-6 w-3/4 rounded-md" />
+                    </CardTitle>
+                    <Skeleton className="h-4 w-full rounded-md" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                     <Skeleton className="h-10 w-full md:w-1/2 rounded-md bg-muted" />
+                     <Skeleton className="h-10 w-full md:w-1/2 rounded-md bg-muted" />
                 </CardContent>
             </Card>
             
@@ -259,7 +290,6 @@ export default function SettingsPage() {
               onCheckedChange={setEnableGreenTier}
             />
           </div>
-
         </CardContent>
       </Card>
 
@@ -287,6 +317,24 @@ export default function SettingsPage() {
               onCheckedChange={setEnableMFA}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-xl text-foreground flex items-center">
+            <DatabaseZap className="mr-2 h-5 w-5 text-primary" />
+            Data Management
+          </CardTitle>
+          <CardDescription>Manage your account data and export options.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button variant="outline" className="w-full md:w-auto" onClick={handleDataExport}>
+            <DatabaseZap className="mr-2 h-4 w-4" /> Request Data Export
+          </Button>
+          <Button variant="destructive" className="w-full md:w-auto" onClick={handleAccountDeletion}>
+            <Trash2 className="mr-2 h-4 w-4" /> Request Account Deletion
+          </Button>
         </CardContent>
       </Card>
       
