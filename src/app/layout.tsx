@@ -5,6 +5,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { LandingHeader } from '@/components/landing-header';
 import { LandingFooter } from '@/components/landing-footer';
+import { CookieConsentBanner } from '@/components/cookie-consent-banner'; // Added
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -35,6 +36,7 @@ export default function RootLayout({
         </main>
         <LandingFooter />
         <Toaster />
+        <CookieConsentBanner /> {/* Added */}
       </body>
     </html>
   );
