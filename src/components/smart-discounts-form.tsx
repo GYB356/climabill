@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Briefcase } from "lucide-react"; // Added Briefcase for plan
 import { useToast } from "@/hooks/use-toast";
 import type { SuggestDiscountsInput, SuggestDiscountsOutput } from "@/ai/flows/suggest-discounts";
 import { suggestDiscounts } from "@/ai/flows/suggest-discounts"; // Server Action
@@ -65,8 +66,8 @@ export function SmartDiscountsForm() {
         const discountSuggestion = await suggestDiscounts(values as SuggestDiscountsInput);
         setResult(discountSuggestion);
         toast({
-          title: "Discount Suggested!",
-          description: `AI recommended a ${discountSuggestion.discountPercentage}% discount.`,
+          title: "Discount & Plan Suggested!",
+          description: `AI recommended a ${discountSuggestion.discountPercentage}% discount and the "${discountSuggestion.recommendedPlan}" plan.`,
         });
       } catch (error) {
         console.error("Error suggesting discount:", error);
@@ -86,7 +87,7 @@ export function SmartDiscountsForm() {
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="text-xl text-foreground">Discount Parameters</CardTitle>
-              <CardDescription>Provide user details to get an AI-powered discount suggestion.</CardDescription>
+              <CardDescription>Provide user details to get an AI-powered discount and plan suggestion.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
@@ -119,7 +120,7 @@ export function SmartDiscountsForm() {
                       />
                     </FormControl>
                     <FormDescription>
-                      A JSON summary of the user's history and usage patterns.
+                      A JSON summary of the user's history and usage patterns. Available plans are Basic, Pro, Enterprise.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -134,7 +135,7 @@ export function SmartDiscountsForm() {
             ) : (
               <Sparkles className="mr-2 h-5 w-5" />
             )}
-            Suggest Discount
+            Suggest Discount & Plan
           </Button>
         </form>
       </Form>
@@ -147,6 +148,7 @@ export function SmartDiscountsForm() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="h-8 bg-muted rounded w-1/2"></div>
+            <div className="h-6 bg-muted rounded w-1/3 mt-2"></div>
             <div className="h-16 bg-muted rounded"></div>
           </CardContent>
         </Card>
@@ -157,13 +159,22 @@ export function SmartDiscountsForm() {
           <CardHeader>
             <CardTitle className="text-2xl text-primary flex items-center">
               <Sparkles className="mr-2 h-6 w-6 text-accent" />
-              AI Discount Suggestion
+              AI Discount & Plan Suggestion
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Suggested Discount</p>
-              <p className="text-4xl font-bold text-primary">{result.discountPercentage}%</p>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Suggested Discount</p>
+                <p className="text-4xl font-bold text-primary">{result.discountPercentage}%</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Recommended Plan</p>
+                <p className="text-3xl font-bold text-primary flex items-center">
+                  <Briefcase className="mr-2 h-7 w-7 text-primary/80" />
+                  {result.recommendedPlan}
+                </p>
+              </div>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Reason</p>
@@ -175,3 +186,4 @@ export function SmartDiscountsForm() {
     </div>
   );
 }
+
