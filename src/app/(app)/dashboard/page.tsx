@@ -2,23 +2,33 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, Users, TrendingUp, Activity, Leaf } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton"; // Added Skeleton import
+import { Button } from '@/components/ui/button';
+import { DollarSign, Users, TrendingUp, Activity, Leaf, Settings, FileText, Sparkles, ArrowRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const ONBOARDING_SEEN_KEY = 'climabill_has_seen_onboarding';
 
 export default function DashboardPage() {
   const [monthlyEmissions, setMonthlyEmissions] = useState<string>("0.00");
   const [offsetPercentage, setOffsetPercentage] = useState<string>("0%");
   const [isMounted, setIsMounted] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(true); // Assume true initially
 
   useEffect(() => {
     setIsMounted(true);
+    const hasSeenOnboarding = localStorage.getItem(ONBOARDING_SEEN_KEY);
+    if (hasSeenOnboarding) {
+      setIsFirstTimeUser(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -30,6 +40,11 @@ export default function DashboardPage() {
       setOffsetPercentage(`${randomOffset}%`);
     }
   }, [isMounted]);
+
+  const handleDismissOnboarding = () => {
+    localStorage.setItem(ONBOARDING_SEEN_KEY, 'true');
+    setIsFirstTimeUser(false);
+  };
 
   const overviewMetrics = [
     {
@@ -59,6 +74,33 @@ export default function DashboardPage() {
       change: "+2% from last week",
       icon: Activity,
       iconColor: "text-accent",
+    },
+  ];
+
+  const onboardingSteps = [
+    {
+      icon: FileText,
+      title: "Customize Invoice Templates",
+      description: "Choose a professional look for your invoices.",
+      href: "/invoices",
+    },
+    {
+      icon: Leaf,
+      title: "Explore Carbon Tracking",
+      description: "Understand and manage your environmental impact.",
+      href: "/carbon-footprint",
+    },
+    {
+      icon: Sparkles,
+      title: "Try AI Smart Discounts",
+      description: "Let AI help you find the best discount strategies.",
+      href: "/smart-discounts",
+    },
+    {
+      icon: Settings,
+      title: "Configure Your Settings",
+      description: "Set up payment reminders and other preferences.",
+      href: "/settings",
     },
   ];
 
@@ -113,6 +155,43 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+    );
+  }
+
+  if (isFirstTimeUser) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Card className="w-full max-w-2xl shadow-xl">
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-bold text-primary">Welcome to ClimaBill!</CardTitle>
+            <CardDescription className="text-lg text-muted-foreground pt-2">
+              We're excited to help you manage your billing sustainably. Here are a few things you can do to get started:
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {onboardingSteps.map((step) => (
+                <Link href={step.href} key={step.title} className="block group">
+                  <Card className="h-full hover:shadow-lg transition-shadow hover:border-primary/50">
+                    <CardHeader className="flex-row items-center gap-3 pb-3">
+                      <step.icon className="h-8 w-8 text-primary flex-shrink-0" />
+                      <CardTitle className="text-lg group-hover:text-primary transition-colors">{step.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">{step.description}</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+          <CardFooter className="pt-6">
+            <Button size="lg" className="w-full" onClick={handleDismissOnboarding}>
+              Explore Dashboard <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     );
   }
