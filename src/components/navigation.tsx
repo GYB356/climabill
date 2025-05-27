@@ -11,7 +11,8 @@ import {
   Settings as SettingsIcon,
   Menu,
   NotebookText,
-  Lightbulb, // Added new icon for suggester
+  Lightbulb, 
+  BarChart3, // Added for Carbon Footprint
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -36,8 +37,8 @@ const navItems = [
   { href: "/invoices", label: "Invoices", icon: FileText },
   { href: "/smart-discounts", label: "Smart Discounts", icon: Sparkles },
   { href: "/text-summarizer", label: "Text Summarizer", icon: NotebookText },
-  { href: "/invoice-item-suggester", label: "Item Suggester", icon: Lightbulb }, // New item
-  { href: "/carbon-footprint", label: "Carbon Footprint", icon: Leaf },
+  { href: "/invoice-item-suggester", label: "Item Suggester", icon: Lightbulb },
+  { href: "/carbon-footprint", label: "Carbon Footprint", icon: BarChart3 }, // Updated Icon
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
@@ -89,7 +90,7 @@ export function AppNavigation() {
             className={cn(
               "group flex items-center gap-3 rounded-md p-3 transition-colors",
               isActive
-                ? "bg-primary/10 text-primary" // Adjusted mobile active style for consistency
+                ? "bg-primary/10 text-primary" 
                 : "hover:bg-accent/10 hover:text-accent-foreground"
             )}
           >
@@ -122,8 +123,8 @@ export function AppNavigation() {
               <span className="sr-only">Toggle navigation</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-72 bg-background p-0"> {/* Changed from bg-sidebar to bg-background for mobile consistency */}
-            <SheetHeader className="p-4 border-b"> {/* Ensure border is visible */}
+          <SheetContent side="left" className="w-72 bg-background p-0"> 
+            <SheetHeader className="p-4 border-b"> 
               <Link href="/dashboard">
                  <ClimaBillLogo className="h-8 text-primary" />
               </Link>

@@ -1,3 +1,4 @@
+
 "use client"; // This page uses client-side state for the chart
 
 import { useState, useEffect } from "react";
@@ -42,8 +43,15 @@ export default function CarbonFootprintPage() {
   const [chartData, setChartData] = useState(initialChartData);
   const [timeframe, setTimeframe] = useState("6m");
   const [enableRealtime, setEnableRealtime] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+
     // Simulate data fetching or calculation
     const generateData = () => {
       const months = timeframe === "12m" 
@@ -57,10 +65,62 @@ export default function CarbonFootprintPage() {
       }));
     };
     setChartData(generateData());
-  }, [timeframe]);
+  }, [timeframe, isMounted]);
 
   const totalEmissions = chartData.reduce((sum, item) => sum + item.emissions, 0);
   const totalOffset = chartData.reduce((sum, item) => sum + item.offset, 0);
+
+  if (!isMounted) {
+    // You can return a loading spinner or null here
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div className="h-8 bg-muted rounded w-3/4 mb-2"></div>
+            <div className="h-4 bg-muted rounded w-1/2"></div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="h-4 bg-muted rounded w-24"></div>
+            <div className="h-6 w-12 bg-muted rounded-full"></div>
+          </div>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          {[1,2,3].map(i => (
+            <Card key={i} className="shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="h-4 bg-muted rounded w-1/3"></div>
+                <div className="h-5 w-5 bg-muted rounded-full"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-muted rounded w-1/2 mb-1"></div>
+                <div className="h-3 bg-muted rounded w-3/4"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+         <Card className="shadow-xl">
+            <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                    <div className="h-6 bg-muted rounded w-48 mb-1"></div>
+                    <div className="h-4 bg-muted rounded w-64"></div>
+                </div>
+                <div className="h-10 bg-muted rounded w-full sm:w-[180px]"></div>
+            </CardHeader>
+            <CardContent className="h-[350px] bg-muted rounded-md"></CardContent>
+        </Card>
+         <Card className="shadow-lg">
+            <CardHeader>
+                <div className="h-6 bg-muted rounded w-56 mb-1"></div>
+                <div className="h-4 bg-muted rounded w-72"></div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="h-16 bg-muted rounded-lg"></div>
+                <div className="h-16 bg-muted rounded-lg"></div>
+            </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -99,7 +159,8 @@ export default function CarbonFootprintPage() {
         <Card className="shadow-lg bg-primary/5 border-primary">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-primary">Net Impact</CardTitle>
-            <Info className="h-4 w-4 text-muted-foreground float-right" />
+            {/* Info icon can be used to provide more details on hover/click if needed */}
+            {/* <Info className="h-4 w-4 text-muted-foreground float-right" /> */}
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">{(totalEmissions - totalOffset).toFixed(2)} tCO₂e</div>
