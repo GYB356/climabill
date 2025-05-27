@@ -1,7 +1,10 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, PlayCircle, Star, Sparkles, Leaf, LayoutDashboard } from 'lucide-react';
+import { ArrowRight, PlayCircle, Star, Sparkles, Leaf, LayoutDashboard, Package, Zap, Briefcase } from 'lucide-react';
+import Image from 'next/image';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function HomePage() {
   return (
@@ -55,10 +58,17 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-foreground mb-8">See ClimaBill in Action</h2>
           <div className="aspect-video bg-muted rounded-lg shadow-xl max-w-3xl mx-auto flex items-center justify-center relative overflow-hidden cursor-pointer group">
-            <Image src="https://placehold.co/1280x720.png" alt="ClimaBill Demo Video Thumbnail" layout="fill" objectFit="cover" data-ai-hint="app screen" />
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center flex-col">
-              <PlayCircle className="w-20 h-20 text-white group-hover:text-primary transition-colors duration-300" />
-              <p className="mt-2 text-white/90 text-lg">Watch Demo</p>
+            <Image 
+              src="https://placehold.co/1280x720.png" 
+              alt="ClimaBill Demo Video Thumbnail" 
+              layout="fill" 
+              objectFit="cover" 
+              data-ai-hint="app screen" 
+              className="group-hover:scale-105 transition-transform duration-300"
+            />
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center flex-col group-hover:bg-black/40 transition-colors duration-300">
+              <PlayCircle className="w-20 h-20 text-white/80 group-hover:text-white transition-colors duration-300 mb-2 group-hover:scale-110 transform" />
+              <p className="mt-2 text-white/90 text-lg font-semibold">Watch Demo</p>
             </div>
           </div>
         </div>
@@ -91,20 +101,30 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-foreground mb-12">Simple, Transparent Pricing</h2>
           <div className="grid md:grid-cols-3 gap-8">
-            {['Basic', 'Pro', 'Enterprise'].map(tier => (
-              <div key={tier} className="p-8 bg-card border rounded-lg shadow-lg">
-                <h3 className="text-2xl font-semibold mb-4 text-primary">{tier}</h3>
-                <p className="text-4xl font-bold text-foreground mb-2">${tier === 'Basic' ? '29' : tier === 'Pro' ? '79' : '199'}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
-                <ul className="text-muted-foreground space-y-2 my-6">
-                  <li>Feature A</li>
-                  <li>Feature B</li>
-                  <li>Feature C</li>
+            {[
+              { tier: 'Basic', price: '29', icon: Package, features: ['AI Invoice Item Suggester', 'Basic Carbon Tracking', '100 Invoices/mo'] },
+              { tier: 'Pro', price: '79', icon: Zap, features: ['Smart Discounts AI', 'Advanced Carbon Offsetting', '500 Invoices/mo', 'Priority Support'], highlighted: true },
+              { tier: 'Enterprise', price: '199', icon: Briefcase, features: ['All Pro Features', 'Custom AI Models', 'Unlimited Invoices', 'Dedicated Account Manager'] },
+            ].map(plan => (
+              <div key={plan.tier} className={`p-8 bg-card border rounded-lg shadow-lg flex flex-col ${plan.highlighted ? 'border-primary ring-2 ring-primary' : 'border-border'}`}>
+                <plan.icon className={`w-12 h-12 mx-auto mb-4 ${plan.highlighted ? 'text-primary' : 'text-accent'}`} />
+                <h3 className="text-2xl font-semibold mb-2 text-foreground">{plan.tier}</h3>
+                <p className="text-4xl font-bold text-foreground mb-2">${plan.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                <ul className="text-muted-foreground space-y-2 my-6 text-sm text-left flex-grow">
+                  {plan.features.map(feature => (
+                    <li key={feature} className="flex items-center">
+                      <CheckCircleIcon className="w-4 h-4 mr-2 text-primary/80 flex-shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
                 </ul>
-                <Button size="lg" variant={tier === 'Pro' ? 'default' : 'outline'} className="w-full">Get Started</Button>
+                <Button size="lg" variant={plan.highlighted ? 'default' : 'outline'} className="w-full mt-auto">
+                  Get Started
+                </Button>
               </div>
             ))}
           </div>
-          <p className="mt-8 text-muted-foreground">Need something different? <a href="#contact" className="text-primary underline">Contact us</a> for custom plans.</p>
+          <p className="mt-8 text-muted-foreground">Need something different? <Link href="/#contact" className="text-primary underline hover:text-primary/80">Contact us</Link> for custom plans.</p>
         </div>
       </section>
 
@@ -145,7 +165,24 @@ export default function HomePage() {
     </div>
   );
 }
-// Need to import Input and Textarea for the contact form
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import Image from 'next/image';
+
+// Helper icon for pricing list
+function CheckCircleIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+  );
+}
