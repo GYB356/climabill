@@ -37,35 +37,35 @@ export default function DashboardPage() {
       value: "$45,231.89",
       change: "+20.1% from last month",
       icon: DollarSign,
-      iconColor: "text-green-500", 
+      iconColor: "text-primary",
     },
     {
       title: "Active Subscriptions",
       value: "+2350",
       change: "+180.1% from last month",
       icon: Users,
-      iconColor: "text-blue-500", 
+      iconColor: "text-primary",
     },
     {
       title: "Churn Rate",
       value: "2.5%",
       change: "-0.5% from last month",
-      icon: TrendingUp, 
-      iconColor: "text-red-500",
+      icon: TrendingUp,
+      iconColor: "text-destructive",
     },
     {
       title: "Avg. Customer Health",
       value: "82%",
       change: "+2% from last week",
       icon: Activity,
-      iconColor: "text-yellow-500",
+      iconColor: "text-accent",
     },
   ];
 
   if (!isMounted) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-8 w-1/3 mb-4 rounded-md" /> 
+        <Skeleton className="h-8 w-1/3 mb-4 rounded-md" />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="shadow-lg">
@@ -128,7 +128,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {metric.title}
               </CardTitle>
-              <metric.icon className={`h-5 w-5 ${metric.iconColor.replace(/text-(green|blue|red|yellow)-500/, '')}`} />
+              <metric.icon className={`h-5 w-5 ${metric.iconColor}`} />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">{metric.value}</div>
