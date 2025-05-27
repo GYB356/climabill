@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Info, Leaf, Cloud, BarChart3, History, DollarSign } from "lucide-react"; // Added History, DollarSign
+import { Info, Leaf, Cloud, BarChart3, History, DollarSign } from "lucide-react";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
   Select,
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Separator } from "@/components/ui/separator"; // Added
+import { Separator } from "@/components/ui/separator";
 
 const initialChartDataSixMonths = [
   { month: "Jan", emissions: 0, offset: 0 },
@@ -173,14 +173,18 @@ export default function CarbonFootprintPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {[1,2,3].map((i) => (
-              <div key={i} className="p-3 border rounded-lg bg-background">
-                <div className="flex justify-between items-center mb-1.5">
-                    <Skeleton className="h-4 w-1/2" />
+              <div key={i} className="p-3 border rounded-lg bg-muted/30">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-1.5 gap-1">
+                    <Skeleton className="h-5 w-3/5" />
                     <Skeleton className="h-4 w-1/4" />
                 </div>
-                <Skeleton className="h-3 w-3/4" />
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                </div>
               </div>
             ))}
+            <Skeleton className="h-9 w-full mt-2 rounded-md" />
           </CardContent>
         </Card>
          <Card className="shadow-lg">
@@ -325,7 +329,7 @@ export default function CarbonFootprintPage() {
             <p className="text-muted-foreground text-center py-4">No contribution history yet.</p>
           )}
           {mockContributionHistory.length > 0 && (
-             <Button variant="link" className="w-full mt-2" onClick={handleViewAllContributions}>View All Contributions</Button>
+             <Button variant="link" className="w-full mt-2 text-primary hover:text-primary/80" onClick={handleViewAllContributions}>View All Contributions</Button>
           )}
         </CardContent>
       </Card>
