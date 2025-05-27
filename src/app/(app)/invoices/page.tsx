@@ -8,18 +8,20 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { CheckCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast"; // Added
+import { useToast } from "@/hooks/use-toast";
 
 const templates = [
   { id: "modern", name: "Modern Minimalist", description: "Clean lines, focuses on readability.", imageUrl: "https://placehold.co/400x560.png", dataAiHint: "invoice minimalist" },
   { id: "classic", name: "Classic Professional", description: "Traditional layout, formal and detailed.", imageUrl: "https://placehold.co/400x560.png", dataAiHint: "invoice classic" },
   { id: "bold", name: "Bold & Vibrant", description: "Uses color accents, contemporary feel.", imageUrl: "https://placehold.co/400x560.png", dataAiHint: "invoice colorful" },
   { id: "eco", name: "Eco Friendly", description: "Subtle green accents, emphasizes sustainability.", imageUrl: "https://placehold.co/400x560.png", dataAiHint: "invoice green" },
+  { id: "compact", name: "Compact Data-Rich", description: "Space-efficient, ideal for many line items.", imageUrl: "https://placehold.co/400x560.png", dataAiHint: "invoice compact" },
+  { id: "creative", name: "Creative Studio", description: "Artistic layout, suitable for creative agencies.", imageUrl: "https://placehold.co/400x560.png", dataAiHint: "invoice creative" },
 ];
 
 export default function InvoiceTemplatesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(templates[0].id);
-  const { toast } = useToast(); // Added
+  const { toast } = useToast();
 
   const handleSaveSelection = () => {
     const currentTemplate = templates.find(t => t.id === selectedTemplate);
@@ -40,7 +42,7 @@ export default function InvoiceTemplatesPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Invoice Templates</h1>
           <p className="text-muted-foreground">Choose a template that best represents your brand.</p>
         </div>
-        <Button size="lg" onClick={handleSaveSelection}> {/* Added onClick */}
+        <Button size="lg" onClick={handleSaveSelection}> 
           <CheckCircle className="mr-2 h-5 w-5" />
           Save Selection
         </Button>
@@ -80,3 +82,6 @@ export default function InvoiceTemplatesPage() {
     </div>
   );
 }
+
+
+    
