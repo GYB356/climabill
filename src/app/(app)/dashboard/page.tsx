@@ -29,25 +29,26 @@ const ONBOARDING_SEEN_KEY = 'climabill_has_seen_onboarding';
 
 const dashboardChartConfig = {
   revenue: {
-    label: "Revenue ($)",
+    label: "Projected Revenue ($)",
     color: "hsl(var(--chart-1))",
     icon: Briefcase,
   },
 } satisfies ChartConfig;
 
-const initialRevenueDataSixMonths = [
-  { month: "Jan", revenue: 4000 }, { month: "Feb", revenue: 3000 },
-  { month: "Mar", revenue: 5000 }, { month: "Apr", revenue: 4500 },
-  { month: "May", revenue: 6000 }, { month: "Jun", revenue: 5500 },
+const revenueDataThirtyDays = [
+  { period: "Week 1", revenue: 5200 }, { period: "Week 2", revenue: 5350 },
+  { period: "Week 3", revenue: 5500 }, { period: "Week 4", revenue: 5600 },
 ];
 
-const initialRevenueDataTwelveMonths = [
-  { month: "Jan", revenue: 4000 }, { month: "Feb", revenue: 3000 },
-  { month: "Mar", revenue: 5000 }, { month: "Apr", revenue: 4500 },
-  { month: "May", revenue: 6000 }, { month: "Jun", revenue: 5500 },
-  { month: "Jul", revenue: 6200 }, { month: "Aug", revenue: 5800 },
-  { month: "Sep", revenue: 7000 }, { month: "Oct", revenue: 6500 },
-  { month: "Nov", revenue: 7200 }, { month: "Dec", revenue: 7500 },
+const revenueDataSixtyDays = [
+  { period: "W1", revenue: 5200 }, { period: "W2", revenue: 5350 }, { period: "W3", revenue: 5500 }, { period: "W4", revenue: 5600 },
+  { period: "W5", revenue: 5750 }, { period: "W6", revenue: 5850 }, { period: "W7", revenue: 6000 }, { period: "W8", revenue: 6100 },
+];
+
+const revenueDataNinetyDays = [
+  { period: "W1", revenue: 5200 }, { period: "W2", revenue: 5350 }, { period: "W3", revenue: 5500 }, { period: "W4", revenue: 5600 },
+  { period: "W5", revenue: 5750 }, { period: "W6", revenue: 5850 }, { period: "W7", revenue: 6000 }, { period: "W8", revenue: 6100 },
+  { period: "W9", revenue: 6250 }, { period: "W10", revenue: 6350 }, { period: "W11", revenue: 6500 }, { period: "W12", revenue: 6600 },
 ];
 
 
@@ -58,8 +59,8 @@ export default function DashboardPage() {
   const [avgCo2PerInvoice, setAvgCo2PerInvoice] = useState<string>("0.0");
   const [isMounted, setIsMounted] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true); 
-  const [revenueTimeframe, setRevenueTimeframe] = useState("6m");
-  const [revenueChartData, setRevenueChartData] = useState(initialRevenueDataSixMonths);
+  const [revenueTimeframe, setRevenueTimeframe] = useState("30d");
+  const [revenueChartData, setRevenueChartData] = useState(revenueDataThirtyDays);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -85,10 +86,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (isMounted) {
-      if (revenueTimeframe === "12m") {
-        setRevenueChartData(initialRevenueDataTwelveMonths);
+      if (revenueTimeframe === "60d") {
+        setRevenueChartData(revenueDataSixtyDays);
+      } else if (revenueTimeframe === "90d") {
+        setRevenueChartData(revenueDataNinetyDays);
       } else {
-        setRevenueChartData(initialRevenueDataSixMonths);
+        setRevenueChartData(revenueDataThirtyDays);
       }
     }
   }, [revenueTimeframe, isMounted]);
@@ -372,8 +375,9 @@ export default function DashboardPage() {
                 <SelectValue placeholder="Select timeframe" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="6m">Last 6 Months</SelectItem>
-                <SelectItem value="12m">Last 12 Months</SelectItem>
+                <SelectItem value="30d">Next 30 Days</SelectItem>
+                <SelectItem value="60d">Next 60 Days</SelectItem>
+                <SelectItem value="90d">Next 90 Days</SelectItem>
               </SelectContent>
             </Select>
           </CardHeader>
@@ -391,7 +395,7 @@ export default function DashboardPage() {
                 >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis
-                    dataKey="month"
+                    dataKey="period"
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
@@ -456,5 +460,4 @@ export default function DashboardPage() {
     </div>
   );
 }
-
     
