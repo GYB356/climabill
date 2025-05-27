@@ -6,8 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { ClimaBillLogo } from "@/components/icons";
-import { Download, Mail, Printer, Sparkles, Lightbulb } from "lucide-react";
+import { Download, Mail, Printer, Sparkles, Lightbulb, Leaf, Info } from "lucide-react"; // Added Info
 import Link from "next/link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"; // Added Tooltip components
 
 // Mock data for the sample invoice
 const invoiceData = {
@@ -128,7 +134,19 @@ export default function SampleInvoicePage({ params }: { params: { id: string } }
                 <TableCell className="text-right font-semibold text-foreground">${invoiceData.subtotal.toFixed(2)}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell colSpan={3} className="text-right font-medium text-muted-foreground">Tax ({invoiceData.taxRate * 100}%)</TableCell>
+                <TableCell colSpan={3} className="text-right font-medium text-muted-foreground flex items-center justify-end gap-1.5">
+                  Tax ({invoiceData.taxRate * 100}%)
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3.5 w-3.5 text-muted-foreground/70 hover:text-primary cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs text-xs">
+                        <p>Tax automatically calculated based on your region and settings (configurable in Billing Settings).</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
                 <TableCell className="text-right font-semibold text-foreground">${invoiceData.taxAmount.toFixed(2)}</TableCell>
               </TableRow>
               {invoiceData.carbonOffsetContribution > 0 && (
@@ -192,5 +210,3 @@ export default function SampleInvoicePage({ params }: { params: { id: string } }
     </div>
   );
 }
-
-    
