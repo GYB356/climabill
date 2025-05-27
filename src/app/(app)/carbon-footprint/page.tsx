@@ -1,7 +1,7 @@
 
 "use client"; // This page uses client-side state for the chart
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const initialChartData = [
+const initialChartDataSixMonths = [
   { month: "Jan", emissions: 0, offset: 0 },
   { month: "Feb", emissions: 0, offset: 0 },
   { month: "Mar", emissions: 0, offset: 0 },
@@ -25,6 +25,16 @@ const initialChartData = [
   { month: "May", emissions: 0, offset: 0 },
   { month: "Jun", emissions: 0, offset: 0 },
 ];
+
+const initialChartDataTwelveMonths = [
+  { month: "Jan", emissions: 0, offset: 0 }, { month: "Feb", emissions: 0, offset: 0 },
+  { month: "Mar", emissions: 0, offset: 0 }, { month: "Apr", emissions: 0, offset: 0 },
+  { month: "May", emissions: 0, offset: 0 }, { month: "Jun", emissions: 0, offset: 0 },
+  { month: "Jul", emissions: 0, offset: 0 }, { month: "Aug", emissions: 0, offset: 0 },
+  { month: "Sep", emissions: 0, offset: 0 }, { month: "Oct", emissions: 0, offset: 0 },
+  { month: "Nov", emissions: 0, offset: 0 }, { month: "Dec", emissions: 0, offset: 0 },
+];
+
 
 const chartConfig = {
   emissions: {
@@ -40,7 +50,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export default function CarbonFootprintPage() {
-  const [chartData, setChartData] = useState(initialChartData);
+  const [chartData, setChartData] = useState(initialChartDataSixMonths);
   const [timeframe, setTimeframe] = useState("6m");
   const [enableRealtime, setEnableRealtime] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
@@ -49,23 +59,46 @@ export default function CarbonFootprintPage() {
     setIsMounted(true);
   }, []);
 
+  const generateNewDataValues = useCallback(() => {
+    return {
+      emissions: parseFloat((Math.random() * 5 + 1).toFixed(2)), // 1 to 6 tCO₂e
+      offset: parseFloat((Math.random() * 2).toFixed(2)),      // 0 to 2 tCO₂e
+    };
+  }, []);
+
   useEffect(() => {
     if (!isMounted) return;
 
-    // Simulate data fetching or calculation
-    const generateData = () => {
-      const months = timeframe === "12m" 
+    const generateInitialData = () => {
+      const months = timeframe === "12m"
         ? ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         : ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
       
       return months.map(month => ({
         month,
-        emissions: parseFloat((Math.random() * 5 + 1).toFixed(2)), // 1 to 6 tCO₂e
-        offset: parseFloat((Math.random() * 2).toFixed(2)),      // 0 to 2 tCO₂e
+        ...generateNewDataValues(),
       }));
     };
-    setChartData(generateData());
-  }, [timeframe, isMounted]);
+    setChartData(generateInitialData());
+  }, [timeframe, isMounted, generateNewDataValues]);
+
+
+  useEffect(() => {
+    if (!isMounted || !enableRealtime) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setChartData(prevData =>
+        prevData.map(item => ({
+          ...item,
+          ...generateNewDataValues(),
+        }))
+      );
+    }, 2000); // Update every 2 seconds
+
+    return () => clearInterval(intervalId);
+  }, [enableRealtime, isMounted, generateNewDataValues, timeframe]); // Added timeframe to reset interval if it changes
 
   const totalEmissions = chartData.reduce((sum, item) => sum + item.emissions, 0);
   const totalOffset = chartData.reduce((sum, item) => sum + item.offset, 0);
@@ -159,8 +192,6 @@ export default function CarbonFootprintPage() {
         <Card className="shadow-lg bg-primary/5 border-primary">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-primary">Net Impact</CardTitle>
-            {/* Info icon can be used to provide more details on hover/click if needed */}
-            {/* <Info className="h-4 w-4 text-muted-foreground float-right" /> */}
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">{(totalEmissions - totalOffset).toFixed(2)} tCO₂e</div>
