@@ -10,7 +10,8 @@ import {
   Leaf,
   Settings as SettingsIcon,
   Menu,
-  NotebookText, // Added new icon
+  NotebookText,
+  Lightbulb, // Added new icon for suggester
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -34,7 +35,8 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/invoices", label: "Invoices", icon: FileText },
   { href: "/smart-discounts", label: "Smart Discounts", icon: Sparkles },
-  { href: "/text-summarizer", label: "Text Summarizer", icon: NotebookText }, // New item
+  { href: "/text-summarizer", label: "Text Summarizer", icon: NotebookText },
+  { href: "/invoice-item-suggester", label: "Item Suggester", icon: Lightbulb }, // New item
   { href: "/carbon-footprint", label: "Carbon Footprint", icon: Leaf },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
