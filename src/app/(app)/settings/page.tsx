@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -58,7 +59,66 @@ export default function SettingsPage() {
   };
   
   if (!isMounted) {
-    return null; // Or a loading spinner
+    // Basic loading state to prevent hydration mismatch & show content is loading
+    return (
+        <div className="space-y-8 animate-pulse">
+            <div>
+                <div className="h-8 bg-muted rounded w-1/4 mb-2"></div>
+                <div className="h-4 bg-muted rounded w-1/2"></div>
+            </div>
+
+            <Card className="shadow-lg">
+                <CardHeader>
+                    <div className="h-6 bg-muted rounded w-3/4 mb-1"></div>
+                    <div className="h-4 bg-muted rounded w-full"></div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div>
+                        <div className="h-4 bg-muted rounded w-1/3 mb-2"></div>
+                        <div className="h-10 bg-muted rounded w-full md:w-[280px]"></div>
+                    </div>
+                    <div>
+                        <div className="h-4 bg-muted rounded w-1/3 mb-2"></div>
+                        <div className="space-y-3 rounded-md border p-4 bg-muted/50">
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i} className="flex items-center space-x-3">
+                                    <div className="h-4 w-4 bg-muted rounded-sm"></div>
+                                    <div className="h-4 bg-muted rounded w-1/2"></div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="shadow-lg">
+                <CardHeader>
+                    <div className="h-6 bg-muted rounded w-3/4 mb-1"></div>
+                    <div className="h-4 bg-muted rounded w-full"></div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between space-x-3 rounded-md border p-4 bg-muted/50">
+                        <div className="space-y-1.5 flex-1">
+                            <div className="h-5 bg-muted rounded w-2/3"></div>
+                            <div className="h-3 bg-muted rounded w-full"></div>
+                        </div>
+                        <div className="h-6 w-11 bg-muted rounded-full"></div>
+                    </div>
+                    {enableCarbonOffset && ( /* Keep this logic for layout purposes if needed, or adjust skeleton */
+                        <div className="space-y-2">
+                            <div className="h-4 bg-muted rounded w-1/3 mb-1"></div>
+                            <div className="h-10 bg-muted rounded w-full md:w-[280px]"></div>
+                            <div className="h-3 bg-muted rounded w-3/4"></div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+            
+            <div className="flex justify-end">
+                <div className="h-11 bg-muted rounded-md w-40"></div>
+            </div>
+        </div>
+    );
   }
 
   return (
