@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save, BellRing, Leaf, ShieldCheck } from "lucide-react";
+import { Save, BellRing, Leaf, ShieldCheck, Sparkles } from "lucide-react"; // Added Sparkles for Green Tier
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -24,6 +24,7 @@ export default function SettingsPage() {
   const [selectedReminders, setSelectedReminders] = useState<string[]>(["3days", "1day"]);
   const [enableCarbonOffset, setEnableCarbonOffset] = useState(true);
   const [carbonOffsetAmount, setCarbonOffsetAmount] = useState("5.00");
+  const [enableGreenTier, setEnableGreenTier] = useState(false); // New state for Green Tier
   const [enableMFA, setEnableMFA] = useState(false);
   const { toast } = useToast();
 
@@ -47,6 +48,7 @@ export default function SettingsPage() {
       selectedReminders,
       enableCarbonOffset,
       carbonOffsetAmount,
+      enableGreenTier, // Log new state
       enableMFA,
     });
     toast({
@@ -108,10 +110,18 @@ export default function SettingsPage() {
                         </div>
                         <Skeleton className="h-6 w-11 rounded-full bg-muted" />
                     </div>
-                    <div className="space-y-2"> {/* Placeholder for potentially visible amount input */}
+                    <div className="space-y-2">
                         <Skeleton className="h-5 w-1/3 mb-1 rounded-md bg-muted" />
                         <Skeleton className="h-10 w-full md:w-[280px] rounded-md bg-muted" />
                         <Skeleton className="h-3 w-3/4 rounded-md bg-muted" />
+                    </div>
+                    {/* Skeleton for Green Tier */}
+                    <div className="flex items-center justify-between space-x-3 rounded-md border p-4 bg-muted/10 mt-4">
+                        <div className="space-y-1.5 flex-1">
+                            <Skeleton className="h-5 w-2/3 rounded-md bg-muted" />
+                            <Skeleton className="h-3 w-full rounded-md bg-muted" />
+                        </div>
+                        <Skeleton className="h-6 w-11 rounded-full bg-muted" />
                     </div>
                 </CardContent>
             </Card>
@@ -196,9 +206,9 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-xl text-foreground flex items-center">
             <Leaf className="mr-2 h-5 w-5 text-accent" />
-            Carbon Offset Program
+            Eco Contributions
           </CardTitle>
-          <CardDescription>Opt-in to offset carbon emissions associated with your services.</CardDescription>
+          <CardDescription>Opt-in to offset carbon emissions and support sustainability.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between space-x-3 rounded-md border p-4 bg-background">
@@ -218,7 +228,7 @@ export default function SettingsPage() {
           </div>
 
           {enableCarbonOffset && (
-            <div className="space-y-2">
+            <div className="space-y-2 pl-4 border-l-2 border-accent ml-1">
               <Label htmlFor="carbon-offset-amount" className="text-base font-medium">Offset Amount (USD)</Label>
               <Input
                 id="carbon-offset-amount"
@@ -233,6 +243,23 @@ export default function SettingsPage() {
               </p>
             </div>
           )}
+
+          <div className="flex items-center justify-between space-x-3 rounded-md border p-4 bg-background mt-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="green-tier-toggle" className="text-base font-medium flex items-center">
+                 <Sparkles className="mr-2 h-4 w-4 text-primary" /> Enable 'Green Tier' Auto-Donation
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Automatically contribute a small portion of your subscription to certified sustainability projects.
+              </p>
+            </div>
+            <Switch
+              id="green-tier-toggle"
+              checked={enableGreenTier}
+              onCheckedChange={setEnableGreenTier}
+            />
+          </div>
+
         </CardContent>
       </Card>
 
@@ -272,5 +299,4 @@ export default function SettingsPage() {
     </div>
   );
 }
-
     
