@@ -16,6 +16,13 @@ import { DollarSign, Users, TrendingUp, Activity, Leaf, Settings, FileText, Spar
 import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ONBOARDING_SEEN_KEY = 'climabill_has_seen_onboarding';
 
@@ -27,13 +34,19 @@ const dashboardChartConfig = {
   },
 } satisfies ChartConfig;
 
-const revenueData = [
-  { month: "Jan", revenue: 4000 },
-  { month: "Feb", revenue: 3000 },
-  { month: "Mar", revenue: 5000 },
-  { month: "Apr", revenue: 4500 },
-  { month: "May", revenue: 6000 },
-  { month: "Jun", revenue: 5500 },
+const initialRevenueDataSixMonths = [
+  { month: "Jan", revenue: 4000 }, { month: "Feb", revenue: 3000 },
+  { month: "Mar", revenue: 5000 }, { month: "Apr", revenue: 4500 },
+  { month: "May", revenue: 6000 }, { month: "Jun", revenue: 5500 },
+];
+
+const initialRevenueDataTwelveMonths = [
+  { month: "Jan", revenue: 4000 }, { month: "Feb", revenue: 3000 },
+  { month: "Mar", revenue: 5000 }, { month: "Apr", revenue: 4500 },
+  { month: "May", revenue: 6000 }, { month: "Jun", revenue: 5500 },
+  { month: "Jul", revenue: 6200 }, { month: "Aug", revenue: 5800 },
+  { month: "Sep", revenue: 7000 }, { month: "Oct", revenue: 6500 },
+  { month: "Nov", revenue: 7200 }, { month: "Dec", revenue: 7500 },
 ];
 
 
@@ -43,6 +56,8 @@ export default function DashboardPage() {
   const [churnPrediction, setChurnPrediction] = useState<string>("0%");
   const [isMounted, setIsMounted] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true); 
+  const [revenueTimeframe, setRevenueTimeframe] = useState("6m");
+  const [revenueChartData, setRevenueChartData] = useState(initialRevenueDataSixMonths);
 
   useEffect(() => {
     setIsMounted(true);
@@ -62,6 +77,16 @@ export default function DashboardPage() {
       setChurnPrediction(`${randomChurn}%`);
     }
   }, [isMounted]);
+
+  useEffect(() => {
+    if (isMounted) {
+      if (revenueTimeframe === "12m") {
+        setRevenueChartData(initialRevenueDataTwelveMonths);
+      } else {
+        setRevenueChartData(initialRevenueDataSixMonths);
+      }
+    }
+  }, [revenueTimeframe, isMounted]);
 
   const handleDismissOnboarding = () => {
     localStorage.setItem(ONBOARDING_SEEN_KEY, 'true');
@@ -88,14 +113,14 @@ export default function DashboardPage() {
       value: churnPrediction,
       change: "Risk in next 30 days",
       icon: AlertTriangle,
-      iconColor: "text-destructive",
+      iconColor: "text-destructive", // Changed from text-red-500
     },
     {
       title: "Avg. Customer Health",
       value: "82%",
       change: "+2% from last week",
       icon: Activity,
-      iconColor: "text-accent",
+      iconColor: "text-accent", // Changed from text-yellow-500
     },
   ];
 
@@ -177,9 +202,12 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
           <Card className="shadow-lg"> 
-            <CardHeader>
-              <Skeleton className="h-6 w-1/2 mb-1 rounded-md" />
-              <Skeleton className="h-4 w-3/4 rounded-md" />
+            <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                    <Skeleton className="h-6 w-1/2 mb-1 rounded-md" />
+                    <Skeleton className="h-4 w-3/4 rounded-md" />
+                </div>
+                <Skeleton className="h-10 w-full sm:w-[180px] rounded-md" />
             </CardHeader>
             <CardContent>
               <Skeleton className="h-[300px] w-full rounded-md" />
@@ -290,7 +318,7 @@ export default function DashboardPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-xl text-foreground flex items-center">
-             <Leaf className="mr-2 h-5 w-5 text-accent" /> Eco Impact Snapshot</CardTitle>
+             <BarChart3 className="mr-2 h-5 w-5 text-accent" /> Eco Impact Snapshot</CardTitle> {/* Changed icon from Leaf to BarChart3 */}
             <CardDescription>Your current carbon footprint status.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center space-y-4">
@@ -307,18 +335,29 @@ export default function DashboardPage() {
         </Card>
 
         <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-xl text-foreground flex items-center">
-              <Briefcase className="mr-2 h-5 w-5 text-primary" />
-              Revenue Forecast
-            </CardTitle>
-            <CardDescription>Projected revenue for the next few months.</CardDescription>
+          <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+              <CardTitle className="text-xl text-foreground flex items-center">
+                <Briefcase className="mr-2 h-5 w-5 text-primary" />
+                Revenue Forecast
+              </CardTitle>
+              <CardDescription>Projected revenue for the selected period.</CardDescription>
+            </div>
+            <Select value={revenueTimeframe} onValueChange={setRevenueTimeframe}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Select timeframe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="6m">Last 6 Months</SelectItem>
+                <SelectItem value="12m">Last 12 Months</SelectItem>
+              </SelectContent>
+            </Select>
           </CardHeader>
           <CardContent>
             <ChartContainer config={dashboardChartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={revenueData}
+                  data={revenueChartData}
                   margin={{
                     top: 5,
                     right: 10,
