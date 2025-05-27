@@ -8,11 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { CalendarIcon, Save, BellRing, Leaf, ShieldCheck } from "lucide-react";
-import { format } from "date-fns";
+import { Save, BellRing, Leaf, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -24,18 +20,16 @@ const reminderOptions = [
 ];
 
 export default function SettingsPage() {
-  const [paymentDeadline, setPaymentDeadline] = useState<Date | undefined>(undefined);
+  const [paymentDeadlineDays, setPaymentDeadlineDays] = useState<string>("30");
   const [selectedReminders, setSelectedReminders] = useState<string[]>(["3days", "1day"]);
   const [enableCarbonOffset, setEnableCarbonOffset] = useState(true);
   const [carbonOffsetAmount, setCarbonOffsetAmount] = useState("5.00");
-  const [enableMFA, setEnableMFA] = useState(false); // Added MFA state
+  const [enableMFA, setEnableMFA] = useState(false);
   const { toast } = useToast();
 
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
     setIsMounted(true);
-    // Set default date only after mounting to avoid hydration mismatch
-    setPaymentDeadline(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000));
   }, []);
 
 
@@ -49,11 +43,11 @@ export default function SettingsPage() {
 
   const handleSaveChanges = () => {
     console.log({
-      paymentDeadline,
+      paymentDeadlineDays,
       selectedReminders,
       enableCarbonOffset,
       carbonOffsetAmount,
-      enableMFA, // Added MFA to log
+      enableMFA,
     });
     toast({
       title: "Settings Saved!",
@@ -71,16 +65,21 @@ export default function SettingsPage() {
 
             <Card className="shadow-lg">
                 <CardHeader>
-                    <Skeleton className="h-6 w-3/4 mb-1 rounded-md flex items-center" />
+                    <CardTitle className="text-xl text-foreground flex items-center">
+                        <Skeleton className="mr-2 h-5 w-5 rounded-full" />
+                        <Skeleton className="h-6 w-3/4 rounded-md" />
+                    </CardTitle>
                     <Skeleton className="h-4 w-full rounded-md" />
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div>
                         <Skeleton className="h-5 w-1/3 mb-2 rounded-md" />
+                        <Skeleton className="h-4 w-full md:w-[280px] mb-1 rounded-md" />
                         <Skeleton className="h-10 w-full md:w-[280px] rounded-md" />
                     </div>
                     <div>
                         <Skeleton className="h-5 w-1/3 mb-2 rounded-md" />
+                        <Skeleton className="h-4 w-full md:w-[280px] mb-1 rounded-md" />
                         <div className="space-y-3 rounded-md border p-4 bg-muted/10">
                             {[...Array(4)].map((_, i) => (
                                 <div key={i} className="flex items-center space-x-3">
@@ -95,8 +94,11 @@ export default function SettingsPage() {
 
             <Card className="shadow-lg">
                 <CardHeader>
-                  <Skeleton className="h-6 w-3/4 mb-1 rounded-md flex items-center" />
-                  <Skeleton className="h-4 w-full rounded-md" />
+                    <CardTitle className="text-xl text-foreground flex items-center">
+                        <Skeleton className="mr-2 h-5 w-5 rounded-full" />
+                        <Skeleton className="h-6 w-3/4 rounded-md" />
+                    </CardTitle>
+                    <Skeleton className="h-4 w-full rounded-md" />
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="flex items-center justify-between space-x-3 rounded-md border p-4 bg-muted/10">
@@ -106,7 +108,6 @@ export default function SettingsPage() {
                         </div>
                         <Skeleton className="h-6 w-11 rounded-full bg-muted" />
                     </div>
-                    {/* Conditional skeleton for offset amount - assuming enableCarbonOffset is true initially for skeleton */}
                     <div className="space-y-2">
                         <Skeleton className="h-5 w-1/3 mb-1 rounded-md bg-muted" />
                         <Skeleton className="h-10 w-full md:w-[280px] rounded-md bg-muted" />
@@ -117,8 +118,11 @@ export default function SettingsPage() {
 
             <Card className="shadow-lg">
                 <CardHeader>
-                  <Skeleton className="h-6 w-3/4 mb-1 rounded-md flex items-center" />
-                  <Skeleton className="h-4 w-full rounded-md" />
+                    <CardTitle className="text-xl text-foreground flex items-center">
+                        <Skeleton className="mr-2 h-5 w-5 rounded-full" />
+                        <Skeleton className="h-6 w-3/4 rounded-md" />
+                    </CardTitle>
+                    <Skeleton className="h-4 w-full rounded-md" />
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="flex items-center justify-between space-x-3 rounded-md border p-4 bg-muted/10">
@@ -155,30 +159,16 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <Label htmlFor="payment-deadline" className="text-base font-medium">Default Payment Deadline</Label>
+            <Label htmlFor="payment-deadline-days" className="text-base font-medium">Default Payment Deadline (Days)</Label>
             <p className="text-sm text-muted-foreground mb-2">Set the default number of days until an invoice is due.</p>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full md:w-[280px] justify-start text-left font-normal",
-                    !paymentDeadline && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {paymentDeadline ? format(paymentDeadline, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={paymentDeadline}
-                  onSelect={setPaymentDeadline}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <Input
+              id="payment-deadline-days"
+              type="number"
+              value={paymentDeadlineDays}
+              onChange={(e) => setPaymentDeadlineDays(e.target.value)}
+              placeholder="e.g., 30"
+              className="w-full md:w-[280px]"
+            />
           </div>
 
           <div>
@@ -282,3 +272,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
