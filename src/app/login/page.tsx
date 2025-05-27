@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ClimaBillLogo } from '@/components/icons';
-import { Github } from 'lucide-react'; // Assuming Google icon is handled or not needed for this button
+import { Github } from 'lucide-react';
 
 export default function LoginPage() {
   return (
@@ -29,7 +29,7 @@ export default function LoginPage() {
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
-                <Link href="#" className="ml-auto inline-block text-sm underline text-primary hover:text-primary/80">
+                <Link href="/forgot-password" className="ml-auto inline-block text-sm underline text-primary hover:text-primary/80">
                   Forgot your password?
                 </Link>
               </div>
