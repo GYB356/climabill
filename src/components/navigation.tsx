@@ -11,7 +11,7 @@ import {
   Settings as SettingsIcon,
   Menu,
   NotebookText,
-  Lightbulb, 
+  Lightbulb,
   BarChart3, // Added for Carbon Footprint
 } from "lucide-react";
 
@@ -38,7 +38,7 @@ const navItems = [
   { href: "/smart-discounts", label: "Smart Discounts", icon: Sparkles },
   { href: "/text-summarizer", label: "Text Summarizer", icon: NotebookText },
   { href: "/invoice-item-suggester", label: "Item Suggester", icon: Lightbulb },
-  { href: "/carbon-footprint", label: "Carbon Footprint", icon: BarChart3 }, // Updated Icon
+  { href: "/carbon-footprint", label: "Carbon Footprint", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
@@ -69,7 +69,7 @@ export function AppNavigation() {
                       "group flex items-center gap-3 rounded-md p-2 transition-colors",
                       isActive
                         ? "bg-sidebar-primary/10 text-sidebar-primary"
-                        : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                   >
                     {linkContent}
@@ -90,8 +90,8 @@ export function AppNavigation() {
             className={cn(
               "group flex items-center gap-3 rounded-md p-3 transition-colors",
               isActive
-                ? "bg-primary/10 text-primary" 
-                : "hover:bg-accent/10 hover:text-accent-foreground"
+                ? "bg-sidebar-primary/10 text-sidebar-primary"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             )}
           >
             {linkContent}
@@ -123,10 +123,10 @@ export function AppNavigation() {
               <span className="sr-only">Toggle navigation</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-72 bg-background p-0"> 
-            <SheetHeader className="p-4 border-b"> 
+          <SheetContent side="left" className="w-72 bg-sidebar text-sidebar-foreground p-0">
+            <SheetHeader className="p-4 border-b border-sidebar-border">
               <Link href="/dashboard">
-                 <ClimaBillLogo className="h-8 text-primary" />
+                 <ClimaBillLogo className="h-8 text-sidebar-primary-foreground" />
               </Link>
             </SheetHeader>
             {renderNavLinks(true)}
