@@ -59,7 +59,7 @@ export function AppNavigation() {
   const renderNavLinks = (isMobile = false) => (
     <nav className={cn("flex flex-col gap-1 px-2", isMobile ? "mt-4" : "mt-6")}>
       {navItems.map((item) => {
-        const isParentActive = pathname.startsWith(item.href) && item.href !== "/dashboard";
+        const isParentActive = pathname.startsWith(item.href) && item.href !== "/dashboard" && item.href !== "/invoices";
         const isItemActive = item.exactMatch ? pathname === item.href : pathname.startsWith(item.href);
         
         const linkContent = (
@@ -79,16 +79,17 @@ export function AppNavigation() {
         );
 
         if (item.subItems) {
+          const isAnySubItemActive = item.subItems.some(subItem => subItem.exactMatch ? pathname === subItem.href : pathname.startsWith(subItem.href));
           return (
             <div key={item.href} className="space-y-1">
               <div
                 className={cn(
                   "group flex items-center gap-3 rounded-md p-2 text-sidebar-foreground w-full text-left",
-                   isParentActive ? "text-sidebar-primary font-medium" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                   isAnySubItemActive ? "text-sidebar-primary font-medium" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
-                <item.icon className={cn("h-5 w-5 shrink-0", isParentActive ? "text-sidebar-primary" : "text-sidebar-foreground/80")} />
-                 <span className={cn(isMobile ? "text-base" : "text-sm", isParentActive ? "font-semibold text-sidebar-primary" : "")}>
+                <item.icon className={cn("h-5 w-5 shrink-0", isAnySubItemActive ? "text-sidebar-primary" : "text-sidebar-foreground/80")} />
+                 <span className={cn(isMobile ? "text-base" : "text-sm", isAnySubItemActive ? "font-semibold text-sidebar-primary" : "")}>
                     {item.label}
                 </span>
               </div>
@@ -199,5 +200,3 @@ export function AppNavigation() {
     </>
   );
 }
-
-    
