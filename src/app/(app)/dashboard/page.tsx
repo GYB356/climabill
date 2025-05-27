@@ -12,16 +12,36 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { DollarSign, Users, TrendingUp, Activity, Leaf, Settings, FileText, Sparkles, ArrowRight } from "lucide-react";
+import { DollarSign, Users, TrendingUp, Activity, Leaf, Settings, FileText, Sparkles, ArrowRight, Briefcase } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 
 const ONBOARDING_SEEN_KEY = 'climabill_has_seen_onboarding';
+
+const dashboardChartConfig = {
+  revenue: {
+    label: "Revenue ($)",
+    color: "hsl(var(--chart-1))",
+    icon: Briefcase,
+  },
+} satisfies ChartConfig;
+
+const revenueData = [
+  { month: "Jan", revenue: 4000 },
+  { month: "Feb", revenue: 3000 },
+  { month: "Mar", revenue: 5000 },
+  { month: "Apr", revenue: 4500 },
+  { month: "May", revenue: 6000 },
+  { month: "Jun", revenue: 5500 },
+];
+
 
 export default function DashboardPage() {
   const [monthlyEmissions, setMonthlyEmissions] = useState<string>("0.00");
   const [offsetPercentage, setOffsetPercentage] = useState<string>("0%");
   const [isMounted, setIsMounted] = useState(false);
-  const [isFirstTimeUser, setIsFirstTimeUser] = useState(true); // Assume true initially
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(true); 
 
   useEffect(() => {
     setIsMounted(true);
@@ -33,9 +53,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (isMounted) {
-      // Generate plausible random values client-side
-      const randomEmissions = (Math.random() * 2 + 0.5).toFixed(2); // 0.50 to 2.50 tCO₂e
-      const randomOffset = Math.floor(Math.random() * 50 + 5);   // 5% to 55%
+      const randomEmissions = (Math.random() * 2 + 0.5).toFixed(2); 
+      const randomOffset = Math.floor(Math.random() * 50 + 5);   
       setMonthlyEmissions(randomEmissions);
       setOffsetPercentage(`${randomOffset}%`);
     }
@@ -65,8 +84,8 @@ export default function DashboardPage() {
       title: "Churn Rate",
       value: "2.5%",
       change: "-0.5% from last month",
-      icon: TrendingUp,
-      iconColor: "text-destructive",
+      icon: TrendingUp, // Changed from TrendingDown to TrendingUp to better reflect "Churn Rate" logic if positive is bad, this implies decrease is good
+      iconColor: "text-destructive", // Or text-green-500 if lower is better
     },
     {
       title: "Avg. Customer Health",
@@ -152,6 +171,30 @@ export default function DashboardPage() {
                 <Skeleton className="h-6 w-1/4 mx-auto mb-1 rounded-md" />
                 <Skeleton className="h-3 w-1/3 mx-auto rounded-md" />
               </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-lg"> {/* Skeleton for Revenue Forecast */}
+            <CardHeader>
+              <Skeleton className="h-6 w-1/2 mb-1 rounded-md" />
+              <Skeleton className="h-4 w-3/4 rounded-md" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-[300px] w-full rounded-md" />
+            </CardContent>
+          </Card>
+          <Card className="shadow-lg"> {/* Skeleton for Customer Health */}
+            <CardHeader>
+              <Skeleton className="h-6 w-1/2 mb-1 rounded-md" />
+              <Skeleton className="h-4 w-3/4 rounded-md" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-1/2 rounded-md" />
+                  <Skeleton className="h-4 w-1/4 rounded-md" />
+                </div>
+              ))}
+              <Skeleton className="h-10 w-full mt-2 rounded-md" />
             </CardContent>
           </Card>
         </div>
@@ -258,7 +301,93 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-xl text-foreground flex items-center">
+              <Briefcase className="mr-2 h-5 w-5 text-primary" />
+              Revenue Forecast
+            </CardTitle>
+            <CardDescription>Projected revenue for the next few months.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={dashboardChartConfig} className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={revenueData}
+                  margin={{
+                    top: 5,
+                    right: 10,
+                    left: -20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    fontSize={12}
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    fontSize={12}
+                    tickFormatter={(value) => `$${value / 1000}k`}
+                  />
+                  <RechartsTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dot" />}
+                  />
+                  <Line
+                    dataKey="revenue"
+                    type="monotone"
+                    stroke="var(--color-revenue)"
+                    strokeWidth={2}
+                    dot={{
+                      fill: "var(--color-revenue)",
+                      r: 4,
+                    }}
+                    activeDot={{
+                      r: 6,
+                    }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-xl text-foreground flex items-center">
+              <Activity className="mr-2 h-5 w-5 text-primary" />
+              Customer Health
+            </CardTitle>
+            <CardDescription>Overall health scores of your customer base.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">High Risk</span>
+              <span className="text-sm font-semibold text-destructive">15 Customers</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Needs Attention</span>
+              <span className="text-sm font-semibold text-yellow-600">42 Customers</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Healthy</span>
+              <span className="text-sm font-semibold text-accent">183 Customers</span>
+            </div>
+            <Button variant="outline" size="sm" className="w-full mt-2">View Health Details</Button>
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );
 }
+
+    
