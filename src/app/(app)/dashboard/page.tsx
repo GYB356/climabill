@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DollarSign, Users, TrendingUp, Activity, Leaf } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton"; // Added Skeleton import
 
 export default function DashboardPage() {
   const [monthlyEmissions, setMonthlyEmissions] = useState<string>("0.00");
@@ -36,46 +37,45 @@ export default function DashboardPage() {
       value: "$45,231.89",
       change: "+20.1% from last month",
       icon: DollarSign,
-      iconColor: "text-green-500", // Will be styled by theme
+      iconColor: "text-green-500", 
     },
     {
       title: "Active Subscriptions",
       value: "+2350",
       change: "+180.1% from last month",
       icon: Users,
-      iconColor: "text-blue-500", // Will be styled by theme
+      iconColor: "text-blue-500", 
     },
     {
       title: "Churn Rate",
       value: "2.5%",
       change: "-0.5% from last month",
       icon: TrendingUp, 
-      iconColor: "text-red-500", // Will be styled by theme
+      iconColor: "text-red-500",
     },
     {
       title: "Avg. Customer Health",
       value: "82%",
       change: "+2% from last week",
       icon: Activity,
-      iconColor: "text-yellow-500", // Will be styled by theme
+      iconColor: "text-yellow-500",
     },
   ];
 
   if (!isMounted) {
-    // Basic loading state to prevent hydration mismatch & show content is loading
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-muted rounded w-1/4 mb-4"></div>
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-1/3 mb-4 rounded-md" /> 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="h-4 bg-muted rounded w-3/4"></div>
-                <div className="h-5 w-5 bg-muted rounded-full"></div>
+                <Skeleton className="h-4 w-3/4 rounded-md" />
+                <Skeleton className="h-5 w-5 rounded-full" />
               </CardHeader>
               <CardContent>
-                <div className="h-7 bg-muted rounded w-1/2 mb-1"></div>
-                <div className="h-3 bg-muted rounded w-full"></div>
+                <Skeleton className="h-7 w-1/2 mb-1 rounded-md" />
+                <Skeleton className="h-3 w-full rounded-md" />
               </CardContent>
             </Card>
           ))}
@@ -83,32 +83,32 @@ export default function DashboardPage() {
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="shadow-lg">
             <CardHeader>
-              <div className="h-6 bg-muted rounded w-1/3 mb-1"></div>
-              <div className="h-4 bg-muted rounded w-1/2"></div>
+              <Skeleton className="h-6 w-1/2 mb-1 rounded-md" />
+              <Skeleton className="h-4 w-3/4 rounded-md" />
             </CardHeader>
             <CardContent className="space-y-3">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="flex items-center">
-                  <div className="mr-2 h-2 w-2 rounded-full bg-muted"></div>
-                  <div className="h-4 bg-muted rounded w-full"></div>
+                  <Skeleton className="mr-2 h-2 w-2 rounded-full" />
+                  <Skeleton className="h-4 w-full rounded-md" />
                 </div>
               ))}
             </CardContent>
           </Card>
           <Card className="shadow-lg">
             <CardHeader>
-              <div className="h-6 bg-muted rounded w-1/2 mb-1"></div>
-              <div className="h-4 bg-muted rounded w-3/4"></div>
+              <Skeleton className="h-6 w-1/2 mb-1 rounded-md" />
+              <Skeleton className="h-4 w-3/4 rounded-md" />
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center space-y-4">
-              <div className="h-16 w-16 bg-muted rounded-full"></div>
+              <Skeleton className="h-16 w-16 rounded-full" />
               <div className="text-center w-full">
-                <div className="h-8 bg-muted rounded w-1/3 mx-auto mb-2"></div>
-                <div className="h-4 bg-muted rounded w-1/2 mx-auto"></div>
+                <Skeleton className="h-8 w-1/3 mx-auto mb-2 rounded-md" />
+                <Skeleton className="h-4 w-1/2 mx-auto rounded-md" />
               </div>
               <div className="text-center w-full">
-                <div className="h-6 bg-muted rounded w-1/4 mx-auto mb-1"></div>
-                <div className="h-3 bg-muted rounded w-1/3 mx-auto"></div>
+                <Skeleton className="h-6 w-1/4 mx-auto mb-1 rounded-md" />
+                <Skeleton className="h-3 w-1/3 mx-auto rounded-md" />
               </div>
             </CardContent>
           </Card>
@@ -128,7 +128,6 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {metric.title}
               </CardTitle>
-              {/* Theme will color these icons via CSS variables if needed, otherwise default color */}
               <metric.icon className={`h-5 w-5 ${metric.iconColor.replace(/text-(green|blue|red|yellow)-500/, '')}`} />
             </CardHeader>
             <CardContent>
@@ -169,13 +168,13 @@ export default function DashboardPage() {
             <CardDescription>Your current carbon footprint status.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center space-y-4">
-            <Leaf className="h-16 w-16 text-accent" /> {/* text-accent will be from globals.css */}
+            <Leaf className="h-16 w-16 text-accent" />
             <div className="text-center">
               <p className="text-3xl font-bold text-foreground">{monthlyEmissions} tCO₂e</p>
               <p className="text-sm text-muted-foreground">Estimated monthly emissions</p>
             </div>
             <div className="text-center">
-              <p className="text-lg font-semibold text-accent">{offsetPercentage} Offset</p> {/* text-accent */}
+              <p className="text-lg font-semibold text-accent">{offsetPercentage} Offset</p>
               <p className="text-xs text-muted-foreground">via ClimaBill Offset Program</p>
             </div>
           </CardContent>
