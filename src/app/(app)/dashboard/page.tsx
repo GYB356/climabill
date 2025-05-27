@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { DollarSign, Users, TrendingUp, Activity, Leaf, Settings, FileText, Sparkles, ArrowRight, Briefcase } from "lucide-react";
+import { DollarSign, Users, TrendingUp, Activity, Leaf, Settings, FileText, Sparkles, ArrowRight, Briefcase, AlertTriangle, BarChart3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
@@ -40,6 +40,7 @@ const revenueData = [
 export default function DashboardPage() {
   const [monthlyEmissions, setMonthlyEmissions] = useState<string>("0.00");
   const [offsetPercentage, setOffsetPercentage] = useState<string>("0%");
+  const [churnPrediction, setChurnPrediction] = useState<string>("0%");
   const [isMounted, setIsMounted] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true); 
 
@@ -55,8 +56,10 @@ export default function DashboardPage() {
     if (isMounted) {
       const randomEmissions = (Math.random() * 2 + 0.5).toFixed(2); 
       const randomOffset = Math.floor(Math.random() * 50 + 5);   
+      const randomChurn = (Math.random() * 10 + 2).toFixed(1); // 2.0 to 12.0%
       setMonthlyEmissions(randomEmissions);
       setOffsetPercentage(`${randomOffset}%`);
+      setChurnPrediction(`${randomChurn}%`);
     }
   }, [isMounted]);
 
@@ -81,11 +84,11 @@ export default function DashboardPage() {
       iconColor: "text-primary",
     },
     {
-      title: "Churn Rate",
-      value: "2.5%",
-      change: "-0.5% from last month",
-      icon: TrendingUp, // Changed from TrendingDown to TrendingUp to better reflect "Churn Rate" logic if positive is bad, this implies decrease is good
-      iconColor: "text-destructive", // Or text-green-500 if lower is better
+      title: "AI Churn Prediction",
+      value: churnPrediction,
+      change: "Risk in next 30 days",
+      icon: AlertTriangle,
+      iconColor: "text-destructive",
     },
     {
       title: "Avg. Customer Health",
@@ -173,7 +176,7 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="shadow-lg"> {/* Skeleton for Revenue Forecast */}
+          <Card className="shadow-lg"> 
             <CardHeader>
               <Skeleton className="h-6 w-1/2 mb-1 rounded-md" />
               <Skeleton className="h-4 w-3/4 rounded-md" />
@@ -182,7 +185,7 @@ export default function DashboardPage() {
               <Skeleton className="h-[300px] w-full rounded-md" />
             </CardContent>
           </Card>
-          <Card className="shadow-lg"> {/* Skeleton for Customer Health */}
+          <Card className="shadow-lg"> 
             <CardHeader>
               <Skeleton className="h-6 w-1/2 mb-1 rounded-md" />
               <Skeleton className="h-4 w-3/4 rounded-md" />
@@ -286,11 +289,12 @@ export default function DashboardPage() {
 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-xl text-foreground">Eco Impact Snapshot</CardTitle>
+            <CardTitle className="text-xl text-foreground flex items-center">
+             <Leaf className="mr-2 h-5 w-5 text-accent" /> Eco Impact Snapshot</CardTitle>
             <CardDescription>Your current carbon footprint status.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center space-y-4">
-            <Leaf className="h-16 w-16 text-accent" />
+             <BarChart3 className="h-16 w-16 text-accent" />
             <div className="text-center">
               <p className="text-3xl font-bold text-foreground">{monthlyEmissions} tCO₂e</p>
               <p className="text-sm text-muted-foreground">Estimated monthly emissions</p>

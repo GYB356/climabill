@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, PlayCircle, Star, Sparkles, Leaf, LayoutDashboard, Package, Zap, Briefcase } from 'lucide-react';
+import { ArrowRight, PlayCircle, Star, Sparkles, Leaf, LayoutDashboard, Package, Zap, Briefcase, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -103,8 +103,8 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               { tier: 'Basic', price: '29', icon: Package, features: ['AI Invoice Item Suggester', 'Basic Carbon Tracking', '100 Invoices/mo'] },
-              { tier: 'Pro', price: '79', icon: Zap, features: ['Smart Discounts AI', 'Advanced Carbon Offsetting', '500 Invoices/mo', 'Priority Support'], highlighted: true },
-              { tier: 'Enterprise', price: '199', icon: Briefcase, features: ['All Pro Features', 'Custom AI Models', 'Unlimited Invoices', 'Dedicated Account Manager'] },
+              { tier: 'Pro', price: '79', icon: Zap, features: ['Smart Discounts AI', 'Advanced Carbon Offsetting', '500 Invoices/mo', 'Priority Support', 'Optional "Green Tier" auto-donation'], highlighted: true },
+              { tier: 'Enterprise', price: '199', icon: Briefcase, features: ['All Pro Features', 'Custom AI Models', 'Unlimited Invoices', 'Dedicated Account Manager', 'Includes "Green Tier" auto-donation'] },
             ].map(plan => (
               <div key={plan.tier} className={`p-8 bg-card border rounded-lg shadow-lg flex flex-col ${plan.highlighted ? 'border-primary ring-2 ring-primary' : 'border-border'}`}>
                 <plan.icon className={`w-12 h-12 mx-auto mb-4 ${plan.highlighted ? 'text-primary' : 'text-accent'}`} />
@@ -113,7 +113,7 @@ export default function HomePage() {
                 <ul className="text-muted-foreground space-y-2 my-6 text-sm text-left flex-grow">
                   {plan.features.map(feature => (
                     <li key={feature} className="flex items-center">
-                      <CheckCircleIcon className="w-4 h-4 mr-2 text-primary/80 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 mr-2 text-primary/80 flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
@@ -163,26 +163,5 @@ export default function HomePage() {
       </section>
 
     </div>
-  );
-}
-
-// Helper icon for pricing list
-function CheckCircleIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-      <polyline points="22 4 12 14.01 9 11.01"></polyline>
-    </svg>
   );
 }
