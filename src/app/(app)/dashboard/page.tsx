@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { DollarSign, Users, TrendingUp, Activity, Leaf, Settings, FileText, Sparkles, ArrowRight, Briefcase, AlertTriangle, BarChart3 } from "lucide-react";
+import { DollarSign, Users, TrendingUp, Activity, Leaf, Settings, FileText, Sparkles, ArrowRight, Briefcase, AlertTriangle, BarChart3, DivideCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
@@ -54,6 +54,7 @@ export default function DashboardPage() {
   const [monthlyEmissions, setMonthlyEmissions] = useState<string>("0.00");
   const [offsetPercentage, setOffsetPercentage] = useState<string>("0%");
   const [churnPrediction, setChurnPrediction] = useState<string>("0%");
+  const [avgCo2PerInvoice, setAvgCo2PerInvoice] = useState<string>("0.0");
   const [isMounted, setIsMounted] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true); 
   const [revenueTimeframe, setRevenueTimeframe] = useState("6m");
@@ -72,9 +73,11 @@ export default function DashboardPage() {
       const randomEmissions = (Math.random() * 2 + 0.5).toFixed(2); 
       const randomOffset = Math.floor(Math.random() * 50 + 5);   
       const randomChurn = (Math.random() * 10 + 2).toFixed(1); // 2.0 to 12.0%
+      const randomAvgCo2 = (Math.random() * 4 + 1).toFixed(1); // 1.0 to 5.0 kg CO2e
       setMonthlyEmissions(randomEmissions);
       setOffsetPercentage(`${randomOffset}%`);
       setChurnPrediction(`${randomChurn}%`);
+      setAvgCo2PerInvoice(randomAvgCo2);
     }
   }, [isMounted]);
 
@@ -113,14 +116,14 @@ export default function DashboardPage() {
       value: churnPrediction,
       change: "Risk in next 30 days",
       icon: AlertTriangle,
-      iconColor: "text-destructive", // Changed from text-red-500
+      iconColor: "text-destructive",
     },
     {
       title: "Avg. Customer Health",
       value: "82%",
       change: "+2% from last week",
       icon: Activity,
-      iconColor: "text-accent", // Changed from text-yellow-500
+      iconColor: "text-accent",
     },
   ];
 
@@ -189,15 +192,19 @@ export default function DashboardPage() {
               <Skeleton className="h-6 w-1/2 mb-1 rounded-md" />
               <Skeleton className="h-4 w-3/4 rounded-md" />
             </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center space-y-4">
+            <CardContent className="flex flex-col items-center justify-center space-y-3">
               <Skeleton className="h-16 w-16 rounded-full" />
               <div className="text-center w-full">
-                <Skeleton className="h-8 w-1/3 mx-auto mb-2 rounded-md" />
-                <Skeleton className="h-4 w-1/2 mx-auto rounded-md" />
+                <Skeleton className="h-8 w-1/3 mx-auto mb-1 rounded-md" />
+                <Skeleton className="h-3 w-1/2 mx-auto rounded-md" />
               </div>
               <div className="text-center w-full">
                 <Skeleton className="h-6 w-1/4 mx-auto mb-1 rounded-md" />
                 <Skeleton className="h-3 w-1/3 mx-auto rounded-md" />
+              </div>
+               <div className="text-center w-full pt-1">
+                <Skeleton className="h-5 w-1/3 mx-auto mb-1 rounded-md" />
+                <Skeleton className="h-3 w-1/2 mx-auto rounded-md" />
               </div>
             </CardContent>
           </Card>
@@ -318,10 +325,10 @@ export default function DashboardPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-xl text-foreground flex items-center">
-             <BarChart3 className="mr-2 h-5 w-5 text-accent" /> Eco Impact Snapshot</CardTitle> {/* Changed icon from Leaf to BarChart3 */}
+             <BarChart3 className="mr-2 h-5 w-5 text-accent" /> Eco Impact Snapshot</CardTitle>
             <CardDescription>Your current carbon footprint status.</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center space-y-4">
+          <CardContent className="flex flex-col items-center justify-center space-y-3">
              <BarChart3 className="h-16 w-16 text-accent" />
             <div className="text-center">
               <p className="text-3xl font-bold text-foreground">{monthlyEmissions} tCO₂e</p>
@@ -330,6 +337,13 @@ export default function DashboardPage() {
             <div className="text-center">
               <p className="text-lg font-semibold text-accent">{offsetPercentage} Offset</p>
               <p className="text-xs text-muted-foreground">via ClimaBill Offset Program</p>
+            </div>
+            <div className="text-center pt-1">
+              <p className="text-lg font-semibold text-muted-foreground flex items-center justify-center">
+                <DivideCircle className="mr-1.5 h-4 w-4 text-muted-foreground/80" /> 
+                {avgCo2PerInvoice} kg CO₂e
+              </p>
+              <p className="text-xs text-muted-foreground">Avg. per Invoice (simulated)</p>
             </div>
           </CardContent>
         </Card>
@@ -432,5 +446,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

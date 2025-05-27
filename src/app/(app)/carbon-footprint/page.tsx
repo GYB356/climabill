@@ -120,6 +120,13 @@ export default function CarbonFootprintPage() {
     });
   };
 
+  const handleViewAllContributions = () => {
+    toast({
+      title: "Coming Soon!",
+      description: "The feature to view all contributions is currently in development.",
+    });
+  };
+
   if (!isMounted) {
     return (
       <div className="space-y-6">
@@ -318,7 +325,7 @@ export default function CarbonFootprintPage() {
             <p className="text-muted-foreground text-center py-4">No contribution history yet.</p>
           )}
           {mockContributionHistory.length > 0 && (
-             <Button variant="link" className="w-full mt-2">View All Contributions</Button>
+             <Button variant="link" className="w-full mt-2" onClick={handleViewAllContributions}>View All Contributions</Button>
           )}
         </CardContent>
       </Card>
@@ -349,7 +356,3 @@ export default function CarbonFootprintPage() {
     </div>
   );
 }
-
-    
-
-    
