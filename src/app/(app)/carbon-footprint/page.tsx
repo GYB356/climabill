@@ -3,11 +3,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Info, Leaf, Cloud, BarChart3 } from "lucide-react";
+import { Info, Leaf, Cloud, BarChart3, History, DollarSign } from "lucide-react"; // Added History, DollarSign
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
   Select,
@@ -17,7 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast"; // Added
+import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator"; // Added
 
 const initialChartDataSixMonths = [
   { month: "Jan", emissions: 0, offset: 0 },
@@ -51,12 +52,18 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+const mockContributionHistory = [
+  { id: "1", date: "2024-05-15", amount: 25.00, project: "Amazon Rainforest Preservation", status: "Completed" },
+  { id: "2", date: "2024-04-20", amount: 15.50, project: "African Savanna Carbon Capture", status: "Completed" },
+  { id: "3", date: "2024-03-10", amount: 30.00, project: "Global Reforestation Initiative", status: "Completed" },
+];
+
 export default function CarbonFootprintPage() {
   const [chartData, setChartData] = useState(initialChartDataSixMonths);
   const [timeframe, setTimeframe] = useState("6m");
   const [enableRealtime, setEnableRealtime] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
-  const { toast } = useToast(); // Added
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsMounted(true);
@@ -101,12 +108,12 @@ export default function CarbonFootprintPage() {
     }, 2000); // Update every 2 seconds
 
     return () => clearInterval(intervalId);
-  }, [enableRealtime, isMounted, generateNewDataValues, timeframe]); // Added timeframe to reset interval if it changes
+  }, [enableRealtime, isMounted, generateNewDataValues, timeframe]);
 
   const totalEmissions = chartData.reduce((sum, item) => sum + item.emissions, 0);
   const totalOffset = chartData.reduce((sum, item) => sum + item.offset, 0);
 
-  const handleContributeNow = () => { // Added handler
+  const handleContributeNow = () => {
     toast({
       title: "Thank You!",
       description: "Your one-time contribution to offset projects is appreciated. (Feature in development)",
@@ -151,6 +158,23 @@ export default function CarbonFootprintPage() {
             <CardContent>
                 <Skeleton className="h-[350px] w-full rounded-md" />
             </CardContent>
+        </Card>
+        <Card className="shadow-lg">
+          <CardHeader>
+            <Skeleton className="h-6 w-56 mb-1" />
+            <Skeleton className="h-4 w-72" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {[1,2,3].map((i) => (
+              <div key={i} className="p-3 border rounded-lg bg-background">
+                <div className="flex justify-between items-center mb-1.5">
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-4 w-1/4" />
+                </div>
+                <Skeleton className="h-3 w-3/4" />
+              </div>
+            ))}
+          </CardContent>
         </Card>
          <Card className="shadow-lg">
             <CardHeader>
@@ -258,6 +282,50 @@ export default function CarbonFootprintPage() {
 
       <Card className="shadow-lg">
         <CardHeader>
+          <CardTitle className="text-xl text-foreground flex items-center">
+            <History className="mr-2 h-6 w-6 text-primary" />
+            Offset Contribution History
+          </CardTitle>
+          <CardDescription>
+            A record of your contributions to carbon offset projects.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {mockContributionHistory.length > 0 ? (
+            mockContributionHistory.map((item, index) => (
+              <div key={item.id}>
+                <div className="p-3 border rounded-lg bg-background hover:bg-muted/50 transition-colors">
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-1.5 gap-1">
+                    <span className="font-semibold text-foreground">{item.project}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(item.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-muted-foreground flex items-center">
+                      <DollarSign className="mr-1 h-4 w-4 text-accent" />
+                      Amount: ${item.amount.toFixed(2)}
+                    </p>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${item.status === "Completed" ? "bg-accent/20 text-accent-foreground" : "bg-muted text-muted-foreground"}`}>
+                      {item.status}
+                    </span>
+                  </div>
+                </div>
+                {index < mockContributionHistory.length - 1 && <Separator className="my-3 sm:hidden" />}
+              </div>
+            ))
+          ) : (
+            <p className="text-muted-foreground text-center py-4">No contribution history yet.</p>
+          )}
+          {mockContributionHistory.length > 0 && (
+             <Button variant="link" className="w-full mt-2">View All Contributions</Button>
+          )}
+        </CardContent>
+      </Card>
+
+
+      <Card className="shadow-lg">
+        <CardHeader>
           <CardTitle className="text-xl text-foreground">Carbon Offset Preferences</CardTitle>
           <CardDescription>Manage your contributions to carbon offset projects.</CardDescription>
         </CardHeader>
@@ -274,12 +342,14 @@ export default function CarbonFootprintPage() {
               <Label htmlFor="one-time-offset" className="text-base font-medium">One-time Offset Contribution</Label>
               <p className="text-sm text-muted-foreground">Make an additional contribution to offset projects.</p>
             </div>
-            <Button variant="outline" onClick={handleContributeNow}>Contribute Now</Button> {/* Added onClick */}
+            <Button variant="outline" onClick={handleContributeNow}>Contribute Now</Button>
           </div>
         </CardContent>
       </Card>
     </div>
   );
 }
+
+    
 
     
