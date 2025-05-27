@@ -11,10 +11,10 @@ import { Switch } from "@/components/ui/switch";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Save, BellRing, Leaf } from "lucide-react";
+import { CalendarIcon, Save, BellRing, Leaf, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton"; // Added Skeleton
+import { Skeleton } from "@/components/ui/skeleton";
 
 const reminderOptions = [
   { id: "7days", label: "7 days before deadline" },
@@ -24,17 +24,18 @@ const reminderOptions = [
 ];
 
 export default function SettingsPage() {
-  const [paymentDeadline, setPaymentDeadline] = useState<Date | undefined>(undefined); 
+  const [paymentDeadline, setPaymentDeadline] = useState<Date | undefined>(undefined);
   const [selectedReminders, setSelectedReminders] = useState<string[]>(["3days", "1day"]);
   const [enableCarbonOffset, setEnableCarbonOffset] = useState(true);
   const [carbonOffsetAmount, setCarbonOffsetAmount] = useState("5.00");
+  const [enableMFA, setEnableMFA] = useState(false); // Added MFA state
   const { toast } = useToast();
 
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
     setIsMounted(true);
     // Set default date only after mounting to avoid hydration mismatch
-    setPaymentDeadline(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)); 
+    setPaymentDeadline(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000));
   }, []);
 
 
@@ -52,13 +53,14 @@ export default function SettingsPage() {
       selectedReminders,
       enableCarbonOffset,
       carbonOffsetAmount,
+      enableMFA, // Added MFA to log
     });
     toast({
       title: "Settings Saved!",
       description: "Your preferences have been updated successfully.",
     });
   };
-  
+
   if (!isMounted) {
     return (
         <div className="space-y-8">
@@ -112,9 +114,25 @@ export default function SettingsPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            <Card className="shadow-lg">
+                <CardHeader>
+                  <Skeleton className="h-6 w-3/4 mb-1 rounded-md flex items-center" />
+                  <Skeleton className="h-4 w-full rounded-md" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between space-x-3 rounded-md border p-4 bg-muted/10">
+                        <div className="space-y-1.5 flex-1">
+                            <Skeleton className="h-5 w-2/3 rounded-md bg-muted" />
+                            <Skeleton className="h-3 w-full rounded-md bg-muted" />
+                        </div>
+                        <Skeleton className="h-6 w-11 rounded-full bg-muted" />
+                    </div>
+                </CardContent>
+            </Card>
             
             <div className="flex justify-end">
-                <Skeleton className="h-11 w-44 rounded-md bg-muted" />
+                <Skeleton className="h-11 w-44 rounded-md bg-primary" />
             </div>
         </div>
     );
@@ -225,6 +243,33 @@ export default function SettingsPage() {
               </p>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-xl text-foreground flex items-center">
+            <ShieldCheck className="mr-2 h-5 w-5 text-primary" />
+            Security Settings
+          </CardTitle>
+          <CardDescription>Manage your account security preferences.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between space-x-3 rounded-md border p-4 bg-background">
+            <div className="space-y-0.5">
+              <Label htmlFor="mfa-toggle" className="text-base font-medium">
+                Enable Multi-Factor Authentication (MFA)
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Enhance your account security by requiring a second form of verification.
+              </p>
+            </div>
+            <Switch
+              id="mfa-toggle"
+              checked={enableMFA}
+              onCheckedChange={setEnableMFA}
+            />
+          </div>
         </CardContent>
       </Card>
       
