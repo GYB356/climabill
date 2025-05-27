@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const initialChartDataSixMonths = [
   { month: "Jan", emissions: 0, offset: 0 },
@@ -104,29 +105,28 @@ export default function CarbonFootprintPage() {
   const totalOffset = chartData.reduce((sum, item) => sum + item.offset, 0);
 
   if (!isMounted) {
-    // You can return a loading spinner or null here
     return (
-      <div className="space-y-6 animate-pulse">
+      <div className="space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <div className="h-8 bg-muted rounded w-3/4 mb-2"></div>
-            <div className="h-4 bg-muted rounded w-1/2"></div>
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-72" />
           </div>
           <div className="flex items-center space-x-2">
-            <div className="h-4 bg-muted rounded w-24"></div>
-            <div className="h-6 w-12 bg-muted rounded-full"></div>
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-6 w-12 rounded-full" />
           </div>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
           {[1,2,3].map(i => (
             <Card key={i} className="shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="h-4 bg-muted rounded w-1/3"></div>
-                <div className="h-5 w-5 bg-muted rounded-full"></div>
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-5 w-5 rounded-full" />
               </CardHeader>
               <CardContent>
-                <div className="h-8 bg-muted rounded w-1/2 mb-1"></div>
-                <div className="h-3 bg-muted rounded w-3/4"></div>
+                <Skeleton className="h-8 w-1/2 mb-1" />
+                <Skeleton className="h-3 w-3/4" />
               </CardContent>
             </Card>
           ))}
@@ -134,21 +134,30 @@ export default function CarbonFootprintPage() {
          <Card className="shadow-xl">
             <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
-                    <div className="h-6 bg-muted rounded w-48 mb-1"></div>
-                    <div className="h-4 bg-muted rounded w-64"></div>
+                    <Skeleton className="h-6 w-48 mb-1" />
+                    <Skeleton className="h-4 w-64" />
                 </div>
-                <div className="h-10 bg-muted rounded w-full sm:w-[180px]"></div>
+                <Skeleton className="h-10 w-full sm:w-[180px] rounded-md" />
             </CardHeader>
-            <CardContent className="h-[350px] bg-muted rounded-md"></CardContent>
+            <CardContent>
+                <Skeleton className="h-[350px] w-full rounded-md" />
+            </CardContent>
         </Card>
          <Card className="shadow-lg">
             <CardHeader>
-                <div className="h-6 bg-muted rounded w-56 mb-1"></div>
-                <div className="h-4 bg-muted rounded w-72"></div>
+                <Skeleton className="h-6 w-56 mb-1" />
+                <Skeleton className="h-4 w-72" />
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="h-16 bg-muted rounded-lg"></div>
-                <div className="h-16 bg-muted rounded-lg"></div>
+              {[1,2].map(i => (
+                <div key={i} className="flex items-center justify-between p-4 border rounded-lg bg-background">
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-5 w-2/3" />
+                    <Skeleton className="h-3 w-full" />
+                  </div>
+                  { i === 1 ? <Skeleton className="h-6 w-11 rounded-full" /> : <Skeleton className="h-10 w-32 rounded-md" /> }
+                </div>
+              ))}
             </CardContent>
         </Card>
       </div>
@@ -263,3 +272,5 @@ export default function CarbonFootprintPage() {
     </div>
   );
 }
+
+    
