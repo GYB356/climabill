@@ -5,6 +5,14 @@ import { ArrowRight, PlayCircle, Star, Sparkles, Leaf, LayoutDashboard, Package,
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function HomePage() {
   return (
@@ -57,20 +65,44 @@ export default function HomePage() {
       <section className="py-16 bg-secondary/30">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-foreground mb-8">See ClimaBill in Action</h2>
-          <div className="aspect-video bg-muted rounded-lg shadow-xl max-w-3xl mx-auto flex items-center justify-center relative overflow-hidden cursor-pointer group">
-            <Image 
-              src="https://placehold.co/1280x720.png" 
-              alt="ClimaBill Demo Video Thumbnail" 
-              layout="fill" 
-              objectFit="cover" 
-              data-ai-hint="app screen" 
-              className="group-hover:scale-105 transition-transform duration-300"
-            />
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center flex-col group-hover:bg-black/40 transition-colors duration-300">
-              <PlayCircle className="w-20 h-20 text-white/80 group-hover:text-white transition-colors duration-300 mb-2 group-hover:scale-110 transform" />
-              <p className="mt-2 text-white/90 text-lg font-semibold">Watch Demo</p>
-            </div>
-          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <div className="aspect-video bg-muted rounded-lg shadow-xl max-w-3xl mx-auto flex items-center justify-center relative overflow-hidden cursor-pointer group">
+                <Image
+                  src="https://placehold.co/1280x720.png"
+                  alt="ClimaBill Demo Video Thumbnail"
+                  layout="fill"
+                  objectFit="cover"
+                  data-ai-hint="app screen"
+                  className="group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center flex-col group-hover:bg-black/40 transition-colors duration-300">
+                  <PlayCircle className="w-20 h-20 text-white/80 group-hover:text-white transition-colors duration-300 mb-2 group-hover:scale-110 transform" />
+                  <p className="mt-2 text-white/90 text-lg font-semibold">Watch Demo</p>
+                </div>
+              </div>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[800px] p-0">
+              <DialogHeader className="p-6 pb-0">
+                <DialogTitle className="text-2xl">ClimaBill Demo Video</DialogTitle>
+                <DialogDescription>
+                  See how ClimaBill can revolutionize your billing and sustainability efforts.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="p-6 aspect-video bg-black flex items-center justify-center">
+                {/* Placeholder for actual video embed */}
+                <Image
+                  src="https://placehold.co/1280x720/1f2937/ffffff.png?text=Video+Player+Placeholder" // Darker placeholder for video
+                  alt="Demo Video Player Placeholder"
+                  width={1280}
+                  height={720}
+                  className="rounded-md"
+                  data-ai-hint="video player"
+                />
+                {/* <p className="text-muted-foreground text-lg">Interactive demo video coming soon!</p> */}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </section>
 
@@ -143,7 +175,7 @@ export default function HomePage() {
           </form>
         </div>
       </section>
-      
+
       {/* Privacy Policy Placeholder Section */}
       <section id="privacy" className="py-12 bg-muted/30">
         <div className="container mx-auto px-4 max-w-3xl">
