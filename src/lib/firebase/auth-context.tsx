@@ -50,7 +50,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     try {
       await authService.loginWithEmailAndPassword(email, password);
+      // Ensure we're using the correct path with the app group
       router.push('/dashboard');
+      // Force a refresh to ensure navigation happens
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 100);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -65,6 +70,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await authService.registerWithEmailAndPassword(email, password, displayName);
       router.push('/dashboard');
+      // Force a refresh to ensure navigation happens
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 100);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -79,6 +88,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await authService.signInWithGoogle();
       router.push('/dashboard');
+      // Force a refresh to ensure navigation happens
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 100);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -93,6 +106,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await authService.signInWithGithub();
       router.push('/dashboard');
+      // Force a refresh to ensure navigation happens
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 100);
     } catch (err: any) {
       setError(err.message);
     } finally {

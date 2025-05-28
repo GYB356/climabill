@@ -12,7 +12,7 @@ import { AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/lib/firebase/auth-context';
 import { useToast } from '@/components/ui/use-toast';
 import { RecaptchaVerifier } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import { auth, isDevelopment } from '@/lib/firebase/config';
 
 export default function MFASetupPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -27,27 +27,54 @@ export default function MFASetupPage() {
   useEffect(() => {
     // Initialize reCAPTCHA verifier
     if (!recaptchaVerifier && typeof window !== 'undefined') {
-      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'normal',
-        callback: () => {
-          // reCAPTCHA solved, allow sending verification code
-        },
-        'expired-callback': () => {
-          // Reset reCAPTCHA
-          toast({
-            title: "reCAPTCHA expired",
-            description: "Please solve the reCAPTCHA again.",
-            variant: "destructive"
+      try {
+        // In development mode, use a mock reCAPTCHA verifier
+        if (isDevelopment) {
+          console.log('Using mock reCAPTCHA verifier for development');
+          // Create a simple mock object that mimics the RecaptchaVerifier interface
+          const mockVerifier = {
+            clear: () => {},
+            render: () => Promise.resolve('mock-recaptcha-token'),
+            verify: () => Promise.resolve('mock-recaptcha-token'),
+            _reset: () => {}
+          };
+          setRecaptchaVerifier(mockVerifier as unknown as RecaptchaVerifier);
+        } else {
+          // In production, use the real reCAPTCHA verifier
+          const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            size: 'normal',
+            callback: () => {
+              // reCAPTCHA solved, allow sending verification code
+            },
+            'expired-callback': () => {
+              // Reset reCAPTCHA
+              toast({
+                title: "reCAPTCHA expired",
+                description: "Please solve the reCAPTCHA again.",
+                variant: "destructive"
+              });
+            }
           });
+          setRecaptchaVerifier(verifier);
         }
-      });
-      setRecaptchaVerifier(verifier);
+      } catch (error) {
+        console.error('Error initializing reCAPTCHA:', error);
+        toast({
+          title: "reCAPTCHA initialization failed",
+          description: "This is likely due to missing or invalid Firebase configuration.",
+          variant: "destructive"
+        });
+      }
     }
 
     return () => {
       // Clean up reCAPTCHA verifier
-      if (recaptchaVerifier) {
-        recaptchaVerifier.clear();
+      if (recaptchaVerifier && !isDevelopment) {
+        try {
+          recaptchaVerifier.clear();
+        } catch (error) {
+          console.error('Error clearing reCAPTCHA:', error);
+        }
       }
     };
   }, [toast]);
@@ -85,13 +112,25 @@ export default function MFASetupPage() {
         formattedPhoneNumber = `+${phoneNumber}`;
       }
 
-      const verificationId = await enrollMFA(formattedPhoneNumber, recaptchaVerifier);
-      setVerificationId(verificationId);
-      setStep('code');
-      toast({
-        title: "Verification code sent",
-        description: `A verification code has been sent to ${formattedPhoneNumber}.`,
-      });
+      // In development mode, use a mock verification ID
+      if (isDevelopment) {
+        console.log('Using mock verification ID for development');
+        setVerificationId('mock-verification-id-123456');
+        setStep('code');
+        toast({
+          title: "Verification code sent (Development Mode)",
+          description: `A mock verification code has been sent to ${formattedPhoneNumber}. Use any 6-digit code to proceed.`,
+        });
+      } else {
+        // In production, use the real MFA enrollment
+        const verificationId = await enrollMFA(formattedPhoneNumber, recaptchaVerifier);
+        setVerificationId(verificationId);
+        setStep('code');
+        toast({
+          title: "Verification code sent",
+          description: `A verification code has been sent to ${formattedPhoneNumber}.`,
+        });
+      }
     } catch (error) {
       console.error("Error sending verification code:", error);
       toast({
@@ -122,12 +161,32 @@ export default function MFASetupPage() {
     }
 
     try {
-      await verifyMFA(verificationId, verificationCode);
-      setStep('complete');
-      toast({
-        title: "MFA enabled",
-        description: "Multi-factor authentication has been successfully enabled for your account.",
-      });
+      // In development mode, accept any 6-digit code
+      if (isDevelopment) {
+        console.log('Using mock verification in development mode');
+        // Check if the code is 6 digits (simple validation for development)
+        if (verificationCode.length === 6 && /^\d+$/.test(verificationCode)) {
+          setStep('complete');
+          toast({
+            title: "MFA enabled (Development Mode)",
+            description: "Mock multi-factor authentication has been successfully enabled for your account.",
+          });
+        } else {
+          toast({
+            title: "Invalid verification code",
+            description: "Please enter a valid 6-digit verification code.",
+            variant: "destructive"
+          });
+        }
+      } else {
+        // In production, use the real MFA verification
+        await verifyMFA(verificationId, verificationCode);
+        setStep('complete');
+        toast({
+          title: "MFA enabled",
+          description: "Multi-factor authentication has been successfully enabled for your account.",
+        });
+      }
     } catch (error) {
       console.error("Error verifying code:", error);
       toast({

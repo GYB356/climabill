@@ -18,9 +18,19 @@ import {
   GoogleAuthProvider,
   GithubAuthProvider,
   onAuthStateChanged,
-  NextOrObserver
+  NextOrObserver,
+  AuthErrorMap
 } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
+
+// Create a mock error factory to prevent 'Cannot read properties of undefined (reading 'create')' error
+const mockErrorFactory = {
+  create: (code: string, message: string) => {
+    const error = new Error(message || code);
+    (error as any).code = code;
+    return error;
+  }
+};
 
 // Check if we're in development mode
 export const isDevelopment = process.env.NODE_ENV === 'development';
@@ -47,6 +57,15 @@ try {
   
   if (isDevelopment) {
     console.log('Using mock Firebase implementation for development');
+    
+    // Patch Firebase Auth error handling to prevent 'Cannot read properties of undefined (reading 'create')' error
+    // This is needed because Firebase internally uses a private error factory that our mock doesn't have access to
+    if (typeof window !== 'undefined') {
+      // @ts-ignore - Accessing internal Firebase property for mocking
+      window._firebase_auth_internal = window._firebase_auth_internal || {};
+      // @ts-ignore
+      window._firebase_auth_internal.ErrorFactory = mockErrorFactory;
+    }
     
     // Create a mock user for development
     const mockUser: User = {
@@ -120,6 +139,12 @@ try {
       sendSignInLinkToEmail: () => Promise.resolve(),
       getRedirectResult: () => Promise.resolve({ user: mockUser } as UserCredential),
       tenantId: null,
+      // Add missing reCAPTCHA methods
+      _getRecaptchaConfig: () => null,
+      _getPendingToken: () => null,
+      _getFramework: () => null,
+      _getAppCheckToken: () => Promise.resolve(null),
+      _getAdditionalUserInfo: () => null,
     };
     
     // Use our mock auth instead of the real Firebase auth
