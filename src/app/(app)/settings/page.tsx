@@ -708,20 +708,21 @@ export default function SettingsPage() {
           <CardDescription>Manage your account security preferences.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-between space-x-3 rounded-md border p-4 bg-background">
+          <div className="flex items-center justify-between py-2">
             <div className="space-y-0.5">
-              <Label htmlFor="mfa-toggle" className="text-base font-medium">
-                Enable Multi-Factor Authentication (MFA)
+              <Label htmlFor="mfa-toggle" className="text-base">
+                Multi-Factor Authentication (MFA)
               </Label>
               <p className="text-sm text-muted-foreground">
                 Enhance your account security by requiring a second form of verification.
               </p>
             </div>
-            <Switch
-              id="mfa-toggle"
-              checked={enableMFA}
-              onCheckedChange={setEnableMFA}
-            />
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.href = '/settings/mfa'}
+            >
+              Setup MFA
+            </Button>
           </div>
         </CardContent>
       </Card>

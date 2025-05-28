@@ -131,7 +131,7 @@ export default function MFASetupPage() {
     } catch (error) {
       console.error("Error verifying code:", error);
       toast({
-        title: "Verification failed",
+        title: "Failed to verify code",
         description: "The verification code is invalid or has expired. Please try again.",
         variant: "destructive"
       });
@@ -140,7 +140,7 @@ export default function MFASetupPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background py-12">
-      <div className="mx-auto grid w-[400px] gap-6">
+      <div className="mx-auto grid w-[380px] gap-6">
         <div className="grid gap-2 text-center">
           <CardTitle className="text-3xl font-bold text-foreground">Multi-Factor Authentication</CardTitle>
           <CardDescription className="text-muted-foreground">

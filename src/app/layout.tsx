@@ -1,4 +1,3 @@
-
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
@@ -6,7 +5,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { LandingHeader } from '@/components/landing-header';
 import { LandingFooter } from '@/components/landing-footer';
 import { CookieConsentBanner } from '@/components/cookie-consent-banner'; // Added
-import { AuthProvider } from '@/lib/firebase/auth-context';
+import { AuthProviderWrapper } from '@/components/providers/auth-provider-wrapper';
+
+export const metadata: Metadata = {
+  title: 'ClimaBill - Next-Gen Billing Management',
+  description: 'Billing platform with AI insights and climate-conscious features.',
+};
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -18,11 +22,6 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-export const metadata: Metadata = {
-  title: 'ClimaBill - Next-Gen Billing Management',
-  description: 'Billing platform with AI insights and climate-conscious features.',
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="light">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
-        <AuthProvider>
+        <AuthProviderWrapper>
           <LandingHeader />
           <main className="flex-grow">
             {children}
@@ -39,7 +38,7 @@ export default function RootLayout({
           <LandingFooter />
           <Toaster />
           <CookieConsentBanner />
-        </AuthProvider>
+        </AuthProviderWrapper>
       </body>
     </html>
   );
