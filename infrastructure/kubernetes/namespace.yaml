@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: climabill
+  labels:
+    name: climabill
+    environment: production
+    app: climabill
+    istio-injection: enabled

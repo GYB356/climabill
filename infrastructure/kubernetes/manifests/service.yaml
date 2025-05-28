@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: climabill-service
+  namespace: climabill
+  labels:
+    app: climabill
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/api/metrics"
+    prometheus.io/port: "3000"
+spec:
+  selector:
+    app: climabill
+    component: app
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  type: ClusterIP

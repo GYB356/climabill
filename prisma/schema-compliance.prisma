@@ -1,0 +1,176 @@
+// GDPR/CCPA Compliance Models
+// These models should be added to the main schema.prisma file
+
+// User consent records
+model Consent {
+  id        String         @id @default(uuid())
+  userId    String
+  type      ConsentType
+  status    ConsentStatus
+  source    String         // Where consent was collected (web, mobile, etc.)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  history   ConsentHistory[]
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+}
+
+// Consent history for audit trail
+model ConsentHistory {
+  id         String         @id @default(uuid())
+  consentId  String
+  status     ConsentStatus
+  source     String         // Where consent was collected (web, mobile, etc.)
+  ipAddress  String?        // IP address when consent was given/changed
+  userAgent  String?        // User agent when consent was given/changed
+  createdAt  DateTime       @default(now())
+  consent    Consent        @relation(fields: [consentId], references: [id], onDelete: Cascade)
+
+  @@index([consentId])
+}
+
+// Data subject requests (access, deletion, etc.)
+model DataSubjectRequest {
+  id          String    @id @default(uuid())
+  userId      String
+  requestType String    // EXPORT, DELETE, RECTIFY
+  status      String    // PROCESSING, COMPLETED, DENIED
+  notes       String?
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+// Data processing records for compliance documentation
+model DataProcessingRecord {
+  id        String   @id @default(uuid())
+  userId    String
+  activity  String
+  details   String?  // JSON string with additional details
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([activity])
+}
+
+// Data processing impact assessments
+model DataProcessingImpactAssessment {
+  id                String    @id @default(uuid())
+  processName       String
+  dataCategories    String[]
+  processingPurpose String
+  risks             String    // JSON string with risk details
+  mitigations       String    // JSON string with mitigation details
+  approved          Boolean   @default(false)
+  approvedBy        String?
+  approvedDate      DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([processName])
+}
+
+// Data breach records
+model DataBreach {
+  id               String    @id @default(uuid())
+  description      String
+  discoveryDate    DateTime
+  notificationDate DateTime?
+  affectedUsers    String[]
+  dataCategories   String[]
+  riskLevel        String    // LOW, MEDIUM, HIGH
+  remediation      String?
+  reportedToDpa    Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([discoveryDate])
+}
+
+// Vendor assessments for data processors
+model VendorAssessment {
+  id                 String   @id @default(uuid())
+  vendorName         String
+  services           String[]
+  dataCategories     String[]
+  processingLocations String[]
+  securityMeasures   String[]
+  contractDate       DateTime
+  dpaInPlace         Boolean
+  subProcessors      String[]
+  riskLevel          String   // LOW, MEDIUM, HIGH
+  approvedBy         String
+  approvedDate       DateTime
+  reviewDate         DateTime
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([vendorName])
+}
+
+// Cookie consent records
+model CookieConsent {
+  id            String   @id @default(uuid())
+  userId        String?
+  sessionId     String
+  necessary     Boolean  @default(true)
+  preferences   Boolean  @default(false)
+  analytics     Boolean  @default(false)
+  marketing     Boolean  @default(false)
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([sessionId])
+}
+
+// Data retention policy definitions
+model DataRetentionPolicy {
+  id               String   @id @default(uuid())
+  dataType         String   @unique
+  retentionPeriod  Int      // in days
+  legalBasis       String
+  automaticDeletion Boolean @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([dataType])
+}
+
+// Enums for consent types and statuses
+enum ConsentType {
+  MARKETING_EMAIL
+  MARKETING_SMS
+  ANALYTICS
+  THIRD_PARTY_SHARING
+  PROFILING
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  COOKIE_POLICY
+}
+
+enum ConsentStatus {
+  GRANTED
+  DENIED
+  WITHDRAWN
+}
+
+// Add these relations to the User model
+// model User {
+//   ...existing fields
+//   consents              Consent[]
+//   dataSubjectRequests   DataSubjectRequest[]
+//   dataProcessingRecords DataProcessingRecord[]
+//   cookieConsents        CookieConsent[]
+//   deleted               Boolean @default(false)
+//   deletedAt             DateTime?
+// }

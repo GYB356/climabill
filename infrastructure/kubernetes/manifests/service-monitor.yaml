@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: climabill-monitor
+  namespace: climabill
+  labels:
+    app: climabill
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: climabill
+  endpoints:
+  - port: http
+    path: /api/metrics
+    interval: 15s
+    scrapeTimeout: 10s
+    honorLabels: true
+    metricRelabelings:
+    - sourceLabels: [__name__]
+      regex: 'http_request_duration_seconds.*'
+      action: keep
+  namespaceSelector:
+    matchNames:
+    - climabill

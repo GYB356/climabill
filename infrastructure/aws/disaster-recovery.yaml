@@ -1,0 +1,305 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'ClimaBill - Disaster Recovery Infrastructure'
+
+Parameters:
+  Environment:
+    Description: Environment (dev, staging, prod)
+    Type: String
+    Default: prod
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+  
+  PrimaryRegion:
+    Description: Primary AWS region
+    Type: String
+    Default: us-east-1
+  
+  SecondaryRegion:
+    Description: Secondary AWS region for disaster recovery
+    Type: String
+    Default: us-west-2
+  
+  DatabaseUsername:
+    Description: Username for the RDS database
+    Type: String
+    Default: climabill
+  
+  DatabasePassword:
+    Description: Password for the RDS database
+    Type: String
+    NoEcho: true
+  
+  DatabaseName:
+    Description: Name of the database
+    Type: String
+    Default: climabill
+  
+  BackupRetentionPeriod:
+    Description: Number of days to retain automated backups
+    Type: Number
+    Default: 7
+    MinValue: 1
+    MaxValue: 35
+
+Resources:
+  # S3 Bucket for Database Backups
+  BackupBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub climabill-${Environment}-db-backups
+      VersioningConfiguration:
+        Status: Enabled
+      ReplicationConfiguration:
+        Role: !GetAtt ReplicationRole.Arn
+        Rules:
+          - Status: Enabled
+            Destination:
+              Bucket: !Sub arn:aws:s3:::climabill-${Environment}-dr-backups
+              StorageClass: STANDARD
+      LifecycleConfiguration:
+        Rules:
+          - Id: TransitionToGlacier
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 30
+                StorageClass: GLACIER
+            ExpirationInDays: 365
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  # S3 Bucket in Secondary Region for Replication
+  DrBackupBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub climabill-${Environment}-dr-backups
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: TransitionToGlacier
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 30
+                StorageClass: GLACIER
+            ExpirationInDays: 365
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  # IAM Role for S3 Replication
+  ReplicationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+  # RDS Read Replica in Secondary Region
+  SecondaryDatabase:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Sub climabill-${Environment}-db-replica
+      SourceDBInstanceIdentifier: !Sub climabill-${Environment}-db
+      SourceRegion: !Ref PrimaryRegion
+      DBInstanceClass: db.t3.medium
+      Engine: postgres
+      MultiAZ: false
+      PubliclyAccessible: false
+      StorageEncrypted: true
+      CopyTagsToSnapshot: true
+      BackupRetentionPeriod: !Ref BackupRetentionPeriod
+      Tags:
+        - Key: Name
+          Value: !Sub climabill-${Environment}-db-replica
+
+  # DynamoDB Global Table for Session Data
+  SessionTable:
+    Type: AWS::DynamoDB::GlobalTable
+    Properties:
+      TableName: !Sub climabill-${Environment}-sessions
+      BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      Replicas:
+        - Region: !Ref PrimaryRegion
+          PointInTimeRecoverySpecification:
+            PointInTimeRecoveryEnabled: true
+        - Region: !Ref SecondaryRegion
+          PointInTimeRecoverySpecification:
+            PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expires
+        Enabled: true
+
+  # CloudWatch Alarm for Database Failover
+  DatabaseFailoverAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub climabill-${Environment}-db-failover-alarm
+      AlarmDescription: Alarm for database failover
+      MetricName: CPUUtilization
+      Namespace: AWS/RDS
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 5
+      Threshold: 99.0
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Sub climabill-${Environment}-db
+      AlarmActions:
+        - !Ref DatabaseFailoverTopic
+
+  # SNS Topic for Database Failover Notification
+  DatabaseFailoverTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub climabill-${Environment}-db-failover-topic
+      DisplayName: Database Failover Notification
+
+  # Lambda Function for Automated Failover
+  FailoverFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub climabill-${Environment}-db-failover
+      Runtime: python3.9
+      Handler: index.handler
+      Role: !GetAtt FailoverRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          import json
+          
+          def handler(event, context):
+              print("Received event:", json.dumps(event))
+              
+              # Get the primary and secondary regions from environment variables
+              primary_region = os.environ['PRIMARY_REGION']
+              secondary_region = os.environ['SECONDARY_REGION']
+              db_instance = os.environ['DB_INSTANCE']
+              
+              # Check if this is an SNS notification
+              if 'Records' in event:
+                  message = json.loads(event['Records'][0]['Sns']['Message'])
+                  alarm_name = message['AlarmName']
+                  
+                  if 'db-failover-alarm' in alarm_name:
+                      print(f"Failover alarm triggered: {alarm_name}")
+                      
+                      # Promote the read replica to a standalone DB instance
+                      rds = boto3.client('rds', region_name=secondary_region)
+                      response = rds.promote_read_replica(
+                          DBInstanceIdentifier=f"{db_instance}-replica"
+                      )
+                      
+                      print(f"Promoted read replica: {response}")
+                      
+                      # Update Route 53 DNS records (simplified)
+                      # In a real implementation, you would update DNS to point to the new primary
+                      
+                      return {
+                          'statusCode': 200,
+                          'body': json.dumps('Failover completed successfully')
+                      }
+              
+              return {
+                  'statusCode': 400,
+                  'body': json.dumps('Not a valid failover event')
+              }
+      Environment:
+        Variables:
+          PRIMARY_REGION: !Ref PrimaryRegion
+          SECONDARY_REGION: !Ref SecondaryRegion
+          DB_INSTANCE: !Sub climabill-${Environment}-db
+      Timeout: 60
+      MemorySize: 128
+
+  # IAM Role for Failover Lambda
+  FailoverRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: RDSFailoverPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - rds:PromoteReadReplica
+                  - rds:ModifyDBInstance
+                  - rds:DescribeDBInstances
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - route53:ChangeResourceRecordSets
+                  - route53:ListResourceRecordSets
+                Resource: '*'
+
+  # SNS Subscription for Lambda
+  FailoverSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref DatabaseFailoverTopic
+      Protocol: lambda
+      Endpoint: !GetAtt FailoverFunction.Arn
+
+  # Lambda Permission for SNS
+  FailoverPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref FailoverFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref DatabaseFailoverTopic
+
+Outputs:
+  BackupBucketName:
+    Description: Name of the S3 bucket for database backups
+    Value: !Ref BackupBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-BackupBucketName
+
+  DrBackupBucketName:
+    Description: Name of the S3 bucket for DR database backups
+    Value: !Ref DrBackupBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-DrBackupBucketName
+
+  SecondaryDatabaseEndpoint:
+    Description: Endpoint of the RDS read replica in the secondary region
+    Value: !GetAtt SecondaryDatabase.Endpoint.Address
+    Export:
+      Name: !Sub ${AWS::StackName}-SecondaryDatabaseEndpoint
+
+  SessionTableName:
+    Description: Name of the DynamoDB global table for sessions
+    Value: !Ref SessionTable
+    Export:
+      Name: !Sub ${AWS::StackName}-SessionTableName

@@ -1,0 +1,176 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: climabill-app
+  namespace: climabill
+  labels:
+    app: climabill
+    component: app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: climabill
+      component: app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: climabill
+        component: app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/api/metrics"
+        prometheus.io/port: "3000"
+    spec:
+      containers:
+      - name: climabill-app
+        image: ${CONTAINER_REGISTRY}/climabill:${IMAGE_TAG}
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 3000
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: NEXT_PUBLIC_FIREBASE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: NEXT_PUBLIC_FIREBASE_API_KEY
+        - name: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+        - name: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+        - name: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+        - name: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+        - name: NEXT_PUBLIC_FIREBASE_APP_ID
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: NEXT_PUBLIC_FIREBASE_APP_ID
+        - name: FIREBASE_SERVICE_ACCOUNT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: FIREBASE_SERVICE_ACCOUNT_KEY
+        - name: STRIPE_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: STRIPE_SECRET_KEY
+        - name: STRIPE_WEBHOOK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: STRIPE_WEBHOOK_SECRET
+        - name: PAYPAL_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: PAYPAL_CLIENT_ID
+        - name: PAYPAL_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: PAYPAL_CLIENT_SECRET
+        - name: CLOVERLY_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: CLOVERLY_API_KEY
+        - name: QUICKBOOKS_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: QUICKBOOKS_CLIENT_ID
+        - name: QUICKBOOKS_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: QUICKBOOKS_CLIENT_SECRET
+        - name: XERO_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: XERO_CLIENT_ID
+        - name: XERO_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: XERO_CLIENT_SECRET
+        - name: SLACK_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: SLACK_CLIENT_ID
+        - name: SLACK_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: SLACK_CLIENT_SECRET
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: DATABASE_URL
+        - name: NEXT_PUBLIC_SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: NEXT_PUBLIC_SENTRY_DSN
+        - name: NEXT_PUBLIC_DATADOG_APPLICATION_ID
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: NEXT_PUBLIC_DATADOG_APPLICATION_ID
+        - name: NEXT_PUBLIC_DATADOG_CLIENT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: NEXT_PUBLIC_DATADOG_CLIENT_TOKEN
+        - name: NEXT_PUBLIC_APP_VERSION
+          value: "${IMAGE_TAG}"
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 15
+      imagePullSecrets:
+      - name: registry-credentials

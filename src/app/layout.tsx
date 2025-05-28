@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { LandingHeader } from '@/components/landing-header';
 import { LandingFooter } from '@/components/landing-footer';
 import { CookieConsentBanner } from '@/components/cookie-consent-banner'; // Added
+import { AuthProvider } from '@/lib/firebase/auth-context';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -30,13 +31,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="light">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
-        <LandingHeader />
-        <main className="flex-grow">
-          {children}
-        </main>
-        <LandingFooter />
-        <Toaster />
-        <CookieConsentBanner /> {/* Added */}
+        <AuthProvider>
+          <LandingHeader />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <LandingFooter />
+          <Toaster />
+          <CookieConsentBanner />
+        </AuthProvider>
       </body>
     </html>
   );
