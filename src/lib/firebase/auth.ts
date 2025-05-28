@@ -22,7 +22,7 @@ import {
   verifyPasswordResetCode,
   AuthError
 } from 'firebase/auth';
-import { auth } from './config';
+import { auth, isDevelopment } from './config';
 
 // Authentication service
 export const authService = {
