@@ -253,7 +253,7 @@ export class ChurnPredictionService {
    */
   async getLatestChurnPrediction(customerId: string): Promise<ChurnPrediction | null> {
     try {
-      const predictionsRef = collection(firestore, this.COLLECTION);
+      const predictionsRef = collection(this.firestore, this.COLLECTION);
       const predictionQuery = query(
         predictionsRef,
         where('customerId', '==', customerId),

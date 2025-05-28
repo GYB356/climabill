@@ -138,6 +138,73 @@ spec:
             secretKeyRef:
               name: climabill-secrets
               key: DATABASE_URL
+        # AI/ML Environment Variables
+        - name: AWS_REGION
+          value: "us-west-2"
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: climabill-secrets
+              key: AWS_SECRET_ACCESS_KEY
+        - name: SAGEMAKER_CHURN_ENDPOINT
+          value: "climabill-churn-prediction-20250528"
+        # Data Warehouse Environment Variables
+        - name: DATA_WAREHOUSE_HOST
+          value: "data-warehouse.climabill.svc.cluster.local"
+        - name: DATA_WAREHOUSE_PORT
+          value: "5432"
+        - name: DATA_WAREHOUSE_USER
+          valueFrom:
+            secretKeyRef:
+              name: data-warehouse-secrets
+              key: username
+        - name: DATA_WAREHOUSE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: data-warehouse-secrets
+              key: password
+        - name: DATA_WAREHOUSE_DB
+          value: "climabill_warehouse"
+        # Blockchain Environment Variables
+        - name: ETHEREUM_RPC_URL
+          value: "https://goerli.infura.io/v3/${INFURA_PROJECT_ID}"
+        - name: ETHEREUM_NETWORK
+          value: "goerli"
+        - name: INFURA_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: blockchain-secrets
+              key: infura-project-id
+        - name: DEPLOYER_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: blockchain-secrets
+              key: deployer-private-key
+        # IPFS Environment Variables
+        - name: IPFS_API_URL
+          value: "https://api.pinata.cloud/pinning/pinJSONToIPFS"
+        - name: IPFS_GATEWAY_URL
+          value: "https://gateway.pinata.cloud/ipfs/"
+        - name: IPFS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: blockchain-secrets
+              key: ipfs-api-key
+        - name: IPFS_API_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: blockchain-secrets
+              key: ipfs-api-secret
+        - name: WEB3_STORAGE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: blockchain-secrets
+              key: web3-storage-token
         readinessProbe:
           httpGet:
             path: /api/health
