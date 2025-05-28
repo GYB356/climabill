@@ -1,0 +1,186 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String              @id @default(uuid())
+  email             String              @unique
+  name              String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  customers         Customer[]
+  invoices          Invoice[]
+  payments          Payment[]
+  carbonUsage       CarbonUsage[]
+  carbonOffsets     CarbonOffset[]
+  wallets           Wallet[]
+  blockchainInvoices BlockchainInvoice[]
+  integrations      Integration[]
+  notifications     Notification[]
+  settings          Json?
+}
+
+model Customer {
+  id        String    @id @default(uuid())
+  userId    String
+  name      String
+  email     String?
+  phone     String?
+  company   String?
+  address   Json?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  invoices  Invoice[]
+  payments  Payment[]
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Invoice {
+  id          String    @id @default(uuid())
+  userId      String
+  customerId  String
+  number      String
+  date        DateTime
+  dueDate     DateTime
+  items       Json
+  total       Float
+  status      String    @default("draft")
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  payments    Payment[]
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([customerId])
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  userId      String
+  customerId  String
+  invoiceId   String
+  amount      Float
+  date        DateTime
+  method      String?
+  reference   String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([invoiceId])
+}
+
+model CarbonUsage {
+  id          String   @id @default(uuid())
+  userId      String
+  amount      Float
+  source      String
+  description String?
+  date        DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model CarbonOffset {
+  id          String   @id @default(uuid())
+  userId      String
+  amount      Float
+  cost        Float
+  provider    String
+  reference   String?
+  date        DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Wallet {
+  id                String              @id @default(uuid())
+  userId            String
+  name              String
+  network           String
+  address           String
+  encryptedData     String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blockchainInvoices BlockchainInvoice[]
+
+  @@index([userId])
+}
+
+model BlockchainInvoice {
+  id              String   @id @default(uuid())
+  userId          String
+  walletId        String
+  invoiceId       String?
+  transactionHash String
+  network         String
+  contractAddress String
+  invoiceData     Json
+  status          String
+  ipfsHash        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet          Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([walletId])
+}
+
+model Integration {
+  id              String   @id @default(uuid())
+  userId          String
+  provider        String
+  providerUserId  String?
+  providerTenantId String?
+  accessToken     String
+  refreshToken    String?
+  tokenExpiry     DateTime?
+  scopes          String[]
+  data            Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([provider])
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  template    String
+  subject     String
+  message     String
+  priority    String
+  data        Json?
+  results     Json?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

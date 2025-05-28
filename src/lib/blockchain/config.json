@@ -1,0 +1,60 @@
+{
+  "contractAddresses": {
+    "ethereum_mainnet": {
+      "invoiceContract": "",
+      "tokenContract": "",
+      "storageContract": ""
+    },
+    "ethereum_goerli": {
+      "invoiceContract": "",
+      "tokenContract": "",
+      "storageContract": ""
+    },
+    "polygon_mainnet": {
+      "invoiceContract": "",
+      "tokenContract": "",
+      "storageContract": ""
+    },
+    "polygon_mumbai": {
+      "invoiceContract": "",
+      "tokenContract": "",
+      "storageContract": ""
+    },
+    "lastDeployed": {}
+  },
+  "providers": {
+    "ethereum": {
+      "mainnet": "https://mainnet.infura.io/v3/${INFURA_PROJECT_ID}",
+      "goerli": "https://goerli.infura.io/v3/${INFURA_PROJECT_ID}"
+    },
+    "polygon": {
+      "mainnet": "https://polygon-rpc.com",
+      "mumbai": "https://rpc-mumbai.maticvigil.com"
+    },
+    "polkadot": {
+      "mainnet": "wss://rpc.polkadot.io",
+      "testnet": "wss://westend-rpc.polkadot.io"
+    }
+  },
+  "ipfs": {
+    "pinningServices": [
+      {
+        "name": "pinata",
+        "apiUrl": "https://api.pinata.cloud/pinning/pinJSONToIPFS",
+        "gatewayUrl": "https://gateway.pinata.cloud/ipfs/"
+      },
+      {
+        "name": "infura",
+        "apiUrl": "https://ipfs.infura.io:5001/api/v0/add",
+        "gatewayUrl": "https://ipfs.infura.io/ipfs/"
+      },
+      {
+        "name": "web3.storage",
+        "apiUrl": "https://api.web3.storage/upload",
+        "gatewayUrl": "https://w3s.link/ipfs/"
+      }
+    ],
+    "preferredService": "pinata"
+  },
+  "defaultNetwork": "ethereum_goerli"
+}

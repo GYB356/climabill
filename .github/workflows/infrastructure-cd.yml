@@ -1,0 +1,351 @@
+name: Infrastructure Deployment
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infrastructure/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      skip_tests:
+        description: 'Skip infrastructure tests'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  AWS_REGION: us-east-1
+  GCP_PROJECT_ID: climabill-project
+  TERRAFORM_VERSION: 1.4.6
+  KUBECTL_VERSION: 1.25.0
+  KUSTOMIZE_VERSION: 4.5.7
+
+jobs:
+  validate:
+    name: Validate Infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Format Check
+        run: |
+          cd infrastructure/terraform
+          terraform fmt -check -recursive
+
+      - name: Validate Kubernetes Manifests
+        uses: azure/k8s-lint@v1
+        with:
+          manifests: |
+            infrastructure/kubernetes/**/*.yaml
+
+  test:
+    name: Test Infrastructure
+    runs-on: ubuntu-latest
+    needs: validate
+    if: ${{ !inputs.skip_tests }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        run: |
+          cd infrastructure/terraform
+          terraform init -backend=false
+
+      - name: Terraform Validate
+        run: |
+          cd infrastructure/terraform
+          terraform validate
+
+      - name: Run Terratest
+        if: false # Enable when terratest is implemented
+        run: |
+          cd infrastructure/tests
+          go test -v ./...
+
+  plan:
+    name: Plan Infrastructure Changes
+    runs-on: ubuntu-latest
+    needs: [validate]
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    strategy:
+      matrix:
+        environment: 
+          - ${{ github.event.inputs.environment || 'dev' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup GCP credentials
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Terraform Init
+        run: |
+          cd infrastructure/terraform/${{ matrix.environment }}
+          terraform init
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          cd infrastructure/terraform/${{ matrix.environment }}
+          terraform plan -out=tfplan -input=false
+        continue-on-error: true
+
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-plan-${{ matrix.environment }}
+          path: infrastructure/terraform/${{ matrix.environment }}/tfplan
+
+      - name: Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+  apply:
+    name: Apply Infrastructure Changes
+    runs-on: ubuntu-latest
+    needs: [plan]
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    strategy:
+      matrix:
+        environment: 
+          - ${{ github.event.inputs.environment || 'dev' }}
+    environment:
+      name: ${{ matrix.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup GCP credentials
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Download Terraform Plan
+        uses: actions/download-artifact@v3
+        with:
+          name: terraform-plan-${{ matrix.environment }}
+          path: infrastructure/terraform/${{ matrix.environment }}
+
+      - name: Terraform Init
+        run: |
+          cd infrastructure/terraform/${{ matrix.environment }}
+          terraform init
+
+      - name: Terraform Apply
+        run: |
+          cd infrastructure/terraform/${{ matrix.environment }}
+          terraform apply -auto-approve tfplan
+
+  deploy_kubernetes:
+    name: Deploy Kubernetes Resources
+    runs-on: ubuntu-latest
+    needs: [apply]
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    strategy:
+      matrix:
+        environment: 
+          - ${{ github.event.inputs.environment || 'dev' }}
+    environment:
+      name: ${{ matrix.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: ${{ env.KUBECTL_VERSION }}
+
+      - name: Setup kustomize
+        uses: imranismail/setup-kustomize@v2
+        with:
+          kustomize-version: ${{ env.KUSTOMIZE_VERSION }}
+
+      - name: Update kubeconfig
+        run: |
+          if [[ "${{ matrix.environment }}" == "prod" ]]; then
+            aws eks update-kubeconfig --name climabill-prod --region ${{ env.AWS_REGION }}
+          else
+            aws eks update-kubeconfig --name climabill-${{ matrix.environment }} --region ${{ env.AWS_REGION }}
+          fi
+
+      - name: Deploy Kubernetes Resources
+        run: |
+          cd infrastructure/kubernetes
+          
+          # Apply namespace if it doesn't exist
+          kubectl apply -f namespace.yaml
+          
+          # Apply secrets first
+          kubectl apply -f security/secrets.yaml
+          
+          # Apply database resources
+          kubectl apply -f postgres/postgres-ha.yaml
+          
+          # Apply Redis resources
+          kubectl apply -f redis/redis-cluster.yaml
+          
+          # Apply monitoring resources
+          kubectl apply -f monitoring/
+          
+          # Apply security policies
+          kubectl apply -f security/
+          
+          # Apply main application resources
+          kubectl apply -f manifests/
+          
+          # Apply service mesh resources
+          kubectl apply -f service-mesh/
+          
+          # Verify deployment
+          kubectl get pods -n climabill
+
+  post_deploy:
+    name: Post-Deployment Tasks
+    runs-on: ubuntu-latest
+    needs: [deploy_kubernetes]
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    strategy:
+      matrix:
+        environment: 
+          - ${{ github.event.inputs.environment || 'dev' }}
+    environment:
+      name: ${{ matrix.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: ${{ env.KUBECTL_VERSION }}
+
+      - name: Update kubeconfig
+        run: |
+          if [[ "${{ matrix.environment }}" == "prod" ]]; then
+            aws eks update-kubeconfig --name climabill-prod --region ${{ env.AWS_REGION }}
+          else
+            aws eks update-kubeconfig --name climabill-${{ matrix.environment }} --region ${{ env.AWS_REGION }}
+          fi
+
+      - name: Run Database Migrations
+        run: |
+          # Wait for database to be ready
+          kubectl wait --for=condition=Ready pod -l app=postgres-ha -n climabill --timeout=300s
+          
+          # Run migrations using the application's migration job
+          kubectl apply -f infrastructure/kubernetes/jobs/db-migrate.yaml
+          kubectl wait --for=condition=Complete job/db-migrate -n climabill --timeout=300s
+
+      - name: Initialize Redis Cluster
+        run: |
+          # Wait for Redis cluster to be ready
+          kubectl wait --for=condition=Ready pod -l app=redis-cluster -n climabill --timeout=300s
+          
+          # Check if Redis cluster job completed successfully
+          kubectl logs job/redis-cluster-init -n climabill
+
+      - name: Send Deployment Notification
+        if: always()
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          payload: |
+            {
+              "text": "Infrastructure Deployment to ${{ matrix.environment }} ${{ job.status == 'success' && 'succeeded' || 'failed' }}!",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Infrastructure Deployment ${{ job.status == 'success' && 'Succeeded' || 'Failed' }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment:*\n${{ matrix.environment }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:*\n${{ job.status }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Workflow:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow Run>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

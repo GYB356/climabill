@@ -1,0 +1,74 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-backup
+  namespace: climabill
+spec:
+  schedule: "0 2 * * *"  # Run daily at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: postgres-backup
+            image: postgres:14-alpine
+            command:
+            - /bin/sh
+            - -c
+            - |
+              BACKUP_FILE="backup-$(date +%Y%m%d-%H%M%S).sql.gz"
+              PGPASSWORD="$DB_PASSWORD" pg_dump -h $DB_HOST -U $DB_USER -d $DB_NAME | gzip > /backups/$BACKUP_FILE
+              
+              # Upload to cloud storage
+              if [ -n "$BACKUP_BUCKET" ]; then
+                echo "Uploading backup to cloud storage..."
+                # For AWS S3
+                if command -v aws &> /dev/null; then
+                  aws s3 cp /backups/$BACKUP_FILE s3://$BACKUP_BUCKET/database-backups/$BACKUP_FILE
+                # For GCP GCS
+                elif command -v gsutil &> /dev/null; then
+                  gsutil cp /backups/$BACKUP_FILE gs://$BACKUP_BUCKET/database-backups/$BACKUP_FILE
+                else
+                  echo "No cloud storage CLI available"
+                fi
+              fi
+              
+              # Cleanup old backups (keep last 7 days)
+              find /backups -type f -name "backup-*.sql.gz" -mtime +7 -delete
+            env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: climabill-secrets
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: climabill-secrets
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: climabill-secrets
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: climabill-secrets
+                  key: DB_NAME
+            - name: BACKUP_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: climabill-secrets
+                  key: BACKUP_BUCKET
+            volumeMounts:
+            - name: backup-volume
+              mountPath: /backups
+          volumes:
+          - name: backup-volume
+            persistentVolumeClaim:
+              claimName: backup-pvc
+          restartPolicy: OnFailure

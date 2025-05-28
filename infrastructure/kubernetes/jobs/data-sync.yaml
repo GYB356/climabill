@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: data-warehouse-sync
+  namespace: climabill
+spec:
+  schedule: "0 */6 * * *"  # Every 6 hours
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: data-sync
+            image: climabill/api:latest
+            command: ["node", "scripts/data-sync.js"]
+            env:
+            - name: NODE_ENV
+              value: "production"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: climabill-secrets
+                  key: database-url
+            - name: DATA_WAREHOUSE_HOST
+              value: "data-warehouse.climabill.svc.cluster.local"
+            - name: DATA_WAREHOUSE_PORT
+              value: "5432"
+            - name: DATA_WAREHOUSE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: data-warehouse-secrets
+                  key: username
+            - name: DATA_WAREHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: data-warehouse-secrets
+                  key: password
+            - name: DATA_WAREHOUSE_DB
+              value: "climabill_warehouse"
+          restartPolicy: OnFailure

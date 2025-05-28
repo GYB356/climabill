@@ -1,0 +1,25 @@
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: climabill-kibana
+  namespace: logging
+spec:
+  version: 7.17.3
+  count: 1
+  elasticsearchRef:
+    name: climabill-elasticsearch
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: false
+  podTemplate:
+    spec:
+      containers:
+      - name: kibana
+        resources:
+          requests:
+            memory: 1Gi
+            cpu: 0.5
+          limits:
+            memory: 2Gi
+            cpu: 1

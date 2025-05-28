@@ -1,11 +1,19 @@
 
+"use client";
+
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ClimaBillLogo } from '@/components/icons';
 import { Github } from 'lucide-react';
+import { useAuth } from '@/lib/firebase/auth-context';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -17,6 +25,49 @@ const GoogleIcon = () => (
 );
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { login, loginWithGoogle, loginWithGithub, error, loading } = useAuth();
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await login(email, password);
+      toast({
+        title: "Login successful",
+        description: "You have been successfully logged in.",
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+      toast({
+        title: "Login successful",
+        description: "You have been successfully logged in with Google.",
+      });
+    } catch (error) {
+      console.error("Google login error:", error);
+    }
+  };
+
+  const handleGithubLogin = async () => {
+    try {
+      await loginWithGithub();
+      toast({
+        title: "Login successful",
+        description: "You have been successfully logged in with GitHub.",
+      });
+    } catch (error) {
+      console.error("GitHub login error:", error);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background py-12">
       <div className="mx-auto grid w-[350px] gap-6">
@@ -31,28 +82,70 @@ export default function LoginPage() {
         </div>
         <Card className="shadow-xl">
           <CardContent className="grid gap-4 pt-6">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" required />
-            </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <Link href="/forgot-password" className="ml-auto inline-block text-sm underline text-primary hover:text-primary/80">
-                  Forgot your password?
-                </Link>
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <form onSubmit={handleEmailLogin}>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="m@example.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required 
+                />
               </div>
-              <Input id="password" type="password" required />
+              <div className="grid gap-2 mt-2">
+                <div className="flex items-center">
+                  <Label htmlFor="password">Password</Label>
+                  <Link href="/forgot-password" className="ml-auto inline-block text-sm underline text-primary hover:text-primary/80">
+                    Forgot your password?
+                  </Link>
+                </div>
+                <Input 
+                  id="password" 
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required 
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full mt-4" 
+                disabled={loading}
+              >
+                {loading ? 'Logging in...' : 'Login'}
+              </Button>
+            </form>
+            <div className="relative my-2">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              </div>
             </div>
-            <Button type="submit" className="w-full" asChild>
-              {/* For prototype, directly link to dashboard. In real app, this would submit a form. */}
-              <Link href="/dashboard">Login</Link>
-            </Button>
-            <Button variant="outline" className="w-full">
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={handleGoogleLogin}
+              disabled={loading}
+            >
               <GoogleIcon />
               Login with Google
             </Button>
-            <Button variant="outline" className="w-full">
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={handleGithubLogin}
+              disabled={loading}
+            >
               <Github className="mr-2 h-4 w-4" />
               Login with GitHub
             </Button>

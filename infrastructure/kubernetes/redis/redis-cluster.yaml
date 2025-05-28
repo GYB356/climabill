@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-cluster-config
+  namespace: climabill
+data:
+  redis.conf: |
+    cluster-enabled yes
+    cluster-config-file nodes.conf
+    cluster-node-timeout 5000
+    appendonly yes
+    protected-mode no
+    maxmemory 2gb
+    maxmemory-policy allkeys-lru
+    save 900 1
+    save 300 10
+    save 60 10000
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-cluster
+  namespace: climabill
+spec:
+  serviceName: redis-cluster
+  replicas: 6
+  selector:
+    matchLabels:
+      app: redis-cluster
+  template:
+    metadata:
+      labels:
+        app: redis-cluster
+    spec:
+      containers:
+      - name: redis
+        image: redis:6.2-alpine
+        ports:
+        - containerPort: 6379
+          name: client
+        - containerPort: 16379
+          name: gossip
+        command: ["redis-server", "/conf/redis.conf"]
+        resources:
+          requests:
+            cpu: 100m
+            memory: 500Mi
+          limits:
+            cpu: 500m
+            memory: 2Gi
+        volumeMounts:
+        - name: conf
+          mountPath: /conf
+          readOnly: false
+        - name: data
+          mountPath: /data
+          readOnly: false
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - redis-cli ping
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      volumes:
+      - name: conf
+        configMap:
+          name: redis-cluster-config
+          items:
+          - key: redis.conf
+            path: redis.conf
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: standard
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cluster
+  namespace: climabill
+  labels:
+    app: redis-cluster
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: client
+  - port: 16379
+    targetPort: 16379
+    name: gossip
+  clusterIP: None
+  selector:
+    app: redis-cluster
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redis-cluster-init
+  namespace: climabill
+spec:
+  template:
+    spec:
+      containers:
+      - name: redis-cluster-init
+        image: redis:6.2-alpine
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for redis-cluster pods to be ready..."
+          sleep 10
+          
+          HOSTS=""
+          for i in $(seq 0 5); do
+            HOSTS="$HOSTS redis-cluster-$i.redis-cluster.climabill.svc.cluster.local:6379"
+          done
+          
+          echo "Creating Redis cluster with hosts: $HOSTS"
+          redis-cli --cluster create $HOSTS --cluster-replicas 1 --cluster-yes
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+      restartPolicy: OnFailure

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: data-warehouse
+  namespace: climabill
+spec:
+  serviceName: "data-warehouse"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-warehouse
+  template:
+    metadata:
+      labels:
+        app: data-warehouse
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:14
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: data-warehouse-secrets
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: data-warehouse-secrets
+              key: password
+        - name: POSTGRES_DB
+          value: climabill_warehouse
+        volumeMounts:
+        - name: data-warehouse-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: data-warehouse-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 100Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-warehouse
+  namespace: climabill
+spec:
+  selector:
+    app: data-warehouse
+  ports:
+  - port: 5432
+    targetPort: 5432

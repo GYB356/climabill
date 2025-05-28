@@ -1,0 +1,567 @@
+openapi: 3.0.3
+info:
+  title: ClimaBill API
+  description: |
+    The ClimaBill API provides programmatic access to ClimaBill's invoicing, carbon tracking, and payment features.
+    This API follows RESTful principles and uses standard HTTP response codes, authentication, and verbs.
+  version: 1.0.0
+  contact:
+    name: ClimaBill API Support
+    url: https://climabill.com/support
+    email: api-support@climabill.com
+  license:
+    name: Proprietary
+    url: https://climabill.com/terms
+servers:
+  - url: https://api.climabill.com/v1
+    description: Production API
+  - url: https://api.staging.climabill.com/v1
+    description: Staging API
+  - url: https://api.dev.climabill.com/v1
+    description: Development API
+tags:
+  - name: Authentication
+    description: Authentication endpoints
+  - name: Users
+    description: User management endpoints
+  - name: Customers
+    description: Customer management endpoints
+  - name: Invoices
+    description: Invoice management endpoints
+  - name: Payments
+    description: Payment processing endpoints
+  - name: Carbon
+    description: Carbon tracking and offset endpoints
+  - name: Blockchain
+    description: Blockchain wallet and invoice endpoints
+  - name: Compliance
+    description: GDPR and CCPA compliance endpoints
+  - name: Integrations
+    description: Third-party integration endpoints
+  - name: Notifications
+    description: Notification management endpoints
+  - name: Analytics
+    description: Analytics and reporting endpoints
+paths:
+  # Authentication endpoints
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate a user and return an access token
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: "Password123!"
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: Register a new user account
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - name
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: "Password123!"
+                name:
+                  type: string
+                  example: John Doe
+      responses:
+        '201':
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Refresh an expired access token using a refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Token successfully refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Invalidate the current access token
+      operationId: logoutUser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successfully logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Successfully logged out
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  # User endpoints
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Get current user
+      description: Get the profile of the currently authenticated user
+      operationId: getCurrentUser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      tags:
+        - Users
+      summary: Update current user
+      description: Update the profile of the currently authenticated user
+      operationId: updateCurrentUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                settings:
+                  type: object
+                  additionalProperties: true
+                  example:
+                    theme: dark
+                    notifications:
+                      email: true
+                      push: false
+      responses:
+        '200':
+          description: User profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  # Compliance endpoints
+  /compliance/data-export:
+    post:
+      tags:
+        - Compliance
+      summary: Request data export
+      description: Request a data export for GDPR/CCPA compliance
+      operationId: requestDataExport
+      security:
+        - BearerAuth: []
+      responses:
+        '202':
+          description: Data export request accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Data export request received. You will be notified when it is ready for download.
+                  requestId:
+                    type: string
+                    example: export-1622547600000
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /compliance/data-deletion:
+    post:
+      tags:
+        - Compliance
+      summary: Request data deletion
+      description: Request data deletion for GDPR/CCPA compliance
+      operationId: requestDataDeletion
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - confirmationCode
+              properties:
+                confirmationCode:
+                  type: string
+                  example: DELETE-MY-DATA
+                retainRequiredData:
+                  type: boolean
+                  default: true
+                  description: Whether to retain data required for legal and business purposes
+      responses:
+        '200':
+          description: Data deletion request processed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Your data deletion request has been processed successfully.
+                  retainedData:
+                    type: string
+                    example: Some data has been retained for legal and business purposes.
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /compliance/consent:
+    get:
+      tags:
+        - Compliance
+      summary: Get user consents
+      description: Get all consent records for the current user
+      operationId: getUserConsents
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Consent records retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Consent'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    post:
+      tags:
+        - Compliance
+      summary: Update user consent
+      description: Update a specific consent setting for the current user
+      operationId: updateUserConsent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - status
+                - source
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - MARKETING_EMAIL
+                    - MARKETING_SMS
+                    - ANALYTICS
+                    - THIRD_PARTY_SHARING
+                    - PROFILING
+                    - TERMS_OF_SERVICE
+                    - PRIVACY_POLICY
+                    - COOKIE_POLICY
+                  example: MARKETING_EMAIL
+                status:
+                  type: string
+                  enum:
+                    - GRANTED
+                    - DENIED
+                    - WITHDRAWN
+                  example: GRANTED
+                source:
+                  type: string
+                  example: privacy-center
+      responses:
+        '200':
+          description: Consent updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consent'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/User'
+    
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        name:
+          type: string
+          example: John Doe
+        createdAt:
+          type: string
+          format: date-time
+          example: 2025-01-01T00:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2025-01-02T00:00:00Z
+        settings:
+          type: object
+          additionalProperties: true
+          example:
+            theme: dark
+            notifications:
+              email: true
+              push: false
+    
+    Consent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        type:
+          type: string
+          enum:
+            - MARKETING_EMAIL
+            - MARKETING_SMS
+            - ANALYTICS
+            - THIRD_PARTY_SHARING
+            - PROFILING
+            - TERMS_OF_SERVICE
+            - PRIVACY_POLICY
+            - COOKIE_POLICY
+          example: MARKETING_EMAIL
+        status:
+          type: string
+          enum:
+            - GRANTED
+            - DENIED
+            - WITHDRAWN
+          example: GRANTED
+        source:
+          type: string
+          example: privacy-center
+        createdAt:
+          type: string
+          format: date-time
+          example: 2025-01-01T00:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2025-01-02T00:00:00Z
+        history:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: 123e4567-e89b-12d3-a456-426614174000
+              status:
+                type: string
+                enum:
+                  - GRANTED
+                  - DENIED
+                  - WITHDRAWN
+                example: GRANTED
+              source:
+                type: string
+                example: privacy-center
+              createdAt:
+                type: string
+                format: date-time
+                example: 2025-01-01T00:00:00Z
+    
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Invalid input
+        message:
+          type: string
+          example: Email is required
+        statusCode:
+          type: integer
+          example: 400

@@ -1,11 +1,19 @@
 
+"use client";
+
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ClimaBillLogo } from '@/components/icons';
-import { Github } from 'lucide-react'; 
+import { Github } from 'lucide-react';
+import { useAuth } from '@/lib/firebase/auth-context';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -17,6 +25,67 @@ const GoogleIcon = () => (
 );
 
 export default function SignupPage() {
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const { register, loginWithGoogle, loginWithGithub, error, loading } = useAuth();
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      setPasswordError('Passwords do not match');
+      return;
+    }
+    
+    // Validate password strength
+    if (password.length < 8) {
+      setPasswordError('Password must be at least 8 characters long');
+      return;
+    }
+    
+    setPasswordError('');
+    
+    try {
+      await register(email, password, fullName);
+      toast({
+        title: "Account created successfully",
+        description: "You have been registered and logged in.",
+      });
+    } catch (error) {
+      console.error("Signup error:", error);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    try {
+      await loginWithGoogle();
+      toast({
+        title: "Account created successfully",
+        description: "You have been registered with Google.",
+      });
+    } catch (error) {
+      console.error("Google signup error:", error);
+    }
+  };
+
+  const handleGithubSignup = async () => {
+    try {
+      await loginWithGithub();
+      toast({
+        title: "Account created successfully",
+        description: "You have been registered with GitHub.",
+      });
+    } catch (error) {
+      console.error("GitHub signup error:", error);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background py-12">
       <div className="mx-auto grid w-[380px] gap-6">
@@ -31,30 +100,88 @@ export default function SignupPage() {
         </div>
         <Card className="shadow-xl">
           <CardContent className="grid gap-4 pt-6">
-            <div className="grid gap-2">
-              <Label htmlFor="full-name">Full Name</Label>
-              <Input id="full-name" placeholder="John Doe" required />
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <form onSubmit={handleSignup}>
+              <div className="grid gap-2">
+                <Label htmlFor="full-name">Full Name</Label>
+                <Input 
+                  id="full-name" 
+                  placeholder="John Doe" 
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required 
+                />
+              </div>
+              <div className="grid gap-2 mt-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="m@example.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required 
+                />
+              </div>
+              <div className="grid gap-2 mt-2">
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required 
+                />
+              </div>
+              <div className="grid gap-2 mt-2">
+                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Input 
+                  id="confirm-password" 
+                  type="password" 
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required 
+                />
+                {passwordError && (
+                  <p className="text-sm text-destructive">{passwordError}</p>
+                )}
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full mt-4" 
+                disabled={loading}
+              >
+                {loading ? 'Creating Account...' : 'Create Account'}
+              </Button>
+            </form>
+            <div className="relative my-2">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" required />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required />
-            </div>
-             <div className="grid gap-2">
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <Input id="confirm-password" type="password" required />
-            </div>
-            <Button type="submit" className="w-full">
-              Create Account
-            </Button>
-            <Button variant="outline" className="w-full">
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={handleGoogleSignup}
+              disabled={loading}
+            >
               <GoogleIcon />
               Sign up with Google
             </Button>
-            <Button variant="outline" className="w-full">
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={handleGithubSignup}
+              disabled={loading}
+            >
               <Github className="mr-2 h-4 w-4" />
               Sign up with GitHub
             </Button>
