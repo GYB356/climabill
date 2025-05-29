@@ -10,15 +10,15 @@ import { getFirebaseAdmin } from './admin';
  */
 export async function getServerUser(): Promise<DecodedIdToken | null> {
   const cookieStore = cookies();
-  const sessionCookie = cookieStore.get('firebase-session');
+  const sessionCookie = (await cookieStore).get('firebase-session')?.value;
   
-  if (!sessionCookie?.value) {
+  if (!sessionCookie) {
     return null;
   }
   
   try {
-    const { auth } = getFirebaseAdmin();
-    const decodedToken = await auth.verifySessionCookie(sessionCookie.value, true);
+    const { auth } = await getFirebaseAdmin();
+    const decodedToken = await auth.verifySessionCookie(sessionCookie, true);
     return decodedToken;
   } catch (error) {
     console.error('Error verifying session cookie:', error);
@@ -32,7 +32,7 @@ export async function getServerUser(): Promise<DecodedIdToken | null> {
  */
 export async function verifyIdToken(idToken: string): Promise<DecodedIdToken | null> {
   try {
-    const { auth } = getFirebaseAdmin();
+    const { auth } = await getFirebaseAdmin();
     const decodedToken = await auth.verifyIdToken(idToken);
     return decodedToken;
   } catch (error) {

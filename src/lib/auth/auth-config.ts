@@ -35,19 +35,21 @@ export function hasRole(user: any, requiredRole: string): boolean {
 }
 
 /**
- * Get Firebase Admin instance
- * This is a helper function to get the Firebase Admin SDK instance
- * @returns Firebase Admin SDK instance
+ * Get Firebase Admin Auth instance
+ * This is a helper function to get the Firebase Admin Auth SDK instance
+ * @returns Promise that resolves to Firebase Admin Auth instance
  */
-export function getAuthAdmin() {
-  return getFirebaseAdmin().auth;
+export async function getAuthAdmin() {
+  const { auth } = await getFirebaseAdmin();
+  return auth;
 }
 
 /**
  * Get Firestore Admin instance
  * This is a helper function to get the Firestore Admin SDK instance
- * @returns Firestore Admin SDK instance
+ * @returns Promise that resolves to Firestore Admin SDK instance
  */
-export function getFirestoreAdmin() {
-  return getFirebaseAdmin().firestore;
+export async function getFirestoreAdmin() {
+  const { firestore } = await getFirebaseAdmin();
+  return firestore;
 }

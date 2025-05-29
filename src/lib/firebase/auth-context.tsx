@@ -80,6 +80,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', { 
+        user: user ? { uid: user.uid, email: user.email, emailVerified: user.emailVerified } : null,
+        currentPath: window.location.pathname 
+      });
+      
       setUser(user);
       setLoading(false);
       
@@ -90,9 +95,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             currentPath === '/login' || 
             currentPath === '/signup' || 
             currentPath === '/auth/signup') {
-          console.log('User authenticated, redirecting to dashboard');
+          console.log('User authenticated, redirecting to dashboard at:', new Date().toISOString());
           router.push('/dashboard');
         }
+      } else {
+        console.log('No authenticated user detected');
       }
     });
 
@@ -103,12 +110,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       setLoading(true);
-      console.log('Attempting to sign in with:', { email, auth });
+      console.log('Attempting to sign in with:', { email });
       const result = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Sign in successful:', result.user);
+      console.log('Sign in successful:', { 
+        uid: result.user.uid, 
+        email: result.user.email,
+        emailVerified: result.user.emailVerified,
+        timestamp: new Date().toISOString()
+      });
       
       // Create a session cookie for server-side authentication
-      await createSessionCookie(result.user);
+      const sessionCreated = await createSessionCookie(result.user);
+      console.log('Session cookie creation result:', sessionCreated);
       
       return result.user;
     } catch (error: any) {
@@ -150,13 +163,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       setLoading(true);
+      console.log('Attempting to create user with email:', email);
       const result = await createUserWithEmailAndPassword(auth, email, password);
-      console.log('Signup successful, user created:', result.user);
+      console.log('Signup successful, user created:', { 
+        uid: result.user.uid, 
+        email: result.user.email,
+        timestamp: new Date().toISOString()
+      });
       
       // Create a session cookie for server-side authentication
-      await createSessionCookie(result.user);
+      const sessionCreated = await createSessionCookie(result.user);
+      console.log('Session cookie creation result:', sessionCreated);
       
       // Explicitly redirect to dashboard after successful signup
+      console.log('Redirecting to dashboard after signup at:', new Date().toISOString());
       router.push('/dashboard');
       
       return result.user;

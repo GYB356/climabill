@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Verify the ID token
-    const { auth } = getFirebaseAdmin();
+    const { auth } = await getFirebaseAdmin();
     const decodedToken = await auth.verifyIdToken(idToken);
     
     // Create a session cookie
