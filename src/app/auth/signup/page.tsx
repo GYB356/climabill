@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { signIn } from "next-auth/react";
+import { useAuth } from "@/lib/firebase/auth-context";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -16,58 +16,45 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const { signup, loginWithGoogle, loginWithGithub, clearError } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    clearError();
     setIsLoading(true);
 
     try {
-      // Create user account
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create account");
-      }
-
-      // Sign in the user
-      const result = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
-      });
-
-      if (result?.error) {
-        throw new Error("Failed to sign in");
-      }
-
-      // Redirect to onboarding
-      router.push("/onboarding");
+      // Register the user with Firebase
+      await signup(email, password);
+      // The auth context will handle redirection to the dashboard
     } catch (error) {
       setError(error instanceof Error ? error.message : "An unexpected error occurred");
-    } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSocialSignup = async (provider: string) => {
+  const handleGoogleSignup = async () => {
     setIsLoading(true);
     try {
-      await signIn(provider, { callbackUrl: "/onboarding" });
+      await loginWithGoogle();
+      // The auth context will handle redirection to the dashboard
     } catch (error) {
-      console.error(`${provider} sign up error:`, error);
+      console.error("Google sign up error:", error);
+      setError(error instanceof Error ? error.message : "Failed to sign up with Google");
+      setIsLoading(false);
+    }
+  };
+
+  const handleGithubSignup = async () => {
+    setIsLoading(true);
+    try {
+      await loginWithGithub();
+      // The auth context will handle redirection to the dashboard
+    } catch (error) {
+      console.error("GitHub sign up error:", error);
+      setError(error instanceof Error ? error.message : "Failed to sign up with GitHub");
+      setIsLoading(false);
     }
   };
 
@@ -154,7 +141,7 @@ export default function SignupPage() {
         <div className="mt-6 grid grid-cols-1 gap-3">
           <Button
             variant="outline"
-            onClick={() => handleSocialSignup("google")}
+            onClick={handleGoogleSignup}
             disabled={isLoading}
             className="w-full"
           >

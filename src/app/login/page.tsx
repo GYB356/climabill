@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,8 @@ export default function LoginPage() {
   const { login, loginWithGoogle, loginWithGithub, error, loading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +41,8 @@ export default function LoginPage() {
         title: "Login successful",
         description: "You have been successfully logged in.",
       });
+      // Explicit redirect to the callback URL or dashboard
+      router.push(callbackUrl);
     } catch (error) {
       console.error("Login error:", error);
     }
@@ -51,6 +55,8 @@ export default function LoginPage() {
         title: "Login successful",
         description: "You have been successfully logged in with Google.",
       });
+      // Explicit redirect to the callback URL or dashboard
+      router.push(callbackUrl);
     } catch (error) {
       console.error("Google login error:", error);
     }
@@ -63,6 +69,8 @@ export default function LoginPage() {
         title: "Login successful",
         description: "You have been successfully logged in with GitHub.",
       });
+      // Explicit redirect to the callback URL or dashboard
+      router.push(callbackUrl);
     } catch (error) {
       console.error("GitHub login error:", error);
     }

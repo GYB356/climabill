@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 
 // Define public routes that don't require authentication
-const publicRoutes = ['/', '/auth/signin', '/auth/signup', '/auth/forgot-password', '/auth/reset-password', '/auth/verify-request', '/api/auth', '/_next'];
+const publicRoutes = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/api/auth', '/_next'];
 
 // Define protected routes that require authentication
 const protectedRoutes = ['/dashboard', '/settings', '/invoices', '/customers', '/reports', '/blockchain', '/analytics'];
+
+// Define auth routes that should redirect to dashboard if already authenticated
+const authRoutes = ['/login', '/signup', '/auth/signin', '/auth/signup'];
 
 export async function middleware(request: NextRequest) {
   // Get the path from the request
@@ -22,25 +24,35 @@ export async function middleware(request: NextRequest) {
     path === route || path.startsWith(route)
   );
   
-  // Get the session token using next-auth
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  // Check if the path is an auth route (login/signup)
+  const isAuthRoute = authRoutes.some(route =>
+    path === route || path.startsWith(route)
+  );
   
-  const isAuthenticated = !!token;
+  // Get the session token from cookies
+  const sessionCookie = request.cookies.get('firebase-session')?.value;
+  const isAuthenticated = !!sessionCookie;
   
-  // If the route is protected and the user is not authenticated, redirect to signin
+  // If the route is protected and the user is not authenticated, redirect to login
   if (isProtectedRoute && !isAuthenticated) {
-    const signinUrl = new URL('/auth/signin', request.url);
+    const loginUrl = new URL('/login', request.url);
     // Store the current path for redirection after login
-    signinUrl.searchParams.set('callbackUrl', path);
-    return NextResponse.redirect(signinUrl);
+    loginUrl.searchParams.set('callbackUrl', path);
+    return NextResponse.redirect(loginUrl);
   }
   
-  // If the route is signin/signup and the user is authenticated, redirect to dashboard
-  if ((path === '/auth/signin' || path === '/auth/signup') && isAuthenticated) {
+  // If the route is an auth route and the user is authenticated, redirect to dashboard
+  if (isAuthRoute && isAuthenticated) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+  
+  // Handle legacy NextAuth routes - redirect to Firebase auth routes
+  if (path === '/auth/signin') {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+  
+  if (path === '/auth/signup') {
+    return NextResponse.redirect(new URL('/signup', request.url));
   }
   
   return NextResponse.next();

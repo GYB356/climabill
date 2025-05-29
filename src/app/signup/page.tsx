@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -30,9 +30,18 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const { register, loginWithGoogle, loginWithGithub, error, loading } = useAuth();
+  const { signup, loginWithGoogle, loginWithGithub, error, loading, user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard';
+  
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,11 +61,12 @@ export default function SignupPage() {
     setPasswordError('');
     
     try {
-      await register(email, password, fullName);
+      await signup(email, password);
       toast({
         title: "Account created successfully",
         description: "You have been registered and logged in.",
       });
+      router.push(callbackUrl);
     } catch (error) {
       console.error("Signup error:", error);
     }
@@ -69,6 +79,7 @@ export default function SignupPage() {
         title: "Account created successfully",
         description: "You have been registered with Google.",
       });
+      router.push(callbackUrl);
     } catch (error) {
       console.error("Google signup error:", error);
     }
@@ -81,6 +92,7 @@ export default function SignupPage() {
         title: "Account created successfully",
         description: "You have been registered with GitHub.",
       });
+      router.push(callbackUrl);
     } catch (error) {
       console.error("GitHub signup error:", error);
     }

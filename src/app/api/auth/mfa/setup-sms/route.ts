@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth/auth-config";
-import { prisma } from "@/lib/db";
-import { generateRecoveryCode } from "@/lib/auth/mfa-utils";
+import { authOptions } from "../../../../../lib/auth/auth-config";
+import prisma from "../../../../../lib/db/prisma";
+import { generateRecoveryCode } from "../../../../../lib/auth/mfa-utils";
 
 /**
  * API endpoint for setting up MFA with SMS

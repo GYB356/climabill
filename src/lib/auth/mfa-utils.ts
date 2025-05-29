@@ -1,61 +1,60 @@
 import * as crypto from 'crypto';
-import * as base32 from 'hi-base32';
-import * as QRCode from 'qrcode';
+import * as OTPAuth from 'otpauth';
+import * as qrcode from 'qrcode';
 
 /**
- * Generate a random MFA secret
+ * Generate a TOTP secret for MFA
+ * @param email User's email
+ * @param issuer App name
+ * @returns Object containing secret, URI, and QR code
  */
-export function generateSecret(email: string, issuer: string = 'ClimaBill') {
+export async function generateSecret(email: string, issuer: string = 'ClimaBill') {
   // Generate a random secret
-  const buffer = crypto.randomBytes(20);
-  const secret = base32.encode(buffer).replace(/=/g, '');
+  const secret = crypto.randomBytes(20).toString('hex');
   
-  // Create otpauth URL for QR code
-  const uri = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(email)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
+  // Create a TOTP object
+  const totp = new OTPAuth.TOTP({
+    issuer,
+    label: email,
+    algorithm: 'SHA1',
+    digits: 6,
+    period: 30,
+    secret: OTPAuth.Secret.fromHex(secret)
+  });
+  
+  // Get the URI for the QR code
+  const uri = totp.toString();
   
   // Generate QR code
-  return new Promise<{ secret: string; uri: string; qrCode: string }>((resolve, reject) => {
-    QRCode.toDataURL(uri, (err, qrCode) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve({ secret, uri, qrCode });
-      }
-    });
-  });
-}
-
-/**
- * Generate a recovery code for MFA
- */
-export function generateRecoveryCode(): string {
-  const buffer = crypto.randomBytes(10);
-  const code = buffer.toString('hex').toUpperCase();
+  const qrCode = await qrcode.toDataURL(uri);
   
-  // Format as XXXX-XXXX-XXXX-XXXX
-  return code.match(/.{1,4}/g)?.join('-') || code;
+  return { secret, uri, qrCode };
 }
 
 /**
  * Verify a TOTP code
+ * @param secret TOTP secret
+ * @param token Token to verify
+ * @returns Boolean indicating if token is valid
  */
 export function verifyTOTP(secret: string, token: string): boolean {
-  // Allow codes from adjacent periods to account for clock skew
-  const window = 1; 
-  
   try {
-    const decodedSecret = base32.decode.asBytes(secret);
-    const currentTime = Math.floor(Date.now() / 1000);
+    // Create a TOTP object
+    const totp = new OTPAuth.TOTP({
+      issuer: 'ClimaBill',
+      label: 'user',
+      algorithm: 'SHA1',
+      digits: 6,
+      period: 30,
+      secret: OTPAuth.Secret.fromHex(secret)
+    });
     
-    // Check current and adjacent time windows
-    for (let i = -window; i <= window; i++) {
-      const time = currentTime + (i * 30);
-      if (generateTOTP(decodedSecret, time) === token) {
-        return true;
-      }
-    }
+    // Verify the token
+    const delta = totp.validate({ token });
     
-    return false;
+    // delta is null if the token is invalid
+    // otherwise it's the time step difference
+    return delta !== null;
   } catch (error) {
     console.error('Error verifying TOTP:', error);
     return false;
@@ -63,29 +62,10 @@ export function verifyTOTP(secret: string, token: string): boolean {
 }
 
 /**
- * Generate a TOTP code for a given time
+ * Generate a recovery code for MFA
+ * @returns Recovery code string
  */
-function generateTOTP(secret: Uint8Array, time: number): string {
-  // Convert time to buffer
-  const counter = Math.floor(time / 30);
-  const buffer = Buffer.alloc(8);
-  
-  for (let i = 0; i < 8; i++) {
-    buffer[7 - i] = counter & 0xff;
-    counter = counter >> 8;
-  }
-  
-  // Generate HMAC
-  const hmac = crypto.createHmac('sha1', Buffer.from(secret));
-  const hmacResult = hmac.update(buffer).digest();
-  
-  // Generate OTP
-  const offset = hmacResult[hmacResult.length - 1] & 0xf;
-  const binary = ((hmacResult[offset] & 0x7f) << 24) |
-                ((hmacResult[offset + 1] & 0xff) << 16) |
-                ((hmacResult[offset + 2] & 0xff) << 8) |
-                (hmacResult[offset + 3] & 0xff);
-  
-  const otp = binary % 1000000;
-  return otp.toString().padStart(6, '0');
+export function generateRecoveryCode(): string {
+  // Generate a random 12-character recovery code
+  return crypto.randomBytes(6).toString('hex').toUpperCase();
 }

@@ -1,219 +1,274 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from 'firebase/auth';
-import { authService } from './auth';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
+  GithubAuthProvider,
+  User,
+  sendPasswordResetEmail,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+  sendEmailVerification,
+  getIdToken
+} from 'firebase/auth';
+import { auth } from './config';
 import { useRouter } from 'next/navigation';
 
-// Define the auth context type
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, displayName: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  loginWithGithub: () => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  signup: (email: string, password: string) => Promise<User>;
+  loginWithGoogle: () => Promise<User>;
+  loginWithGithub: () => Promise<User>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  updateUserPassword: (currentPassword: string, newPassword: string) => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
-  enrollMFA: (phoneNumber: string, recaptchaVerifier: any) => Promise<string>;
-  verifyMFA: (verificationId: string, verificationCode: string) => Promise<void>;
   clearError: () => void;
 }
 
-// Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Auth provider component
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  
+  // Helper function to create a session cookie
+  const createSessionCookie = async (user: User) => {
+    try {
+      // Get the ID token
+      const idToken = await getIdToken(user);
+      
+      // Call the session API to create a session cookie
+      const response = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create session');
+      }
+      
+      console.log('Session cookie created successfully');
+      return true;
+    } catch (error) {
+      console.error('Error creating session cookie:', error);
+      return false;
+    }
+  };
 
-  // Listen for auth state changes
   useEffect(() => {
-    const unsubscribe = authService.onAuthStateChanged((user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
+      
+      // Redirect logic
+      if (user) {
+        const currentPath = window.location.pathname;
+        if (currentPath === '/auth/signin' || 
+            currentPath === '/login' || 
+            currentPath === '/signup' || 
+            currentPath === '/auth/signup') {
+          console.log('User authenticated, redirecting to dashboard');
+          router.push('/dashboard');
+        }
+      }
     });
 
-    // Cleanup subscription
-    return () => unsubscribe();
-  }, []);
+    return unsubscribe;
+  }, [router]);
 
-  // Login with email and password
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    setError(null);
     try {
-      await authService.loginWithEmailAndPassword(email, password);
-      // Ensure we're using the correct path with the app group
-      router.push('/dashboard');
-      // Force a refresh to ensure navigation happens
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 100);
-    } catch (err: any) {
-      setError(err.message);
+      setError(null);
+      setLoading(true);
+      console.log('Attempting to sign in with:', { email, auth });
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      console.log('Sign in successful:', result.user);
+      
+      // Create a session cookie for server-side authentication
+      await createSessionCookie(result.user);
+      
+      return result.user;
+    } catch (error: any) {
+      console.error('Firebase auth error:', error.code, error.message);
+      let errorMessage = 'An error occurred during sign in';
+      
+      // Provide more user-friendly error messages
+      switch(error.code) {
+        case 'auth/invalid-credential':
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+          break;
+        case 'auth/user-not-found':
+          errorMessage = 'No account found with this email address.';
+          break;
+        case 'auth/wrong-password':
+          errorMessage = 'Incorrect password. Please try again.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email format.';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'This account has been disabled.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many failed login attempts. Please try again later.';
+          break;
+        default:
+          errorMessage = `Error: ${error.message}`;
+      }
+      
+      setError(errorMessage);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // Register with email and password
-  const register = async (email: string, password: string, displayName: string) => {
-    setLoading(true);
-    setError(null);
+  const signup = async (email: string, password: string) => {
     try {
-      await authService.registerWithEmailAndPassword(email, password, displayName);
+      setError(null);
+      setLoading(true);
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      console.log('Signup successful, user created:', result.user);
+      
+      // Create a session cookie for server-side authentication
+      await createSessionCookie(result.user);
+      
+      // Explicitly redirect to dashboard after successful signup
       router.push('/dashboard');
-      // Force a refresh to ensure navigation happens
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 100);
-    } catch (err: any) {
-      setError(err.message);
+      
+      return result.user;
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // Login with Google
   const loginWithGoogle = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      await authService.signInWithGoogle();
-      router.push('/dashboard');
-      // Force a refresh to ensure navigation happens
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 100);
-    } catch (err: any) {
-      setError(err.message);
+      setError(null);
+      setLoading(true);
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // Create a session cookie for server-side authentication
+      await createSessionCookie(result.user);
+      
+      return result.user;
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // Login with Github
   const loginWithGithub = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      await authService.signInWithGithub();
-      router.push('/dashboard');
-      // Force a refresh to ensure navigation happens
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 100);
-    } catch (err: any) {
-      setError(err.message);
+      setError(null);
+      setLoading(true);
+      const provider = new GithubAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // Create a session cookie for server-side authentication
+      await createSessionCookie(result.user);
+      
+      return result.user;
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // Logout
   const logout = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      await authService.logout();
-      router.push('/login');
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      await signOut(auth);
+      
+      // Clear the session cookie
+      await fetch('/api/auth/session', {
+        method: 'DELETE',
+      });
+      
+      router.push('/');
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
     }
   };
 
-  // Reset password
   const resetPassword = async (email: string) => {
-    setLoading(true);
-    setError(null);
     try {
-      await authService.resetPassword(email);
-    } catch (err: any) {
-      setError(err.message);
+      setError(null);
+      setLoading(true);
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // Update password
-  const updatePassword = async (currentPassword: string, newPassword: string) => {
-    setLoading(true);
-    setError(null);
+  const updateUserPassword = async (currentPassword: string, newPassword: string) => {
     try {
-      if (user) {
-        await authService.updateUserPassword(user, currentPassword, newPassword);
-      } else {
+      setError(null);
+      setLoading(true);
+      if (!user || !user.email) {
         throw new Error('No user is currently logged in');
       }
-    } catch (err: any) {
-      setError(err.message);
+      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // Send verification email
   const sendVerificationEmail = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      if (user) {
-        await authService.sendVerificationEmail(user);
-      } else {
+      setError(null);
+      setLoading(true);
+      if (!user) {
         throw new Error('No user is currently logged in');
       }
-    } catch (err: any) {
-      setError(err.message);
+      await sendEmailVerification(user);
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // Enroll in MFA
-  const enrollMFA = async (phoneNumber: string, recaptchaVerifier: any) => {
-    setLoading(true);
-    setError(null);
-    try {
-      if (user) {
-        return await authService.enrollMFA(user, phoneNumber, recaptchaVerifier);
-      } else {
-        throw new Error('No user is currently logged in');
-      }
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Verify MFA
-  const verifyMFA = async (verificationId: string, verificationCode: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      if (user) {
-        await authService.verifyMFA(user, verificationId, verificationCode);
-      } else {
-        throw new Error('No user is currently logged in');
-      }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Clear error
   const clearError = () => {
     setError(null);
   };
@@ -223,26 +278,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     error,
     login,
-    register,
+    signup,
     loginWithGoogle,
     loginWithGithub,
     logout,
     resetPassword,
-    updatePassword,
+    updateUserPassword,
     sendVerificationEmail,
-    enrollMFA,
-    verifyMFA,
-    clearError,
+    clearError
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
-
-// Custom hook to use auth context
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};

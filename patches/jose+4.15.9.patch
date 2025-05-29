@@ -1,0 +1,12 @@
+diff --git a/node_modules/jose/dist/browser/jwe/compact/decrypt.js b/node_modules/jose/dist/browser/jwe/compact/decrypt.js
+index 3f7b3d7..e5f9a21 100644
+--- a/node_modules/jose/dist/browser/jwe/compact/decrypt.js
++++ b/node_modules/jose/dist/browser/jwe/compact/decrypt.js
+@@ -1,6 +1,6 @@
+ import { flattenedDecrypt } from '../flattened/decrypt.js';
+ import { JWEInvalid } from '../../util/errors.js';
+-import { decoder } from '../../lib/buffer_utils.js';
++import { decoder } from '../../runtime/browser/buffer_utils.js';
+ export async function compactDecrypt(jwe, key, options) {
+     if (jwe instanceof Uint8Array) {
+         jwe = decoder.decode(jwe);

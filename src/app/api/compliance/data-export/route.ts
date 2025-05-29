@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { getServerUser } from '@/lib/firebase/get-server-user';
+// Firebase auth doesn't need authOptions
 import { complianceService } from '@/lib/compliance/compliance-service';
 import { logger } from '@/lib/monitoring/logger';
 

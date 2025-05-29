@@ -1,7 +1,8 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
+import { AuthProvider as FirebaseAuthProvider } from "@/lib/firebase/auth-context";
 
+// Re-export the Firebase AuthProvider for backward compatibility
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return <FirebaseAuthProvider>{children}</FirebaseAuthProvider>;
 }

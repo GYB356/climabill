@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getServerUser } from '@/lib/firebase/get-server-user';
+// Firebase auth doesn't need authOptions
 import { redirect } from 'next/navigation';
 import { OnboardingFlow } from '@/components/onboarding/onboarding-flow';
 
@@ -10,12 +10,12 @@ export const metadata: Metadata = {
 };
 
 export default async function OnboardingPage() {
-  // Get session
-  const session = await getServerSession(authOptions);
+  // Get user from Firebase
+  const user = await getServerUser();
   
   // Redirect if not authenticated
-  if (!session || !session.user) {
-    redirect('/login');
+  if (!user) {
+    redirect('/auth/signin');
   }
 
   // Get user ID

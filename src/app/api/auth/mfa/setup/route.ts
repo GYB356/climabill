@@ -1,26 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth/auth-config";
-import { prisma } from "@/lib/db";
-import { generateSecret, generateRecoveryCode } from "@/lib/auth/mfa-utils";
+import { getServerUser } from "@/lib/firebase/get-server-user";
+import prisma from "@/lib/db/prisma";
+import { generateSecret, generateRecoveryCode } from "../../../../../lib/auth/mfa-utils";
+import { withAuth } from "@/lib/firebase/api-auth";
 
 /**
  * API endpoint for setting up MFA with an authenticator app
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, firebaseUser) => {
   try {
-    // Verify authentication
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     // Parse request body
     const body = await request.json();
     const { userId } = body;
 
     // Verify user has permission
-    if (userId !== session.user.id) {
+    if (userId !== firebaseUser.uid) {
       return NextResponse.json(
         { error: "You do not have permission to configure MFA for this user" },
         { status: 403 }
@@ -46,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // Generate MFA secret
     const { secret, uri, qrCode } = await generateSecret(
-      session.user.email || "user@example.com",
+      firebaseUser.email || "user@example.com",
       "ClimaBill"
     );
 
@@ -89,4 +84,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

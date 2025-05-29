@@ -19,7 +19,7 @@ import {
   Zap,
   LogOut
 } from 'lucide-react';
-import { signOut } from 'next-auth/react';
+import { useAuth } from '@/lib/firebase/auth-context';
 
 interface MobileNavigationProps {
   user?: {
@@ -29,7 +29,8 @@ interface MobileNavigationProps {
   };
 }
 
-export function MobileNavigation({ user }: MobileNavigationProps) {
+export default function MobileNavigation({ user }: MobileNavigationProps) {
+  const { logout } = useAuth();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [userInitials, setUserInitials] = useState('');
@@ -110,7 +111,7 @@ export function MobileNavigation({ user }: MobileNavigationProps) {
               <Button
                 variant="ghost"
                 className="w-full justify-start text-muted-foreground"
-                onClick={() => signOut()}
+                onClick={() => logout()}
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out

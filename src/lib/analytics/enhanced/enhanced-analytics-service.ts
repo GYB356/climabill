@@ -17,7 +17,7 @@ import {
   AnalyticsTimeFrame,
   ForecastMethod
 } from './types';
-import { db } from '@/lib/db';
+import prisma from '../../db/prisma';
 
 /**
  * Service for enhanced analytics functionality

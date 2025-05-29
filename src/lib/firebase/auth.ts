@@ -20,7 +20,8 @@ import {
   sendEmailVerification,
   applyActionCode,
   verifyPasswordResetCode,
-  AuthError
+  AuthError,
+  getIdToken
 } from 'firebase/auth';
 import { auth, isDevelopment } from './config';
 
@@ -108,8 +109,42 @@ export const authService = {
   },
 
   // Session Management
+  async createSession(user: User): Promise<void> {
+    try {
+      // Get the ID token
+      const idToken = await getIdToken(user);
+      
+      // Call the session API to create a session cookie
+      const response = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create session');
+      }
+    } catch (error) {
+      console.error('Error creating session:', error);
+      throw error;
+    }
+  },
+  
   async logout(): Promise<void> {
-    return signOut(auth);
+    try {
+      // Sign out from Firebase
+      await signOut(auth);
+      
+      // Delete the session cookie
+      await fetch('/api/auth/session', {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('Error during logout:', error);
+      throw error;
+    }
   },
 
   // Current user

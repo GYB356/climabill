@@ -22,6 +22,8 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,6 +31,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="light">
+      <head>
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
         <AuthProviderWrapper>
           <LandingHeader />

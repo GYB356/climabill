@@ -11,7 +11,7 @@ import {
   ErrorOutline
 } from '@mui/icons-material';
 import { ConsentType, ConsentStatus } from '@prisma/client';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/firebase/auth-context';
 
 /**
  * Privacy Center Component

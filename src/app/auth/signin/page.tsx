@@ -1,55 +1,51 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/lib/firebase/auth-context";
 
 export default function SigninPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { login, loginWithGoogle, error: authError, loading } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     try {
-      const result = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
-      });
-
-      if (result?.error) {
-        setError("Invalid email or password");
-      } else if (result?.url) {
-        window.location.href = callbackUrl;
-      }
+      await login(email, password);
+      // Note: No redirection here since login() in auth-context already handles redirection
     } catch (error) {
-      setError("An error occurred during sign in");
       console.error("Sign in error:", error);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleSocialSignIn = async (provider: string) => {
-    setIsLoading(true);
+    setIsSubmitting(true);
     try {
-      await signIn(provider, { callbackUrl });
+      if (provider === "google") {
+        await loginWithGoogle();
+      }
+      // Note: No redirection here since loginWithGoogle() in auth-context already handles redirection
     } catch (error) {
       console.error(`${provider} sign in error:`, error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const isLoading = loading || isSubmitting;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-tr from-green-50 to-blue-50 p-4">
@@ -61,9 +57,9 @@ export default function SigninPage() {
           </p>
         </div>
 
-        {error && (
+        {authError && (
           <div className="rounded-md bg-red-50 p-4 text-sm text-red-500">
-            {error}
+            {authError}
           </div>
         )}
 

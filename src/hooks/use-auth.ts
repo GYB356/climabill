@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/lib/firebase/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -9,18 +9,19 @@ import { useEffect } from "react";
  * Will redirect to login if user is not authenticated
  */
 export function useRequireAuth() {
-  const { data: session, status } = useSession();
+  const { user, loading } = useAuth();
   const router = useRouter();
   
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push(`/auth/signin?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
+    // Only redirect if we've finished loading and there's no user
+    if (!loading && !user) {
+      router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
     }
-  }, [status, router]);
+  }, [user, loading, router]);
   
   return { 
-    session, 
-    isLoading: status === "loading",
-    isAuthenticated: status === "authenticated"
+    session: user ? { user } : null, 
+    isLoading: loading,
+    isAuthenticated: !!user
   };
 }

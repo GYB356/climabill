@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { db } from '@/lib/db';
+import { getServerUser } from '@/lib/firebase/get-server-user';
+// Firebase auth doesn't need authOptions
+import prisma from '../../../../lib/db/prisma';
 
 /**
  * API route for completing the onboarding process
  */
 export async function POST(request: NextRequest) {
   try {
-    // Get session and validate authentication
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    // Get user from Firebase and validate authentication
+    const user = await getServerUser();
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
