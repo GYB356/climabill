@@ -1,210 +1,174 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/lib/firebase/auth-context';
 import { useToast } from '@/components/ui/use-toast';
-import { RecaptchaVerifier } from 'firebase/auth';
-import { auth, isDevelopment } from '@/lib/firebase/config';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function MFASetupPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
-  const [verificationId, setVerificationId] = useState<string | null>(null);
-  const [step, setStep] = useState<'phone' | 'code' | 'complete'>('phone');
-  const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
-  const { user, enrollMFA, verifyMFA, error, loading } = useAuth();
+  const [recoveryCode, setRecoveryCode] = useState<string | null>(null);
+  const [step, setStep] = useState<'setup' | 'verify' | 'complete'>('setup');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { data: session, status } = useSession();
   const { toast } = useToast();
   const router = useRouter();
 
-  useEffect(() => {
-    // Initialize reCAPTCHA verifier
-    if (!recaptchaVerifier && typeof window !== 'undefined') {
-      try {
-        // In development mode, use a mock reCAPTCHA verifier
-        if (isDevelopment) {
-          console.log('Using mock reCAPTCHA verifier for development');
-          // Create a simple mock object that mimics the RecaptchaVerifier interface
-          const mockVerifier = {
-            clear: () => {},
-            render: () => Promise.resolve('mock-recaptcha-token'),
-            verify: () => Promise.resolve('mock-recaptcha-token'),
-            _reset: () => {}
-          };
-          setRecaptchaVerifier(mockVerifier as unknown as RecaptchaVerifier);
-        } else {
-          // In production, use the real reCAPTCHA verifier
-          const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            size: 'normal',
-            callback: () => {
-              // reCAPTCHA solved, allow sending verification code
-            },
-            'expired-callback': () => {
-              // Reset reCAPTCHA
-              toast({
-                title: "reCAPTCHA expired",
-                description: "Please solve the reCAPTCHA again.",
-                variant: "destructive"
-              });
-            }
-          });
-          setRecaptchaVerifier(verifier);
-        }
-      } catch (error) {
-        console.error('Error initializing reCAPTCHA:', error);
-        toast({
-          title: "reCAPTCHA initialization failed",
-          description: "This is likely due to missing or invalid Firebase configuration.",
-          variant: "destructive"
-        });
-      }
-    }
+  // Redirect if not authenticated
+  if (status === "unauthenticated") {
+    router.push('/auth/signin');
+    return null;
+  }
 
-    return () => {
-      // Clean up reCAPTCHA verifier
-      if (recaptchaVerifier && !isDevelopment) {
-        try {
-          recaptchaVerifier.clear();
-        } catch (error) {
-          console.error('Error clearing reCAPTCHA:', error);
-        }
-      }
-    };
-  }, [toast]);
-
-  useEffect(() => {
-    // Check if user is logged in
-    if (!user) {
-      router.push('/login');
-    }
-  }, [user, router]);
-
-  const handleSendVerificationCode = async () => {
-    if (!phoneNumber) {
-      toast({
-        title: "Phone number required",
-        description: "Please enter your phone number.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!recaptchaVerifier) {
-      toast({
-        title: "reCAPTCHA not loaded",
-        description: "Please wait for reCAPTCHA to load or refresh the page.",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  const setupAppMFA = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
+      const response = await fetch('/api/auth/mfa/setup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: session?.user?.id,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to setup MFA');
+      }
+      
+      setRecoveryCode(data.recoveryCode);
+      setStep('verify');
+      toast({
+        title: "MFA setup initiated",
+        description: "Scan the QR code with your authenticator app and enter the verification code.",
+      });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+      toast({
+        title: "MFA setup failed",
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const setupSmsMFA = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      if (!phoneNumber) {
+        throw new Error('Phone number is required');
+      }
+      
       // Format phone number to E.164 format if not already
       let formattedPhoneNumber = phoneNumber;
       if (!phoneNumber.startsWith('+')) {
         formattedPhoneNumber = `+${phoneNumber}`;
       }
-
-      // In development mode, use a mock verification ID
-      if (isDevelopment) {
-        console.log('Using mock verification ID for development');
-        setVerificationId('mock-verification-id-123456');
-        setStep('code');
-        toast({
-          title: "Verification code sent (Development Mode)",
-          description: `A mock verification code has been sent to ${formattedPhoneNumber}. Use any 6-digit code to proceed.`,
-        });
-      } else {
-        // In production, use the real MFA enrollment
-        const verificationId = await enrollMFA(formattedPhoneNumber, recaptchaVerifier);
-        setVerificationId(verificationId);
-        setStep('code');
-        toast({
-          title: "Verification code sent",
-          description: `A verification code has been sent to ${formattedPhoneNumber}.`,
-        });
+      
+      const response = await fetch('/api/auth/mfa/setup-sms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: session?.user?.id,
+          phoneNumber: formattedPhoneNumber,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to setup SMS MFA');
       }
+      
+      setStep('verify');
+      toast({
+        title: "Verification code sent",
+        description: "Please check your phone for the verification code.",
+      });
     } catch (error) {
-      console.error("Error sending verification code:", error);
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
       toast({
         title: "Failed to send verification code",
-        description: "There was an error sending the verification code. Please try again.",
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
-
-  const handleVerifyCode = async () => {
-    if (!verificationCode) {
-      toast({
-        title: "Verification code required",
-        description: "Please enter the verification code sent to your phone.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!verificationId) {
-      toast({
-        title: "Verification ID missing",
-        description: "Please request a new verification code.",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  
+  const verifyMFA = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      // In development mode, accept any 6-digit code
-      if (isDevelopment) {
-        console.log('Using mock verification in development mode');
-        // Check if the code is 6 digits (simple validation for development)
-        if (verificationCode.length === 6 && /^\d+$/.test(verificationCode)) {
-          setStep('complete');
-          toast({
-            title: "MFA enabled (Development Mode)",
-            description: "Mock multi-factor authentication has been successfully enabled for your account.",
-          });
-        } else {
-          toast({
-            title: "Invalid verification code",
-            description: "Please enter a valid 6-digit verification code.",
-            variant: "destructive"
-          });
-        }
-      } else {
-        // In production, use the real MFA verification
-        await verifyMFA(verificationId, verificationCode);
-        setStep('complete');
-        toast({
-          title: "MFA enabled",
-          description: "Multi-factor authentication has been successfully enabled for your account.",
-        });
+      if (!verificationCode) {
+        throw new Error('Verification code is required');
       }
+      
+      const response = await fetch('/api/auth/mfa/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: session?.user?.id,
+          verificationCode,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to verify MFA code');
+      }
+      
+      setStep('complete');
+      toast({
+        title: "MFA enabled",
+        description: "Multi-factor authentication has been successfully enabled.",
+      });
     } catch (error) {
-      console.error("Error verifying code:", error);
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
       toast({
         title: "Failed to verify code",
-        description: "The verification code is invalid or has expired. Please try again.",
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background py-12">
-      <div className="mx-auto grid w-[380px] gap-6">
-        <div className="grid gap-2 text-center">
-          <CardTitle className="text-3xl font-bold text-foreground">Multi-Factor Authentication</CardTitle>
+    <div className="flex min-h-screen bg-muted/40">
+      <div className="container max-w-3xl py-12">
+        <div className="mb-8 space-y-2">
+          <h1 className="text-3xl font-bold">Multi-Factor Authentication</h1>
           <CardDescription className="text-muted-foreground">
-            {step === 'phone' && "Set up an additional layer of security for your account."}
-            {step === 'code' && "Enter the verification code sent to your phone."}
+            {step === 'setup' && "Set up an additional layer of security for your account."}
+            {step === 'verify' && "Enter the verification code from your authenticator app."}
             {step === 'complete' && "Multi-factor authentication has been enabled."}
           </CardDescription>
         </div>
@@ -217,36 +181,68 @@ export default function MFASetupPage() {
               </Alert>
             )}
 
-            {step === 'phone' && (
+            {step === 'setup' && (
               <>
-                <div className="grid gap-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+1234567890"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    required
-                    className="bg-card"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Enter your phone number in international format (e.g., +1234567890).
-                  </p>
-                </div>
-                <div id="recaptcha-container" className="my-4"></div>
-                <Button 
-                  onClick={handleSendVerificationCode} 
-                  className="w-full" 
-                  disabled={loading || !phoneNumber}
-                >
-                  {loading ? 'Sending...' : 'Send Verification Code'}
-                </Button>
+                <Tabs defaultValue="app" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="app">Authenticator App</TabsTrigger>
+                    <TabsTrigger value="sms">SMS</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="app" className="mt-4 space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-sm">
+                        Use an authenticator app like Google Authenticator, Microsoft Authenticator, or Authy to generate time-based one-time passwords.
+                      </p>
+                      <Button 
+                        onClick={setupAppMFA} 
+                        className="w-full" 
+                        disabled={loading}
+                      >
+                        {loading ? 'Setting up...' : 'Set up authenticator'}
+                      </Button>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="sms" className="mt-4 space-y-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="+1234567890"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        required
+                        className="bg-card"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Enter your phone number in international format (e.g., +1234567890).
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={setupSmsMFA} 
+                      className="w-full" 
+                      disabled={loading || !phoneNumber}
+                    >
+                      {loading ? 'Sending...' : 'Send Verification Code'}
+                    </Button>
+                  </TabsContent>
+                </Tabs>
               </>
             )}
 
-            {step === 'code' && (
+            {step === 'verify' && (
               <>
+                {recoveryCode && (
+                  <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md">
+                    <h3 className="font-medium text-amber-800 mb-2">Recovery Code</h3>
+                    <p className="text-sm text-amber-700 mb-2">
+                      Save this recovery code in a safe place. You'll need it if you lose access to your authenticator app.
+                    </p>
+                    <div className="bg-white p-3 rounded border border-amber-300 font-mono text-center">
+                      {recoveryCode}
+                    </div>
+                  </div>
+                )}
                 <div className="grid gap-2">
                   <Label htmlFor="code">Verification Code</Label>
                   <Input
@@ -259,11 +255,11 @@ export default function MFASetupPage() {
                     className="bg-card"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Enter the 6-digit verification code sent to your phone.
+                    Enter the 6-digit verification code from your authenticator app or SMS.
                   </p>
                 </div>
                 <Button 
-                  onClick={handleVerifyCode} 
+                  onClick={verifyMFA} 
                   className="w-full" 
                   disabled={loading || !verificationCode}
                 >
@@ -271,7 +267,7 @@ export default function MFASetupPage() {
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => setStep('phone')} 
+                  onClick={() => setStep('setup')} 
                   className="w-full"
                 >
                   Back

@@ -1,7 +1,7 @@
 "use client";
 
-import { AuthProvider } from '@/lib/firebase/auth-context';
+import { SessionProvider } from 'next-auth/react';
 
 export function AuthProviderWrapper({ children }: { children: React.ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  return <SessionProvider>{children}</SessionProvider>;
 }

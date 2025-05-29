@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
 // Define public routes that don't require authentication
-const publicRoutes = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/verify-email', '/api/auth', '/_next'];
+const publicRoutes = ['/', '/auth/signin', '/auth/signup', '/auth/forgot-password', '/auth/reset-password', '/auth/verify-request', '/api/auth', '/_next'];
 
 // Define protected routes that require authentication
 const protectedRoutes = ['/dashboard', '/settings', '/invoices', '/customers', '/reports', '/blockchain', '/analytics'];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Get the path from the request
   const path = request.nextUrl.pathname;
   
@@ -21,35 +22,24 @@ export function middleware(request: NextRequest) {
     path === route || path.startsWith(route)
   );
   
-  // Get the session token from cookies
-  const sessionCookie = request.cookies.get('session');
-  // For development mode, also check for a mock session cookie
-  const mockSessionCookie = request.cookies.get('mock_session');
-  const isAuthenticated = !!sessionCookie || !!mockSessionCookie || process.env.NODE_ENV === 'development';
+  // Get the session token using next-auth
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
   
-  // Special case for development mode - always allow access in development
-  if (process.env.NODE_ENV === 'development' && isProtectedRoute) {
-    // In development, we'll set a mock session cookie if it doesn't exist
-    const response = NextResponse.next();
-    if (!mockSessionCookie) {
-      response.cookies.set('mock_session', 'mock-session-for-development', {
-        maxAge: 60 * 60 * 24 * 7, // 1 week
-        path: '/',
-      });
-    }
-    return response;
-  }
+  const isAuthenticated = !!token;
   
-  // If the route is not public and the user is not authenticated, redirect to login
+  // If the route is protected and the user is not authenticated, redirect to signin
   if (isProtectedRoute && !isAuthenticated) {
-    const loginUrl = new URL('/login', request.url);
+    const signinUrl = new URL('/auth/signin', request.url);
     // Store the current path for redirection after login
-    loginUrl.searchParams.set('redirect', path);
-    return NextResponse.redirect(loginUrl);
+    signinUrl.searchParams.set('callbackUrl', path);
+    return NextResponse.redirect(signinUrl);
   }
   
-  // If the route is login/signup and the user is authenticated, redirect to dashboard
-  if ((path === '/login' || path === '/signup') && isAuthenticated) {
+  // If the route is signin/signup and the user is authenticated, redirect to dashboard
+  if ((path === '/auth/signin' || path === '/auth/signup') && isAuthenticated) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
   
