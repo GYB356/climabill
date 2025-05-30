@@ -5,15 +5,30 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ClimaBillLogo } from '@/components/icons';
-import { ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle, CheckCircle, Mail, Clock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { authService } from '@/lib/firebase/auth';
+import { z } from 'zod';
+
+// Email validation schema
+const emailSchema = z.object({
+  email: z.string().email("Please enter a valid email address")
+});
 
 export default function VerifyEmailPage() {
-  const [isVerifying, setIsVerifying] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [isResending, setIsResending] = useState(false);
+  const [isResendSuccess, setIsResendSuccess] = useState(false);
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [retryAfter, setRetryAfter] = useState(0);
+  const [showResendForm, setShowResendForm] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -23,32 +38,95 @@ export default function VerifyEmailPage() {
     if (oobCode) {
       verifyEmail(oobCode);
     } else {
-      setIsVerifying(false);
-      toast({
-        title: "Invalid verification link",
-        description: "The email verification link is invalid or has expired.",
-        variant: "destructive"
-      });
+      setError('No verification code provided. Please check your email for a verification link.');
+      setShowResendForm(true);
     }
-  }, [searchParams, toast]);
+  }, [searchParams]);
 
-  const verifyEmail = async (oobCode: string) => {
+  const verifyEmail = async (code: string) => {
+    setIsVerifying(true);
     try {
-      await authService.verifyEmail(oobCode);
+      await authService.applyActionCode(code);
       setIsVerified(true);
       toast({
         title: "Email verified",
         description: "Your email has been successfully verified.",
       });
+      // Redirect to dashboard after 3 seconds
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 3000);
     } catch (error) {
-      console.error("Error verifying email:", error);
+      console.error("Email verification error:", error);
+      setError('Invalid or expired verification link. Please request a new verification email.');
+      setShowResendForm(true);
       toast({
         title: "Verification failed",
-        description: "The email verification link is invalid or has expired.",
+        description: "Invalid or expired verification link.",
         variant: "destructive"
       });
     } finally {
       setIsVerifying(false);
+    }
+  };
+
+  const handleResendVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    // Validate email
+    const result = emailSchema.safeParse({ email });
+    if (!result.success) {
+      setError(result.error.errors[0].message);
+      return;
+    }
+
+    setIsResending(true);
+    setIsResendSuccess(false);
+
+    try {
+      // Call our new API endpoint
+      const response = await fetch('/api/auth/email/verify/resend', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          // Rate limited
+          setIsRateLimited(true);
+          setRetryAfter(data.retryAfter || 60);
+          toast({
+            title: "Too many attempts",
+            description: "Please wait before trying again.",
+            variant: "destructive"
+          });
+        } else {
+          throw new Error(data.message || 'Failed to send verification email');
+        }
+        return;
+      }
+
+      setIsResendSuccess(true);
+      toast({
+        title: "Verification email sent",
+        description: "Check your inbox for the verification link.",
+      });
+    } catch (err) {
+      console.error("Error resending verification email:", err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      toast({
+        title: "Failed to send verification email",
+        description: err instanceof Error ? err.message : 'An unexpected error occurred',
+        variant: "destructive"
+      });
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -83,18 +161,85 @@ export default function VerifyEmailPage() {
               <Alert variant="default" className="bg-green-50 border-green-200">
                 <CheckCircle className="h-4 w-4 text-green-500" />
                 <AlertDescription className="text-green-700">
-                  Your email has been successfully verified. You can now use all features of your account.
+                  Your email has been successfully verified. Redirecting to dashboard...
                 </AlertDescription>
               </Alert>
             ) : (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  The email verification link is invalid or has expired. Please request a new verification link.
-                </AlertDescription>
-              </Alert>
+              <>
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                
+                {isRateLimited && (
+                  <Alert variant="warning" className="bg-amber-50 border-amber-200">
+                    <Clock className="h-4 w-4 text-amber-500" />
+                    <AlertDescription className="text-amber-700">
+                      Too many verification attempts. Please try again in {retryAfter} {retryAfter === 1 ? 'minute' : 'minutes'}.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {isResendSuccess && (
+                  <Alert variant="default" className="bg-green-50 border-green-200">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <AlertDescription className="text-green-700">
+                      Verification email sent! Please check your inbox and click the verification link.
+                      <p className="mt-2 text-sm">If you don't see the email, please check your spam folder.</p>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {isVerifying ? (
+                  <div className="flex items-center justify-center py-6">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <span className="ml-3">Verifying your email...</span>
+                  </div>
+                ) : showResendForm && !isResendSuccess ? (
+                  <form onSubmit={handleResendVerification} className="grid gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="bg-card"
+                        disabled={isResending || isRateLimited}
+                      />
+                      <p className="text-xs text-muted-foreground">Enter the email address you used to sign up</p>
+                    </div>
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isResending || isRateLimited}
+                    >
+                      {isResending ? (
+                        <>
+                          <div className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent border-white rounded-full"></div>
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="mr-2 h-4 w-4" />
+                          Resend Verification Email
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                ) : !isResendSuccess && (
+                  <div className="text-center">
+                    <p className="text-muted-foreground">
+                      If you haven't received a verification email, please check your spam folder or contact support.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
-            
             <div className="grid gap-2 mt-4">
               <Button 
                 onClick={() => router.push('/dashboard')} 

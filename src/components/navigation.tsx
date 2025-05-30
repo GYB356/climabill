@@ -46,11 +46,20 @@ const navItems = [
       { href: "/invoices", label: "Template Selection", icon: FileText, exactMatch: true }, 
     ]
   },
-  { href: "/reports", label: "Reporting", icon: BarChartHorizontalBig }, // Added Reports
+  { href: "/reports", label: "Reporting", icon: BarChartHorizontalBig },
   { href: "/smart-discounts", label: "Smart Discounts", icon: Sparkles },
   { href: "/text-summarizer", label: "Text Summarizer", icon: NotebookText },
   { href: "/invoice-item-suggester", label: "Item Suggester", icon: Lightbulb },
-  { href: "/carbon-footprint", label: "Carbon Footprint", icon: BarChart3 },
+  { 
+    href: "/carbon", 
+    label: "Carbon", 
+    icon: Leaf,
+    subItems: [
+      { href: "/carbon/dashboard", label: "Dashboard", icon: BarChart3 },
+      { href: "/carbon/management", label: "Management", icon: SettingsIcon },
+      { href: "/carbon/offset", label: "Offset", icon: Trees },
+    ]
+  },
   { href: "/learn-sustainability", label: "Learn Sustainability", icon: Trees },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
