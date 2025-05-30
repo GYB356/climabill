@@ -1,0 +1,100 @@
+{
+  "app": {
+    "name": "ClimaBill",
+    "tagline": "Ihr Weg zur CO₂-neutralen Abrechnung"
+  },
+  "navigation": {
+    "home": "Startseite",
+    "dashboard": "Dashboard",
+    "carbon": "Kohlenstoff",
+    "invoices": "Rechnungen",
+    "settings": "Einstellungen",
+    "apiDocs": "API-Dokumentation",
+    "reports": "Berichte",
+    "profile": "Profil",
+    "logout": "Abmelden",
+    "login": "Anmelden",
+    "signup": "Registrieren"
+  },
+  "carbon": {
+    "dashboard": "Kohlenstoff-Dashboard",
+    "footprint": "CO₂-Fußabdruck",
+    "offsets": "CO₂-Kompensationen",
+    "tracking": "Nutzungsverfolgung",
+    "analytics": "Analysen",
+    "insights": "Erkenntnisse",
+    "standards": "Standards-Konformität",
+    "reports": "Nachhaltigkeitsberichte",
+    "goals": "Kohlenstoffziele",
+    "forecast": "Kohlenstoffprognose",
+    "reduction": "Reduktionsempfehlungen",
+    "total": "Gesamter Kohlenstoff",
+    "usage": "Kohlenstoffnutzung",
+    "offset": "Kompensierter Kohlenstoff",
+    "net": "Netto-Kohlenstoff",
+    "details": "Kohlenstoffdetails",
+    "metrics": {
+      "invoices": "Rechnungen",
+      "emails": "E-Mails",
+      "storage": "Speicher",
+      "api": "API-Aufrufe",
+      "custom": "Benutzerdefinierte Nutzung"
+    },
+    "units": {
+      "kg": "kg CO₂e",
+      "tonnes": "Tonnen CO₂e",
+      "emails": "E-Mails",
+      "gb": "GB",
+      "invoices": "Rechnungen",
+      "calls": "Aufrufe"
+    }
+  },
+  "buttons": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "create": "Erstellen",
+    "update": "Aktualisieren",
+    "delete": "Löschen",
+    "view": "Ansehen",
+    "edit": "Bearbeiten",
+    "add": "Hinzufügen",
+    "remove": "Entfernen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "submit": "Absenden",
+    "offset": "Kohlenstoff kompensieren",
+    "generate": "Bericht generieren",
+    "download": "Herunterladen"
+  },
+  "settings": {
+    "language": "Sprache",
+    "theme": "Thema",
+    "notifications": "Benachrichtigungen",
+    "account": "Konto",
+    "preferences": "Präferenzen",
+    "integrations": "Integrationen",
+    "security": "Sicherheit"
+  },
+  "time": {
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "thisWeek": "Diese Woche",
+    "lastWeek": "Letzte Woche",
+    "thisMonth": "Dieser Monat",
+    "lastMonth": "Letzter Monat",
+    "thisQuarter": "Dieses Quartal",
+    "lastQuarter": "Letztes Quartal",
+    "thisYear": "Dieses Jahr",
+    "lastYear": "Letztes Jahr",
+    "custom": "Benutzerdefinierter Zeitraum"
+  },
+  "errors": {
+    "generic": "Ein Fehler ist aufgetreten",
+    "notFound": "Nicht gefunden",
+    "unauthorized": "Nicht autorisierter Zugriff",
+    "validation": "Validierungsfehler",
+    "serverError": "Serverfehler",
+    "offline": "Sie sind offline"
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "app": {
+    "name": "ClimaBill",
+    "tagline": "Votre chemin vers une facturation neutre en carbone"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "dashboard": "Tableau de bord",
+    "carbon": "Carbone",
+    "invoices": "Factures",
+    "settings": "Paramètres",
+    "apiDocs": "Documentation API",
+    "reports": "Rapports",
+    "profile": "Profil",
+    "logout": "Déconnexion",
+    "login": "Connexion",
+    "signup": "S'inscrire"
+  },
+  "carbon": {
+    "dashboard": "Tableau de bord carbone",
+    "footprint": "Empreinte carbone",
+    "offsets": "Compensations carbone",
+    "tracking": "Suivi d'utilisation",
+    "analytics": "Analyses",
+    "insights": "Informations",
+    "standards": "Conformité aux normes",
+    "reports": "Rapports de durabilité",
+    "goals": "Objectifs carbone",
+    "forecast": "Prévision carbone",
+    "reduction": "Recommandations de réduction",
+    "total": "Carbone total",
+    "usage": "Utilisation de carbone",
+    "offset": "Carbone compensé",
+    "net": "Carbone net",
+    "details": "Détails carbone",
+    "metrics": {
+      "invoices": "Factures",
+      "emails": "Emails",
+      "storage": "Stockage",
+      "api": "Appels API",
+      "custom": "Utilisation personnalisée"
+    },
+    "units": {
+      "kg": "kg CO₂e",
+      "tonnes": "tonnes CO₂e",
+      "emails": "emails",
+      "gb": "Go",
+      "invoices": "factures",
+      "calls": "appels"
+    }
+  },
+  "buttons": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "create": "Créer",
+    "update": "Mettre à jour",
+    "delete": "Supprimer",
+    "view": "Voir",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "remove": "Supprimer",
+    "back": "Retour",
+    "next": "Suivant",
+    "submit": "Soumettre",
+    "offset": "Compenser le carbone",
+    "generate": "Générer un rapport",
+    "download": "Télécharger"
+  },
+  "settings": {
+    "language": "Langue",
+    "theme": "Thème",
+    "notifications": "Notifications",
+    "account": "Compte",
+    "preferences": "Préférences",
+    "integrations": "Intégrations",
+    "security": "Sécurité"
+  },
+  "time": {
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "thisWeek": "Cette semaine",
+    "lastWeek": "Semaine dernière",
+    "thisMonth": "Ce mois",
+    "lastMonth": "Mois dernier",
+    "thisQuarter": "Ce trimestre",
+    "lastQuarter": "Trimestre dernier",
+    "thisYear": "Cette année",
+    "lastYear": "Année dernière",
+    "custom": "Plage personnalisée"
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite",
+    "notFound": "Non trouvé",
+    "unauthorized": "Accès non autorisé",
+    "validation": "Erreur de validation",
+    "serverError": "Erreur serveur",
+    "offline": "Vous êtes hors ligne"
+  }
+}

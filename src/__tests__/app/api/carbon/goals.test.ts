@@ -25,6 +25,14 @@ describe('Carbon Goals API', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
+    // Setup complete mock implementation for CarbonGoalsService
+    mockGoalsService.prototype.getGoals = jest.fn().mockImplementation(async () => []);
+    mockGoalsService.prototype.getGoal = jest.fn().mockImplementation(async () => null);
+    mockGoalsService.prototype.createGoal = jest.fn().mockImplementation(async (data) => ({ id: 'newId', ...data }));
+    mockGoalsService.prototype.updateGoal = jest.fn().mockImplementation(async (id, data) => ({ id, ...data }));
+    mockGoalsService.prototype.deleteGoal = jest.fn().mockImplementation(async () => undefined);
+    mockGoalsService.prototype.getGoalProgress = jest.fn().mockImplementation(async () => ({}));
+    
     // Mock authenticated user session
     mockGetServerSession.mockResolvedValue({
       user: {
