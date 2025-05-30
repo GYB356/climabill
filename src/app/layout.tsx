@@ -1,17 +1,8 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import { Toaster } from "@/components/ui/toaster";
-import { LandingHeader } from '@/components/landing-header';
-import { LandingFooter } from '@/components/landing-footer';
-import dynamic from 'next/dynamic';
 import { AuthProviderWrapper } from '@/components/providers/auth-provider-wrapper';
-
-// Lazy load non-critical components
-const CookieConsentBanner = dynamic(
-  () => import('@/components/cookie-consent-banner').then(mod => mod.CookieConsentBanner),
-  { ssr: false, loading: () => <div className="hidden">Loading consent banner...</div> }
-);
+import { ClientLayout } from '@/components/client-layout';
 
 export const metadata: Metadata = {
   title: 'ClimaBill - Next-Gen Billing Management',
@@ -46,13 +37,9 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
         <AuthProviderWrapper>
-          <LandingHeader />
-          <main className="flex-grow">
+          <ClientLayout>
             {children}
-          </main>
-          <LandingFooter />
-          <Toaster />
-          <CookieConsentBanner />
+          </ClientLayout>
         </AuthProviderWrapper>
       </body>
     </html>
