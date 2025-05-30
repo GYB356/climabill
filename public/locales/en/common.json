@@ -1,0 +1,100 @@
+{
+  "app": {
+    "name": "ClimaBill",
+    "tagline": "Your path to carbon-neutral billing"
+  },
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "carbon": "Carbon",
+    "invoices": "Invoices",
+    "settings": "Settings",
+    "apiDocs": "API Docs",
+    "reports": "Reports",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "signup": "Sign Up"
+  },
+  "carbon": {
+    "dashboard": "Carbon Dashboard",
+    "footprint": "Carbon Footprint",
+    "offsets": "Carbon Offsets",
+    "tracking": "Usage Tracking",
+    "analytics": "Analytics",
+    "insights": "Insights",
+    "standards": "Standards Compliance",
+    "reports": "Sustainability Reports",
+    "goals": "Carbon Goals",
+    "forecast": "Carbon Forecast",
+    "reduction": "Reduction Recommendations",
+    "total": "Total Carbon",
+    "usage": "Carbon Usage",
+    "offset": "Offset Carbon",
+    "net": "Net Carbon",
+    "details": "Carbon Details",
+    "metrics": {
+      "invoices": "Invoices",
+      "emails": "Emails",
+      "storage": "Storage",
+      "api": "API Calls",
+      "custom": "Custom Usage"
+    },
+    "units": {
+      "kg": "kg CO₂e",
+      "tonnes": "tonnes CO₂e",
+      "emails": "emails",
+      "gb": "GB",
+      "invoices": "invoices",
+      "calls": "calls"
+    }
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "create": "Create",
+    "update": "Update",
+    "delete": "Delete",
+    "view": "View",
+    "edit": "Edit",
+    "add": "Add",
+    "remove": "Remove",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "offset": "Offset Carbon",
+    "generate": "Generate Report",
+    "download": "Download"
+  },
+  "settings": {
+    "language": "Language",
+    "theme": "Theme",
+    "notifications": "Notifications",
+    "account": "Account",
+    "preferences": "Preferences",
+    "integrations": "Integrations",
+    "security": "Security"
+  },
+  "time": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This Week",
+    "lastWeek": "Last Week",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "thisQuarter": "This Quarter",
+    "lastQuarter": "Last Quarter",
+    "thisYear": "This Year",
+    "lastYear": "Last Year",
+    "custom": "Custom Range"
+  },
+  "errors": {
+    "generic": "An error occurred",
+    "notFound": "Not found",
+    "unauthorized": "Unauthorized access",
+    "validation": "Validation error",
+    "serverError": "Server error",
+    "offline": "You are offline"
+  }
+}

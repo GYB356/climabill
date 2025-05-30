@@ -1,0 +1,100 @@
+{
+  "app": {
+    "name": "ClimaBill",
+    "tagline": "通往碳中和账单的道路"
+  },
+  "navigation": {
+    "home": "首页",
+    "dashboard": "仪表盘",
+    "carbon": "碳排放",
+    "invoices": "发票",
+    "settings": "设置",
+    "apiDocs": "API文档",
+    "reports": "报告",
+    "profile": "个人资料",
+    "logout": "退出登录",
+    "login": "登录",
+    "signup": "注册"
+  },
+  "carbon": {
+    "dashboard": "碳排放仪表盘",
+    "footprint": "碳足迹",
+    "offsets": "碳抵消",
+    "tracking": "使用跟踪",
+    "analytics": "分析",
+    "insights": "洞察",
+    "standards": "标准合规",
+    "reports": "可持续发展报告",
+    "goals": "碳目标",
+    "forecast": "碳预测",
+    "reduction": "减排建议",
+    "total": "总碳排放",
+    "usage": "碳使用量",
+    "offset": "抵消的碳",
+    "net": "净碳排放",
+    "details": "碳详情",
+    "metrics": {
+      "invoices": "发票",
+      "emails": "电子邮件",
+      "storage": "存储",
+      "api": "API调用",
+      "custom": "自定义使用"
+    },
+    "units": {
+      "kg": "公斤 CO₂e",
+      "tonnes": "吨 CO₂e",
+      "emails": "封电子邮件",
+      "gb": "GB",
+      "invoices": "张发票",
+      "calls": "次调用"
+    }
+  },
+  "buttons": {
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "create": "创建",
+    "update": "更新",
+    "delete": "删除",
+    "view": "查看",
+    "edit": "编辑",
+    "add": "添加",
+    "remove": "移除",
+    "back": "返回",
+    "next": "下一步",
+    "submit": "提交",
+    "offset": "抵消碳排放",
+    "generate": "生成报告",
+    "download": "下载"
+  },
+  "settings": {
+    "language": "语言",
+    "theme": "主题",
+    "notifications": "通知",
+    "account": "账户",
+    "preferences": "偏好设置",
+    "integrations": "集成",
+    "security": "安全"
+  },
+  "time": {
+    "today": "今天",
+    "yesterday": "昨天",
+    "thisWeek": "本周",
+    "lastWeek": "上周",
+    "thisMonth": "本月",
+    "lastMonth": "上月",
+    "thisQuarter": "本季度",
+    "lastQuarter": "上季度",
+    "thisYear": "今年",
+    "lastYear": "去年",
+    "custom": "自定义范围"
+  },
+  "errors": {
+    "generic": "发生错误",
+    "notFound": "未找到",
+    "unauthorized": "未授权访问",
+    "validation": "验证错误",
+    "serverError": "服务器错误",
+    "offline": "您处于离线状态"
+  }
+}

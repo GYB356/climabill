@@ -6,18 +6,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { CarbonTrackingService } from '@/lib/carbon/carbon-tracking-service';
+import { CachedCarbonTrackingService } from '@/lib/carbon/cached-carbon-tracking-service';
 import { CarbonOffsetService } from '@/lib/carbon/carbon-offset-service';
 import { useAuth } from '@/lib/firebase/auth-context';
-import { Loader2, AlertCircle, TrendingUp, TrendingDown, Leaf, DollarSign } from 'lucide-react';
+import { Loader2, AlertCircle, TrendingUp, TrendingDown, Leaf, DollarSign, BarChart4, Activity, ListTodo } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { CarbonEmissionsChart } from '@/components/carbon/CarbonEmissionsChart';
 import { CarbonOffsetHistory } from '@/components/carbon/CarbonOffsetHistory';
 import { CarbonUsageBreakdown } from '@/components/carbon/CarbonUsageBreakdown';
 import { CarbonOffsetRecommendation } from '@/components/carbon/CarbonOffsetRecommendation';
+import { CarbonForecastChart } from '@/components/carbon/CarbonForecastChart';
+import { CarbonReductionInsights } from '@/components/carbon/CarbonReductionInsights';
+import { CarbonGoalTracker } from '@/components/carbon/CarbonGoalTracker';
+import { CarbonAnalytics } from '@/components/carbon/CarbonAnalytics';
+import EnhancedCarbonDashboard from '@/components/carbon/EnhancedCarbonDashboard';
+import { useTranslation } from 'next-i18next';
 
 export default function CarbonDashboardPage() {
+  const { t } = useTranslation('common');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -44,7 +51,7 @@ export default function CarbonDashboardPage() {
   const { toast } = useToast();
   
   // Services
-  const carbonTrackingService = new CarbonTrackingService();
+  const carbonTrackingService = new CachedCarbonTrackingService();
   const carbonOffsetService = new CarbonOffsetService();
   
   // Load carbon data
@@ -130,20 +137,14 @@ export default function CarbonDashboardPage() {
   }
   
   return (
-    <div className="container mx-auto py-8 max-w-7xl">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Carbon Dashboard</h1>
-          <p className="text-muted-foreground">
-            Track, analyze, and offset your carbon footprint
-          </p>
-        </div>
-        <Button 
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">{t('carbon.dashboard')}</h1>
+        <Button
+          variant="outline"
           onClick={() => router.push('/carbon/offset')}
-          className="mt-4 md:mt-0"
         >
-          <Leaf className="mr-2 h-4 w-4" />
-          Purchase Carbon Offsets
+          {t('buttons.offset')}
         </Button>
       </div>
       
@@ -154,12 +155,15 @@ export default function CarbonDashboardPage() {
         </Alert>
       )}
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs defaultValue="overview" className="space-y-4" onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="overview">{t('navigation.dashboard')}</TabsTrigger>
           <TabsTrigger value="emissions">Emissions</TabsTrigger>
           <TabsTrigger value="offsets">Offsets</TabsTrigger>
-          <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+          <TabsTrigger value="analytics">{t('carbon.analytics')}</TabsTrigger>
+          <TabsTrigger value="insights">{t('carbon.insights')}</TabsTrigger>
+          <TabsTrigger value="goals">{t('carbon.goals')}</TabsTrigger>
+          <TabsTrigger value="enhanced">{t('carbon.analytics')} 2.0</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
@@ -346,6 +350,98 @@ export default function CarbonDashboardPage() {
               />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-4">
+            <Card className="col-span-1 lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart4 className="h-5 w-5" />
+                  Advanced Analytics
+                </CardTitle>
+                <CardDescription>
+                  Detailed carbon usage analysis with customizable filters
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CarbonAnalytics 
+                  organizationId={user?.uid || ''} 
+                  departmentId={undefined}
+                  projectId={undefined}
+                />
+              </CardContent>
+            </Card>
+            
+            <Card className="col-span-1">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Goal Tracking
+                </CardTitle>
+                <CardDescription>
+                  Track progress on your carbon reduction goals
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CarbonGoalTracker 
+                  organizationId={user?.uid || ''} 
+                  showAddNew={true}
+                />
+              </CardContent>
+            </Card>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Carbon Usage Forecast</CardTitle>
+              <CardDescription>
+                AI-powered forecast of your future carbon usage
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CarbonForecastChart 
+                organizationId={user?.uid || ''} 
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="insights" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="col-span-1">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ListTodo className="h-5 w-5" />
+                  Carbon Reduction Insights
+                </CardTitle>
+                <CardDescription>
+                  AI-generated recommendations to reduce your carbon footprint
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CarbonReductionInsights 
+                  organizationId={user?.uid || ''} 
+                />
+              </CardContent>
+            </Card>
+            
+            <Card className="col-span-1">
+              <CardHeader>
+                <CardTitle>Offset Recommendations</CardTitle>
+                <CardDescription>
+                  Personalized recommendations for carbon offsetting
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CarbonOffsetRecommendation 
+                  userId={user?.uid || ''} 
+                  currentFootprint={carbonSummary || undefined}
+                  recommendation={offsetRecommendation || undefined}
+                />
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
         
         <TabsContent value="recommendations" className="space-y-4">

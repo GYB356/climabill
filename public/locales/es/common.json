@@ -1,0 +1,100 @@
+{
+  "app": {
+    "name": "ClimaBill",
+    "tagline": "Tu camino hacia la facturación neutra en carbono"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "dashboard": "Panel",
+    "carbon": "Carbono",
+    "invoices": "Facturas",
+    "settings": "Configuración",
+    "apiDocs": "Documentación API",
+    "reports": "Informes",
+    "profile": "Perfil",
+    "logout": "Cerrar Sesión",
+    "login": "Iniciar Sesión",
+    "signup": "Registrarse"
+  },
+  "carbon": {
+    "dashboard": "Panel de Carbono",
+    "footprint": "Huella de Carbono",
+    "offsets": "Compensaciones de Carbono",
+    "tracking": "Seguimiento de Uso",
+    "analytics": "Análisis",
+    "insights": "Información",
+    "standards": "Cumplimiento de Estándares",
+    "reports": "Informes de Sostenibilidad",
+    "goals": "Objetivos de Carbono",
+    "forecast": "Previsión de Carbono",
+    "reduction": "Recomendaciones de Reducción",
+    "total": "Carbono Total",
+    "usage": "Uso de Carbono",
+    "offset": "Carbono Compensado",
+    "net": "Carbono Neto",
+    "details": "Detalles de Carbono",
+    "metrics": {
+      "invoices": "Facturas",
+      "emails": "Correos electrónicos",
+      "storage": "Almacenamiento",
+      "api": "Llamadas API",
+      "custom": "Uso Personalizado"
+    },
+    "units": {
+      "kg": "kg CO₂e",
+      "tonnes": "toneladas CO₂e",
+      "emails": "correos",
+      "gb": "GB",
+      "invoices": "facturas",
+      "calls": "llamadas"
+    }
+  },
+  "buttons": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "create": "Crear",
+    "update": "Actualizar",
+    "delete": "Eliminar",
+    "view": "Ver",
+    "edit": "Editar",
+    "add": "Añadir",
+    "remove": "Eliminar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "submit": "Enviar",
+    "offset": "Compensar Carbono",
+    "generate": "Generar Informe",
+    "download": "Descargar"
+  },
+  "settings": {
+    "language": "Idioma",
+    "theme": "Tema",
+    "notifications": "Notificaciones",
+    "account": "Cuenta",
+    "preferences": "Preferencias",
+    "integrations": "Integraciones",
+    "security": "Seguridad"
+  },
+  "time": {
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "thisWeek": "Esta Semana",
+    "lastWeek": "Semana Pasada",
+    "thisMonth": "Este Mes",
+    "lastMonth": "Mes Pasado",
+    "thisQuarter": "Este Trimestre",
+    "lastQuarter": "Trimestre Pasado",
+    "thisYear": "Este Año",
+    "lastYear": "Año Pasado",
+    "custom": "Rango Personalizado"
+  },
+  "errors": {
+    "generic": "Ocurrió un error",
+    "notFound": "No encontrado",
+    "unauthorized": "Acceso no autorizado",
+    "validation": "Error de validación",
+    "serverError": "Error del servidor",
+    "offline": "Estás sin conexión"
+  }
+}
