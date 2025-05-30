@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -8,28 +7,76 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ClimaBillLogo } from '@/components/icons';
-import { ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
-import { useAuth } from '@/lib/firebase/auth-context';
+import { ArrowLeft, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
+import { z } from 'zod';
+
+// Email validation schema
+const emailSchema = z.object({
+  email: z.string().email("Please enter a valid email address")
+});
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const { resetPassword, error, loading } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [retryAfter, setRetryAfter] = useState(0);
   const { toast } = useToast();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setError(null);
+    
+    // Validate email
+    const result = emailSchema.safeParse({ email });
+    if (!result.success) {
+      setError(result.error.errors[0].message);
+      return;
+    }
+    
     try {
-      await resetPassword(email);
+      setLoading(true);
+      
+      // Call our new API endpoint
+      const response = await fetch('/api/auth/password/reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        if (response.status === 429) {
+          // Rate limited
+          setIsRateLimited(true);
+          setRetryAfter(data.retryAfter || 60);
+          toast({
+            title: "Too many attempts",
+            description: "Please wait before trying again.",
+            variant: "destructive"
+          });
+        } else {
+          throw new Error(data.error || 'Failed to send reset email');
+        }
+        return;
+      }
+      
       setIsSubmitted(true);
       toast({
         title: "Reset link sent",
         description: "Check your email for a password reset link.",
       });
-    } catch (error) {
-      console.error("Password reset error:", error);
+    } catch (err) {
+      console.error("Password reset error:", err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -54,11 +101,21 @@ export default function ForgotPasswordPage() {
               </Alert>
             )}
             
+            {isRateLimited && (
+              <Alert variant="warning" className="bg-amber-50 border-amber-200">
+                <Clock className="h-4 w-4 text-amber-500" />
+                <AlertDescription className="text-amber-700">
+                  Too many reset attempts. Please try again in {retryAfter} {retryAfter === 1 ? 'minute' : 'minutes'}.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             {isSubmitted ? (
               <Alert variant="default" className="bg-green-50 border-green-200">
                 <CheckCircle className="h-4 w-4 text-green-500" />
                 <AlertDescription className="text-green-700">
                   Password reset email sent. Check your inbox for further instructions.
+                  <p className="mt-2 text-sm">If you don't see the email, please check your spam folder.</p>
                 </AlertDescription>
               </Alert>
             ) : (
@@ -73,9 +130,15 @@ export default function ForgotPasswordPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     className="bg-card"
+                    disabled={isRateLimited || loading}
                   />
+                  <p className="text-xs text-muted-foreground">Enter the email address associated with your account</p>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={loading || isRateLimited}
+                >
                   {loading ? 'Sending...' : 'Send Reset Link'}
                 </Button>
               </form>

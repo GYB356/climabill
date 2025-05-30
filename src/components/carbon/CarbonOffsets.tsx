@@ -1,0 +1,515 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Grid,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton,
+  Chip,
+  Stack,
+  Alert,
+  Stepper,
+  Step,
+  StepLabel
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  FileDownload as FileDownloadIcon,
+  Info as InfoIcon
+} from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { CarbonOffsetService } from '../../lib/carbon/carbon-offset-service';
+import { CloverlyClient } from '../../lib/carbon/cloverly-client';
+import { OffsetProjectType } from '../../lib/carbon/models/department-project';
+import { useAuth } from '../../hooks/useAuth';
+
+interface CarbonOffsetsProps {
+  organizationId: string;
+  departmentId?: string;
+  projectId?: string;
+}
+
+interface OffsetEstimate {
+  cost: number;
+  currency: string;
+  carbonInKg: number;
+  projectType: OffsetProjectType;
+  projectName: string;
+  projectLocation: string;
+  projectDescription: string;
+}
+
+const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
+  organizationId,
+  departmentId,
+  projectId
+}) => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [offsets, setOffsets] = useState<any[]>([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [activeStep, setActiveStep] = useState(0);
+  const [processing, setProcessing] = useState(false);
+  const [formData, setFormData] = useState({
+    carbonInKg: '',
+    projectType: '' as OffsetProjectType,
+    location: {
+      country: '',
+      state: '',
+      postal_code: ''
+    }
+  });
+  const [estimate, setEstimate] = useState<OffsetEstimate | null>(null);
+
+  const offsetService = new CarbonOffsetService();
+  const cloverlyClient = new CloverlyClient();
+
+  useEffect(() => {
+    if (organizationId) {
+      loadOffsets();
+    }
+  }, [organizationId, departmentId, projectId]);
+
+  const loadOffsets = async () => {
+    try {
+      setLoading(true);
+      const offsetsList = await offsetService.getOffsetHistory(
+        organizationId,
+        departmentId,
+        projectId
+      );
+      setOffsets(offsetsList);
+      setError(null);
+    } catch (err) {
+      console.error('Error loading carbon offsets:', err);
+      setError('Failed to load offset history. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+    setActiveStep(0);
+    setEstimate(null);
+    setFormData({
+      carbonInKg: '',
+      projectType: '' as OffsetProjectType,
+      location: {
+        country: '',
+        state: '',
+        postal_code: ''
+      }
+    });
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setError(null);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        [name]: value,
+      },
+    }));
+  };
+
+  const handleProjectTypeChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
+    setFormData((prev) => ({
+      ...prev,
+      projectType: e.target.value as OffsetProjectType,
+    }));
+  };
+
+  const handleGetEstimate = async () => {
+    try {
+      setProcessing(true);
+      setError(null);
+
+      if (!formData.carbonInKg || isNaN(Number(formData.carbonInKg))) {
+        setError('Please enter a valid carbon amount');
+        return;
+      }
+
+      const estimateResponse = await cloverlyClient.estimateOffset(
+        Number(formData.carbonInKg),
+        formData.projectType || undefined,
+        formData.location
+      );
+
+      setEstimate({
+        cost: estimateResponse.cost,
+        currency: estimateResponse.currency,
+        carbonInKg: estimateResponse.carbonInKg,
+        projectType: estimateResponse.projectType,
+        projectName: estimateResponse.projectName,
+        projectLocation: estimateResponse.projectLocation,
+        projectDescription: estimateResponse.projectDescription
+      });
+
+      setActiveStep(1);
+    } catch (err) {
+      console.error('Error getting offset estimate:', err);
+      setError('Failed to get offset estimate. Please try again.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handlePurchaseOffset = async () => {
+    try {
+      setProcessing(true);
+      setError(null);
+
+      if (!estimate) {
+        setError('Please get an estimate first');
+        return;
+      }
+
+      await offsetService.purchaseOffset(
+        organizationId,
+        {
+          carbonInKg: estimate.carbonInKg,
+          cost: estimate.cost,
+          currency: estimate.currency,
+          projectType: estimate.projectType,
+          projectName: estimate.projectName,
+          projectLocation: estimate.projectLocation,
+          departmentId,
+          projectId
+        }
+      );
+
+      handleCloseDialog();
+      loadOffsets();
+    } catch (err) {
+      console.error('Error purchasing offset:', err);
+      setError('Failed to purchase offset. Please try again.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const formatCarbon = (kg: number): string => {
+    if (kg >= 1000) {
+      return `${(kg / 1000).toFixed(1)} tonnes CO₂e`;
+    }
+    return `${kg.toFixed(1)} kg CO₂e`;
+  };
+
+  const formatCurrency = (amount: number, currency: string): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency
+    }).format(amount);
+  };
+
+  const formatDate = (date: Date) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  return (
+    <Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h5">Carbon Offsets</Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={handleOpenDialog}
+        >
+          Purchase Offset
+        </Button>
+      </Box>
+
+      {loading ? (
+        <Box display="flex" justifyContent="center" my={4}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Typography color="error">{error}</Typography>
+      ) : offsets.length === 0 ? (
+        <Typography>
+          No carbon offsets found. Purchase your first offset to start compensating for your emissions.
+        </Typography>
+      ) : (
+        <List>
+          {offsets.map((offset) => (
+            <ListItem key={offset.id}>
+              <ListItemText
+                primary={
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Typography variant="subtitle1">
+                      {formatCarbon(offset.carbonInKg)}
+                    </Typography>
+                    <Chip
+                      label={offset.projectType}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                    />
+                  </Box>
+                }
+                secondary={
+                  <Grid container spacing={2} mt={1}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="body2" component="div">
+                        Project: {offset.projectName}
+                      </Typography>
+                      <Typography variant="body2" component="div">
+                        Location: {offset.projectLocation}
+                      </Typography>
+                      <Typography variant="body2" component="div">
+                        Date: {formatDate(offset.purchaseDate)}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="body2" component="div">
+                        Cost: {formatCurrency(offset.cost, offset.currency)}
+                      </Typography>
+                      {offset.certificateUrl && (
+                        <Button
+                          variant="text"
+                          size="small"
+                          startIcon={<FileDownloadIcon />}
+                          href={offset.certificateUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          View Certificate
+                        </Button>
+                      )}
+                    </Grid>
+                  </Grid>
+                }
+              />
+            </ListItem>
+          ))}
+        </List>
+      )}
+
+      <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="md">
+        <DialogTitle>Purchase Carbon Offset</DialogTitle>
+        <DialogContent>
+          <Box mt={1}>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+
+            <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+              <Step>
+                <StepLabel>Enter Details</StepLabel>
+              </Step>
+              <Step>
+                <StepLabel>Review & Purchase</StepLabel>
+              </Step>
+            </Stepper>
+
+            {activeStep === 0 ? (
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Carbon Amount (kg CO₂e)"
+                    name="carbonInKg"
+                    type="number"
+                    value={formData.carbonInKg}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel>Project Type (Optional)</InputLabel>
+                    <Select
+                      label="Project Type (Optional)"
+                      value={formData.projectType}
+                      onChange={handleProjectTypeChange}
+                    >
+                      <MenuItem value="">Any Type</MenuItem>
+                      {Object.values(OffsetProjectType).map((type) => (
+                        <MenuItem key={type} value={type}>
+                          {type}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Country (Optional)"
+                    name="country"
+                    value={formData.location.country}
+                    onChange={handleLocationChange}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="State (Optional)"
+                    name="state"
+                    value={formData.location.state}
+                    onChange={handleLocationChange}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Postal Code (Optional)"
+                    name="postal_code"
+                    value={formData.location.postal_code}
+                    onChange={handleLocationChange}
+                  />
+                </Grid>
+              </Grid>
+            ) : (
+              estimate && (
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Offset Estimate
+                    </Typography>
+
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Carbon Amount
+                        </Typography>
+                        <Typography variant="body1" gutterBottom>
+                          {formatCarbon(estimate.carbonInKg)}
+                        </Typography>
+
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Cost
+                        </Typography>
+                        <Typography variant="body1" gutterBottom>
+                          {formatCurrency(estimate.cost, estimate.currency)}
+                        </Typography>
+
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Project Type
+                        </Typography>
+                        <Typography variant="body1" gutterBottom>
+                          {estimate.projectType}
+                        </Typography>
+                      </Grid>
+
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Project Name
+                        </Typography>
+                        <Typography variant="body1" gutterBottom>
+                          {estimate.projectName}
+                        </Typography>
+
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Location
+                        </Typography>
+                        <Typography variant="body1" gutterBottom>
+                          {estimate.projectLocation}
+                        </Typography>
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Project Description
+                        </Typography>
+                        <Typography variant="body1">
+                          {estimate.projectDescription}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              )
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          {activeStep === 0 ? (
+            <Button
+              onClick={handleGetEstimate}
+              color="primary"
+              variant="contained"
+              disabled={processing}
+            >
+              {processing ? (
+                <>
+                  <CircularProgress size={24} sx={{ mr: 1 }} />
+                  Getting Estimate...
+                </>
+              ) : (
+                'Get Estimate'
+              )}
+            </Button>
+          ) : (
+            <>
+              <Button onClick={() => setActiveStep(0)}>Back</Button>
+              <Button
+                onClick={handlePurchaseOffset}
+                color="primary"
+                variant="contained"
+                disabled={processing}
+              >
+                {processing ? (
+                  <>
+                    <CircularProgress size={24} sx={{ mr: 1 }} />
+                    Processing...
+                  </>
+                ) : (
+                  'Purchase Offset'
+                )}
+              </Button>
+            </>
+          )}
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
+
+export default CarbonOffsets;

@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -7,22 +6,38 @@ import { ArrowRight, PlayCircle, Star, Sparkles, Leaf, LayoutDashboard, Package,
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { useState, useEffect, Suspense } from 'react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
+
+// Dynamically import non-critical Dialog components
+const Dialog = dynamic(() => import("@/components/ui/dialog").then(mod => mod.Dialog), { ssr: false });
+const DialogContent = dynamic(() => import("@/components/ui/dialog").then(mod => mod.DialogContent));
+const DialogDescription = dynamic(() => import("@/components/ui/dialog").then(mod => mod.DialogDescription));
+const DialogHeader = dynamic(() => import("@/components/ui/dialog").then(mod => mod.DialogHeader));
+const DialogTitle = dynamic(() => import("@/components/ui/dialog").then(mod => mod.DialogTitle));
+const DialogTrigger = dynamic(() => import("@/components/ui/dialog").then(mod => mod.DialogTrigger));
+const DialogFooter = dynamic(() => import("@/components/ui/dialog").then(mod => mod.DialogFooter));
+const DialogClose = dynamic(() => import("@/components/ui/dialog").then(mod => mod.DialogClose));
+
+// Tour slide placeholder for lazy loading
+const TourSlideContent = ({ slide, currentIndex }) => (
+  <div className="p-6 pt-2 aspect-video bg-black flex items-center justify-center">
+    <Image
+      src={slide.imageUrl}
+      alt={slide.title}
+      width={1200}
+      height={675}
+      className="rounded-md object-contain max-h-full"
+      data-ai-hint={slide.dataAiHint}
+      loading={currentIndex === 0 ? "eager" : "lazy"}
+    />
+  </div>
+);
 
 
 const tourSlides = [
@@ -79,6 +94,7 @@ export default function HomePage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(paymentMethods[0].id);
   const [optForPaymentPlan, setOptForPaymentPlan] = useState(false);
   const [currentDate, setCurrentDate] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     setCurrentDate(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
@@ -147,58 +163,56 @@ export default function HomePage() {
       <section className="py-16 bg-secondary/30">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-foreground mb-8">See ClimaBill in Action</h2>
-          <Dialog onOpenChange={(open) => { if (!open) setCurrentTourSlide(0); }}> 
-            <DialogTrigger asChild>
-              <div className="aspect-video bg-muted rounded-lg shadow-xl max-w-3xl mx-auto flex items-center justify-center relative overflow-hidden cursor-pointer group">
-                <Image
-                  src={tourSlides[0].imageUrl}
-                  alt="ClimaBill Demo Thumbnail"
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  data-ai-hint={tourSlides[0].dataAiHint}
-                  priority
-                />
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center flex-col group-hover:bg-black/40 transition-colors duration-300">
-                  <PlayCircle className="w-20 h-20 text-white/80 group-hover:text-white transition-colors duration-300 mb-2 group-hover:scale-110 transform" />
-                  <p className="mt-2 text-white/90 text-lg font-semibold">Take Product Tour</p>
-                </div>
-              </div>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[800px] p-0">
-              <DialogHeader className="p-6 pb-2">
-                <DialogTitle className="text-2xl">{tourSlides[currentTourSlide].title}</DialogTitle>
-                <DialogDescription>
-                  {tourSlides[currentTourSlide].description}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="p-6 pt-2 aspect-video bg-black flex items-center justify-center">
-                <Image
-                  src={tourSlides[currentTourSlide].imageUrl}
-                  alt={tourSlides[currentTourSlide].title}
-                  width={1200}
-                  height={675}
-                  className="rounded-md object-contain max-h-full"
-                  data-ai-hint={tourSlides[currentTourSlide].dataAiHint}
-                />
-              </div>
-              <DialogFooter className="p-6 pt-2 flex justify-between items-center">
-                <Button variant="outline" onClick={handlePrevSlide} disabled={currentTourSlide === 0}>
-                  <ChevronLeft className="mr-2 h-4 w-4" /> Previous
-                </Button>
-                <span className="text-sm text-muted-foreground">Slide {currentTourSlide + 1} of {tourSlides.length}</span>
-                {currentTourSlide < tourSlides.length - 1 ? (
-                  <Button onClick={handleNextSlide}>
-                    Next <ChevronRight className="ml-2 h-4 w-4" />
+          <div className="aspect-video bg-muted rounded-lg shadow-xl max-w-3xl mx-auto flex items-center justify-center relative overflow-hidden cursor-pointer group"
+               onClick={() => setIsDialogOpen(true)}>
+            <Image
+              src={tourSlides[0].imageUrl}
+              alt="ClimaBill Demo Thumbnail"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              data-ai-hint={tourSlides[0].dataAiHint}
+              priority
+            />
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center flex-col group-hover:bg-black/40 transition-colors duration-300">
+              <PlayCircle className="w-20 h-20 text-white/80 group-hover:text-white transition-colors duration-300 mb-2 group-hover:scale-110 transform" />
+              <p className="mt-2 text-white/90 text-lg font-semibold">Take Product Tour</p>
+            </div>
+          </div>
+          
+          {isDialogOpen && (
+            <Dialog open={isDialogOpen} onOpenChange={(open) => { 
+              setIsDialogOpen(open);
+              if (!open) setCurrentTourSlide(0);
+            }}>
+              <DialogContent className="sm:max-w-[800px] p-0">
+                <DialogHeader className="p-6 pb-2">
+                  <DialogTitle className="text-2xl">{tourSlides[currentTourSlide].title}</DialogTitle>
+                  <DialogDescription>
+                    {tourSlides[currentTourSlide].description}
+                  </DialogDescription>
+                </DialogHeader>
+                <Suspense fallback={<div className="aspect-video bg-black flex items-center justify-center">Loading...</div>}>
+                  <TourSlideContent slide={tourSlides[currentTourSlide]} currentIndex={currentTourSlide} />
+                </Suspense>
+                <DialogFooter className="p-6 pt-2 flex justify-between items-center">
+                  <Button variant="outline" onClick={handlePrevSlide} disabled={currentTourSlide === 0}>
+                    <ChevronLeft className="mr-2 h-4 w-4" /> Previous
                   </Button>
-                ) : (
-                  <DialogClose asChild>
-                    <Button>Finish Tour</Button>
-                  </DialogClose>
-                )}
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                  <span className="text-sm text-muted-foreground">Slide {currentTourSlide + 1} of {tourSlides.length}</span>
+                  {currentTourSlide < tourSlides.length - 1 ? (
+                    <Button onClick={handleNextSlide}>
+                      Next <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <DialogClose asChild>
+                      <Button>Finish Tour</Button>
+                    </DialogClose>
+                  )}
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </section>
 
@@ -230,7 +244,7 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-foreground mb-12">Simple, Transparent Pricing</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {pricingPlans.map(plan => (
-              <div key={plan.tier} className={`p-8 bg-card border rounded-lg shadow-lg flex flex-col ${plan.highlighted ? 'border-primary ring-2 ring-primary' : 'border-border'}`}>
+              <div key={plan.tier} className={`p-8 bg-card border rounded-lg shadow-lg flex flex-col ${plan.highlighted ? 'border-primary ring-2 ring-primary' : 'border-muted'}`}>
                 <plan.icon className={`w-12 h-12 mx-auto mb-4 ${plan.highlighted ? 'text-primary' : 'text-accent'}`} />
                 <h3 className="text-2xl font-semibold mb-2 text-foreground">{plan.tier}</h3>
                 <p className="text-4xl font-bold text-foreground mb-2">${plan.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
