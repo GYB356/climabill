@@ -1,4 +1,4 @@
-import { firestore } from '../firebase/config';
+import { db } from '../firebase/config';
 import { 
   collection, 
   doc, 
@@ -91,7 +91,7 @@ export class CarbonOffsetService {
       };
       
       // Save to Firestore
-      const docRef = await addDoc(collection(firestore, this.DONATION_COLLECTION), donation);
+      const docRef = await addDoc(collection(db, this.DONATION_COLLECTION), donation);
       
       // Create payment intent based on gateway
       let clientSecret: string | undefined;
@@ -114,7 +114,7 @@ export class CarbonOffsetService {
         clientSecret = paymentIntent.client_secret;
         
         // Update donation with payment ID
-        await updateDoc(doc(firestore, this.DONATION_COLLECTION, docRef.id), {
+        await updateDoc(doc(db, this.DONATION_COLLECTION, docRef.id), {
           paymentId: paymentIntent.id,
           updatedAt: Timestamp.now(),
         });
@@ -137,7 +137,7 @@ export class CarbonOffsetService {
         paymentUrl = order.approvalUrl;
         
         // Update donation with payment ID
-        await updateDoc(doc(firestore, this.DONATION_COLLECTION, docRef.id), {
+        await updateDoc(doc(db, this.DONATION_COLLECTION, docRef.id), {
           paymentId: order.id,
           updatedAt: Timestamp.now(),
         });
@@ -174,7 +174,7 @@ export class CarbonOffsetService {
   }> {
     try {
       // Get donation
-      const donationRef = doc(firestore, this.DONATION_COLLECTION, donationId);
+      const donationRef = doc(db, this.DONATION_COLLECTION, donationId);
       const donationSnap = await getDoc(donationRef);
       
       if (!donationSnap.exists()) {
@@ -260,7 +260,7 @@ export class CarbonOffsetService {
   }> {
     try {
       // Get donation
-      const donationRef = doc(firestore, this.DONATION_COLLECTION, donationId);
+      const donationRef = doc(db, this.DONATION_COLLECTION, donationId);
       const donationSnap = await getDoc(donationRef);
       
       if (!donationSnap.exists()) {
@@ -320,7 +320,7 @@ export class CarbonOffsetService {
    */
   async getDonation(donationId: string): Promise<OffsetDonation | null> {
     try {
-      const donationRef = doc(firestore, this.DONATION_COLLECTION, donationId);
+      const donationRef = doc(db, this.DONATION_COLLECTION, donationId);
       const donationSnap = await getDoc(donationRef);
       
       if (!donationSnap.exists()) {
