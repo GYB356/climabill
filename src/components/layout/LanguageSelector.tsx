@@ -1,4 +1,6 @@
-import { useRouter } from 'next/router';
+"use client";
+
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'next-i18next';
 import { Fragment, useState } from 'react';
 import { Menu, Transition } from '@headlessui/react';
@@ -14,16 +16,35 @@ const languages = [
 
 export const LanguageSelector = () => {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { t } = useTranslation('common');
-  const { pathname, asPath, query } = router;
+  
+  // Get current language from cookie or localStorage
+  const getCurrentLanguage = () => {
+    // Try to get from cookie first
+    const cookieLang = document.cookie.split('; ')
+      .find(row => row.startsWith('NEXT_LOCALE='))
+      ?.split('=')[1];
+      
+    // Then from localStorage
+    const localStorageLang = localStorage.getItem('NEXT_LOCALE');
+    
+    // Return found language or default to 'en'
+    const langCode = cookieLang || localStorageLang || 'en';
+    return languages.find(lang => lang.code === langCode) || languages[0];
+  };
   
   // Find current language
-  const currentLanguage = languages.find(lang => lang.code === router.locale) || languages[0];
+  const currentLanguage = getCurrentLanguage();
   
   // Handle language change
   const changeLanguage = (locale: string) => {
     document.cookie = `NEXT_LOCALE=${locale}; max-age=31536000; path=/`;
-    router.push({ pathname, query }, asPath, { locale });
+    localStorage.setItem('NEXT_LOCALE', locale);
+    
+    // In App Router, we need to reload the page to change the language
+    window.location.reload();
   };
   
   return (
@@ -55,7 +76,7 @@ export const LanguageSelector = () => {
                     onClick={() => changeLanguage(language.code)}
                     className={`
                       ${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} 
-                      ${router.locale === language.code ? 'bg-gray-50 font-medium' : ''}
+                      ${currentLanguage.code === language.code ? 'bg-gray-50 font-medium' : ''}
                       group flex w-full items-center px-4 py-2 text-sm
                     `}
                   >

@@ -134,19 +134,19 @@ export default function MFASetupPage() {
         },
         body: JSON.stringify({
           userId: session?.user?.id,
-          verificationCode,
+          code: verificationCode,
         }),
       });
       
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to verify MFA code');
+        throw new Error(data.error || 'Failed to verify MFA');
       }
       
       setStep('complete');
       toast({
-        title: "MFA enabled",
+        title: "MFA setup complete",
         description: "Multi-factor authentication has been successfully enabled.",
       });
     } catch (error) {
@@ -162,45 +162,44 @@ export default function MFASetupPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-muted/40">
-      <div className="container max-w-3xl py-12">
-        <div className="mb-8 space-y-2">
-          <h1 className="text-3xl font-bold">Multi-Factor Authentication</h1>
-          <CardDescription className="text-muted-foreground">
-            {step === 'setup' && "Set up an additional layer of security for your account."}
-            {step === 'verify' && "Enter the verification code from your authenticator app."}
-            {step === 'complete' && "Multi-factor authentication has been enabled."}
-          </CardDescription>
-        </div>
-        <Card className="shadow-xl">
-          <CardContent className="grid gap-4 pt-6">
+    <div className="container max-w-md mx-auto py-8">
+      <div className="space-y-4">
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-xl text-center">Multi-Factor Authentication Setup</CardTitle>
+            <CardDescription className="text-center">
+              Enhance your account security by setting up MFA.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             {error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-
+            
             {step === 'setup' && (
               <>
-                <Tabs defaultValue="app" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
+                <Tabs defaultValue="app">
+                  <TabsList className="grid grid-cols-2 w-full">
                     <TabsTrigger value="app">Authenticator App</TabsTrigger>
                     <TabsTrigger value="sms">SMS</TabsTrigger>
                   </TabsList>
                   <TabsContent value="app" className="mt-4 space-y-4">
-                    <div className="space-y-2">
-                      <p className="text-sm">
-                        Use an authenticator app like Google Authenticator, Microsoft Authenticator, or Authy to generate time-based one-time passwords.
+                    <div className="rounded-md bg-primary/10 p-4">
+                      <h3 className="font-medium mb-2">How it works</h3>
+                      <p className="text-sm text-muted-foreground">
+                        We'll generate a QR code that you can scan with your authenticator app (like Google Authenticator, Authy, or Microsoft Authenticator).
                       </p>
-                      <Button 
-                        onClick={setupAppMFA} 
-                        className="w-full" 
-                        disabled={loading}
-                      >
-                        {loading ? 'Setting up...' : 'Set up authenticator'}
-                      </Button>
                     </div>
+                    <Button 
+                      onClick={setupAppMFA} 
+                      className="w-full"
+                      disabled={loading}
+                    >
+                      {loading ? 'Setting up...' : 'Generate QR Code'}
+                    </Button>
                   </TabsContent>
                   <TabsContent value="sms" className="mt-4 space-y-4">
                     <div className="grid gap-2">

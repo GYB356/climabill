@@ -1,6 +1,8 @@
+"use client";
+
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
-import { useRouter } from 'next/router';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { CachedCarbonTrackingService } from '@/lib/carbon/cached-carbon-tracking-service';
 import EnhancedChart, { ChartType } from '@/components/data-visualization/EnhancedChart';
 import { useAuth } from '@/components/providers/auth-provider';

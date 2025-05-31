@@ -9,8 +9,8 @@ import {
 } from 'firebase/firestore';
 import { CARBON_DEFAULTS, OffsetProjectType, OffsetPurchaseStatus, PaymentGateway } from './config';
 import { CarbonTrackingService, CarbonOffset } from './carbon-tracking-service';
-import { StripeService } from '../billing/stripe-service';
-import { PayPalService } from '../billing/paypal-service';
+import { StripeService } from '../billing/stripe/stripe-service';
+import { PayPalService } from '../billing/paypal/paypal-service';
 
 /**
  * Interface for offset donation
