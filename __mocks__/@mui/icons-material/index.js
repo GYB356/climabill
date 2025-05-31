@@ -2,13 +2,12 @@ import React from 'react';
 
 // Create a mock component factory that returns a proper React component
 const createMockComponent = (name) => {
-  const Component = React.forwardRef((props, ref) => {
+  const Component = (props) => {
     return React.createElement('span', {
       'data-testid': `mui-icon-${name.toLowerCase()}`,
-      ref,
       ...props,
     }, props.children || name);
-  });
+  };
   Component.displayName = name;
   return Component;
 };

@@ -27,6 +27,7 @@ const customJestConfig = {
     '^@mui/material$': '<rootDir>/__mocks__/@mui/material/index.js',
     '^@mui/material/(.*)$': '<rootDir>/__mocks__/@mui/material/index.js',
     '^@mui/icons-material$': '<rootDir>/__mocks__/@mui/icons-material/index.js',
+    '^@mui/icons-material/Edit$': '<rootDir>/__mocks__/@mui/icons-material/Edit.js',
     '^@mui/icons-material/(.*)$': '<rootDir>/__mocks__/@mui/icons-material/index.js',
     '^@mui/x-date-pickers/LocalizationProvider$': '<rootDir>/__mocks__/@mui/x-date-pickers/LocalizationProvider.js',
     '^@mui/x-date-pickers/AdapterDateFns$': '<rootDir>/__mocks__/@mui/x-date-pickers/AdapterDateFns.js',
