@@ -51,55 +51,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   
-  // Helper function to create a session cookie
+  // Helper function to create a session cookie (non-blocking)
   const createSessionCookie = async (user: User) => {
     try {
       // Get the ID token
       const idToken = await getIdToken(user);
       
-      // Call the session API to create a session cookie
-      const response = await fetch('/api/auth/session', {
+      // Call the session API to create a session cookie (non-blocking)
+      // We don't await this to avoid blocking the UI
+      fetch('/api/auth/session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ idToken }),
+      }).catch(err => {
+        // Silently handle errors
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to create session');
-      }
-      
-      console.log('Session cookie created successfully');
       return true;
     } catch (error) {
-      console.error('Error creating session cookie:', error);
       return false;
     }
   };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('Auth state changed:', { 
-        user: user ? { uid: user.uid, email: user.email, emailVerified: user.emailVerified } : null,
-        currentPath: window.location.pathname 
-      });
-      
+      // Set user state without excessive logging
       setUser(user);
       setLoading(false);
       
-      // Redirect logic
+      // Redirect logic with setTimeout to avoid blocking rendering
       if (user) {
         const currentPath = window.location.pathname;
         if (currentPath === '/auth/signin' || 
             currentPath === '/login' || 
             currentPath === '/signup' || 
             currentPath === '/auth/signup') {
-          console.log('User authenticated, redirecting to dashboard at:', new Date().toISOString());
-          router.push('/dashboard');
+          // Use setTimeout to defer navigation until after render
+          setTimeout(() => {
+            router.push('/dashboard');
+          }, 0);
         }
-      } else {
-        console.log('No authenticated user detected');
       }
     });
 
@@ -110,18 +103,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       setLoading(true);
-      console.log('Attempting to sign in with:', { email });
+      // Remove excessive logging
       const result = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Sign in successful:', { 
-        uid: result.user.uid, 
-        email: result.user.email,
-        emailVerified: result.user.emailVerified,
-        timestamp: new Date().toISOString()
-      });
       
-      // Create a session cookie for server-side authentication
-      const sessionCreated = await createSessionCookie(result.user);
-      console.log('Session cookie creation result:', sessionCreated);
+      // Create a session cookie for server-side authentication (don't await)
+      createSessionCookie(result.user);
       
       return result.user;
     } catch (error: any) {
