@@ -12,7 +12,11 @@ export class NextRequest {
   }
 
   json() {
-    return Promise.resolve(this.body);
+    try {
+      return Promise.resolve(typeof this.body === 'string' ? JSON.parse(this.body) : this.body);
+    } catch (error) {
+      return Promise.reject(new Error('Invalid JSON'));
+    }
   }
 }
 

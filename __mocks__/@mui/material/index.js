@@ -55,6 +55,8 @@ export const Menu = createMockComponent('Menu');
 export const Tooltip = createMockComponent('Tooltip');
 export const Switch = createMockComponent('Switch');
 export const FormControlLabel = createMockComponent('FormControlLabel');
+export const Stack = createMockComponent('Stack');
+export const InputAdornment = createMockComponent('InputAdornment');
 
 // Mock hooks
 export const useTheme = jest.fn().mockReturnValue({
@@ -119,4 +121,6 @@ export default {
   Tooltip,
   Switch,
   FormControlLabel,
+  Stack,
+  InputAdornment,
 };

@@ -61,6 +61,70 @@ jest.mock('firebase/app', () => {
   };
 });
 
+// Mock the Firebase config module specifically
+jest.mock('./src/lib/firebase/config', () => {
+  // Create mock functions that match the firestore mock structure
+  const createDocRef = () => ({
+    get: jest.fn().mockResolvedValue({
+      id: 'mock-id',
+      data: jest.fn().mockReturnValue({}),
+      exists: jest.fn().mockReturnValue(true),
+    }),
+    set: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  });
+
+  const createCollectionRef = () => ({
+    add: jest.fn().mockResolvedValue({ id: 'mock-id' }),
+    doc: jest.fn().mockReturnValue(createDocRef()),
+    where: jest.fn().mockReturnValue({
+      where: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      get: jest.fn().mockResolvedValue({
+        docs: [],
+        empty: true,
+        size: 0,
+      }),
+    }),
+    orderBy: jest.fn().mockReturnValue({
+      where: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      get: jest.fn().mockResolvedValue({
+        docs: [],
+        empty: true,
+        size: 0,
+      }),
+    }),
+    limit: jest.fn().mockReturnValue({
+      where: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      get: jest.fn().mockResolvedValue({
+        docs: [],
+        empty: true,
+        size: 0,
+      }),
+    }),
+    get: jest.fn().mockResolvedValue({
+      docs: [],
+      empty: true,
+      size: 0,
+    }),
+  });
+  
+  return {
+    db: createCollectionRef(),
+    auth: {
+      currentUser: null,
+      onAuthStateChanged: jest.fn(),
+    },
+    default: {},
+  };
+});
+
 jest.mock('firebase/auth', () => {
   return {
     getAuth: jest.fn().mockReturnValue({
@@ -78,21 +142,90 @@ jest.mock('firebase/auth', () => {
 });
 
 jest.mock('firebase/firestore', () => {
+  const mockCollection = jest.fn();
+  const mockDoc = jest.fn();
+  const mockAdd = jest.fn();
+  const mockGet = jest.fn();
+  const mockUpdate = jest.fn();
+  const mockDelete = jest.fn();
+  const mockSet = jest.fn();
+  const mockWhere = jest.fn();
+  const mockOrderBy = jest.fn();
+  const mockLimit = jest.fn();
+  const mockQuery = jest.fn();
+
+  // Mock chain-able methods
+  const createQueryChain = () => ({
+    where: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
+    get: jest.fn().mockResolvedValue({
+      docs: [],
+      empty: true,
+      size: 0,
+    }),
+  });
+
+  const createDocRef = () => ({
+    get: jest.fn().mockResolvedValue({
+      id: 'mock-id',
+      data: jest.fn().mockReturnValue({}),
+      exists: jest.fn().mockReturnValue(true),
+    }),
+    set: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  });
+
+  const createCollectionRef = () => ({
+    add: jest.fn().mockResolvedValue({ id: 'mock-id' }),
+    doc: jest.fn().mockReturnValue(createDocRef()),
+    where: jest.fn().mockReturnValue(createQueryChain()),
+    orderBy: jest.fn().mockReturnValue(createQueryChain()),
+    limit: jest.fn().mockReturnValue(createQueryChain()),
+    get: jest.fn().mockResolvedValue({
+      docs: [],
+      empty: true,
+      size: 0,
+    }),
+  });
+
   return {
     getFirestore: jest.fn(),
-    collection: jest.fn(),
-    doc: jest.fn(),
-    getDoc: jest.fn(),
-    getDocs: jest.fn(),
+    collection: jest.fn().mockReturnValue(createCollectionRef()),
+    doc: jest.fn().mockReturnValue(createDocRef()),
+    addDoc: jest.fn().mockResolvedValue({ id: 'mock-id' }),
+    getDoc: jest.fn().mockResolvedValue({
+      id: 'mock-id',
+      data: jest.fn().mockReturnValue({}),
+      exists: jest.fn().mockReturnValue(true),
+    }),
+    getDocs: jest.fn().mockResolvedValue({
+      docs: [],
+      empty: true,
+      size: 0,
+    }),
     setDoc: jest.fn(),
     updateDoc: jest.fn(),
     deleteDoc: jest.fn(),
-    query: jest.fn(),
+    query: jest.fn().mockReturnValue(createQueryChain()),
     where: jest.fn(),
     orderBy: jest.fn(),
     limit: jest.fn(),
     startAfter: jest.fn(),
     onSnapshot: jest.fn(),
+    Timestamp: {
+      now: jest.fn().mockReturnValue({
+        toDate: jest.fn().mockReturnValue(new Date()),
+        seconds: Math.floor(Date.now() / 1000),
+        nanoseconds: 0,
+      }),
+      fromDate: jest.fn().mockImplementation((date) => ({
+        toDate: jest.fn().mockReturnValue(date),
+        seconds: Math.floor(date.getTime() / 1000),
+        nanoseconds: 0,
+      })),
+    },
   };
 });
 

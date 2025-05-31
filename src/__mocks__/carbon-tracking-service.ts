@@ -3,12 +3,22 @@ import { CarbonUsageData, EmissionsTimeSeriesData, EmissionsSourceData } from '.
 
 // Create instance methods
 const getCarbonUsageForPeriodImpl = jest.fn().mockResolvedValue({
-  totalEmissions: 1000,
-  breakdown: [
-    { source: 'Electricity', emissions: 500, percentage: 50 },
-    { source: 'Transportation', emissions: 300, percentage: 30 },
-    { source: 'Heating', emissions: 200, percentage: 20 },
-  ],
+  id: 'usage-123',
+  userId: 'user123',
+  organizationId: 'org123',
+  invoiceCount: 50,
+  emailCount: 100,
+  storageGb: 10,
+  apiCallCount: 500,
+  totalCarbonInKg: 900,
+  offsetCarbonInKg: 50,
+  remainingCarbonInKg: 850,
+  period: {
+    startDate: new Date('2025-01-01'),
+    endDate: new Date('2025-01-31'),
+  },
+  createdAt: new Date(),
+  updatedAt: new Date(),
 });
 
 const getEmissionsTimeSeriesImpl = jest.fn().mockImplementation((organizationId, startDate, endDate) => {
@@ -254,3 +264,31 @@ CarbonTrackingService.prototype.getEmissionsForProject = getEmissionsForProjectI
 CarbonTrackingService.prototype.getEmissionsBreakdown = getEmissionsBreakdownImpl;
 CarbonTrackingService.prototype.getEmissionsTrends = getEmissionsTrendsImpl;
 CarbonTrackingService.prototype.purchaseCarbonOffset = purchaseCarbonOffsetImpl;
+
+// Add missing methods needed by tests
+const getCarbonUsageSummaryImpl = jest.fn().mockResolvedValue({
+  totalCarbonInKg: 5000,
+  offsetCarbonInKg: 30,
+  offsetPercentage: 0.6,
+  sources: [
+    { source: 'Electricity', emissions: 2500, percentage: 50 },
+    { source: 'Transportation', emissions: 1500, percentage: 30 },
+    { source: 'Heating', emissions: 1000, percentage: 20 },
+  ],
+});
+
+CarbonTrackingService.prototype.getCarbonUsageSummary = getCarbonUsageSummaryImpl;
+
+// Add getCarbonFootprintSummary method needed by carbon-goals-service
+const getCarbonFootprintSummaryImpl = jest.fn().mockResolvedValue({
+  totalCarbonInKg: 900,
+  offsetCarbonInKg: 30,
+  offsetPercentage: 3.3,
+  sources: [
+    { source: 'Electricity', emissions: 450, percentage: 50 },
+    { source: 'Transportation', emissions: 270, percentage: 30 },
+    { source: 'Heating', emissions: 180, percentage: 20 },
+  ],
+});
+
+CarbonTrackingService.prototype.getCarbonFootprintSummary = getCarbonFootprintSummaryImpl;

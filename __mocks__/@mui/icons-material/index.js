@@ -1,4 +1,3 @@
-// Mock Material-UI icons
 import React from 'react';
 
 // Create a mock component factory
@@ -15,6 +14,7 @@ const createMockComponent = (name) => {
 
 // Common icons used in the application
 export const Add = createMockComponent('Add');
+export const AddIcon = createMockComponent('AddIcon');
 export const Edit = createMockComponent('Edit');
 export const Delete = createMockComponent('Delete');
 export const TrendingUp = createMockComponent('TrendingUp');
@@ -55,6 +55,7 @@ export const ArrowDownward = createMockComponent('ArrowDownward');
 // Export default for components that use default export
 export default {
   Add,
+  AddIcon,
   Edit,
   Delete,
   TrendingUp,

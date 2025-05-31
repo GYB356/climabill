@@ -10,7 +10,7 @@ jest.mock('next-auth', () => ({
   getServerSession: jest.fn(),
 }));
 
-// Mock the CarbonGoalsService
+// Mock the CarbonGoalsService - use the mock from __mocks__
 jest.mock('../../../../lib/carbon/carbon-goals-service');
 
 // Mock the auth options
@@ -58,7 +58,7 @@ describe('Carbon Goals API', () => {
           targetReductionPercentage: 20,
           startDate: new Date('2025-01-01'),
           targetDate: new Date('2025-12-31'),
-          status: 'active',
+          status: 'active' as const,
         },
         {
           id: 'goal2',
@@ -69,7 +69,7 @@ describe('Carbon Goals API', () => {
           targetReductionPercentage: 20,
           startDate: new Date('2025-01-01'),
           targetDate: new Date('2025-12-31'),
-          status: 'active',
+          status: 'active' as const,
         },
       ];
       
@@ -154,7 +154,7 @@ describe('Carbon Goals API', () => {
         targetReductionPercentage: 20,
         startDate: '2025-01-01T00:00:00.000Z',
         targetDate: '2025-12-31T00:00:00.000Z',
-        status: 'active',
+        status: 'active' as const,
       };
       
       const createdGoal = {
@@ -168,14 +168,26 @@ describe('Carbon Goals API', () => {
       
       mockGoalsService.prototype.createGoal.mockResolvedValue(createdGoal);
       
+      // Debug: Log the request data being sent
+      console.log('Request body:', JSON.stringify(goalData));
+      
       const req = new NextRequest('http://localhost:3000/api/carbon/goals', {
         method: 'POST',
         body: JSON.stringify(goalData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       
       // Act
       const response = await POST(req);
       const data = await response.json();
+      
+      // Debug: Log the response data to see the error
+      if (response.status !== 201) {
+        console.log('Response status:', response.status);
+        console.log('Response data:', data);
+      }
       
       // Assert
       expect(response.status).toBe(201);
@@ -263,7 +275,7 @@ describe('Carbon Goals API', () => {
         targetReductionPercentage: 20,
         startDate: new Date('2025-01-01'),
         targetDate: new Date('2025-12-31'),
-        status: 'active',
+        status: 'active' as const,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -286,6 +298,9 @@ describe('Carbon Goals API', () => {
       const req = new NextRequest('http://localhost:3000/api/carbon/goals', {
         method: 'PUT',
         body: JSON.stringify(updateData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       
       // Mock params
@@ -377,7 +392,7 @@ describe('Carbon Goals API', () => {
         targetReductionPercentage: 20,
         startDate: new Date('2025-01-01'),
         targetDate: new Date('2025-12-31'),
-        status: 'active',
+        status: 'active' as const,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -416,7 +431,7 @@ describe('Carbon Goals API', () => {
         targetReductionPercentage: 20,
         startDate: new Date('2025-01-01'),
         targetDate: new Date('2025-12-31'),
-        status: 'active',
+        status: 'active' as const,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -476,7 +491,7 @@ describe('Carbon Goals API', () => {
         targetReductionPercentage: 20,
         startDate: new Date('2025-01-01'),
         targetDate: new Date('2025-12-31'),
-        status: 'active',
+        status: 'active' as const,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
