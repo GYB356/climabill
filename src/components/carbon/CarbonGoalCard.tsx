@@ -13,7 +13,10 @@ import {
   ListItemText,
   Divider
 } from '@mui/material';
-import { Edit as EditIcon } from '@mui/icons-material';
+// The best approach for the test environment is to create a custom EditIcon component
+// that uses the mocked component exported by the icons-material mock
+import { Edit } from '@mui/icons-material';
+const EditIcon = Edit;
 import { CarbonReductionGoal } from '../../lib/carbon/models/department-project';
 
 interface CarbonGoalCardProps {

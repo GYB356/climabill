@@ -48,34 +48,34 @@ const getGoalsImpl = jest.fn().mockImplementation((organizationId: string, depar
   const goals = [
     {
       id: 'goal-1',
-      name: 'Carbon Reduction Goal 1',
-      description: 'Reduce carbon emissions by 30% by 2025',
+      name: 'Reduce Office Emissions',
+      description: 'Reduce emissions from office operations',
       baselineCarbonInKg: 1000,
-      targetCarbonInKg: 700,
-      targetReductionPercentage: 30,
-      startDate: new Date('2023-01-01'),
+      targetCarbonInKg: 800,
+      targetReductionPercentage: 20,
+      startDate: new Date('2025-01-01'),
       targetDate: new Date('2025-12-31'),
-      organizationId: 'org-123',
+      organizationId: 'org123',
       departmentId: 'dept-1',
       status: 'active' as 'active' | 'achieved' | 'missed' | 'archived',
-      createdAt: new Date('2023-01-01'),
-      updatedAt: new Date('2023-01-01'),
+      createdAt: new Date('2025-01-01'),
+      updatedAt: new Date('2025-01-01'),
     },
     {
       id: 'goal-2',
-      name: 'Carbon Reduction Goal 2',
-      description: 'Reduce carbon emissions by 20% by 2024',
-      baselineCarbonInKg: 800,
-      targetCarbonInKg: 640,
-      targetReductionPercentage: 20,
-      startDate: new Date('2023-01-01'),
-      targetDate: new Date('2024-12-31'),
-      organizationId: 'org-123',
+      name: 'Reduce Travel Emissions',
+      description: 'Reduce emissions from business travel',
+      baselineCarbonInKg: 2000,
+      targetCarbonInKg: 1400,
+      targetReductionPercentage: 30,
+      startDate: new Date('2025-01-01'),
+      targetDate: new Date('2025-12-31'),
+      organizationId: 'org123',
       departmentId: 'dept-2',
       projectId: 'proj-1',
       status: 'active' as 'active' | 'achieved' | 'missed' | 'archived',
-      createdAt: new Date('2023-01-01'),
-      updatedAt: new Date('2023-01-01'),
+      createdAt: new Date('2025-01-01'),
+      updatedAt: new Date('2025-01-01'),
     },
   ];
 
@@ -97,9 +97,10 @@ const getGoalsImpl = jest.fn().mockImplementation((organizationId: string, depar
 
 
 const updateGoalProgressImpl = jest.fn().mockImplementation((goalId: string) => {
-  return Promise.resolve({
+  // Return the expected structure: { goal, currentCarbonInKg, progressPercentage }
+  const goal = {
     id: goalId,
-    name: 'Carbon Reduction Goal',
+    name: goalId === 'goal-1' ? 'Carbon Reduction Goal 1' : 'Carbon Reduction Goal 2',
     description: 'Reduce carbon emissions by 30% by 2025',
     baselineCarbonInKg: 1000,
     targetCarbonInKg: 700,
@@ -107,11 +108,16 @@ const updateGoalProgressImpl = jest.fn().mockImplementation((goalId: string) => 
     startDate: new Date('2023-01-01'),
     targetDate: new Date('2025-12-31'),
     organizationId: 'org-123',
-    currentValue: 850,
-    progressPercentage: 50,
     status: 'active' as 'active' | 'achieved' | 'missed' | 'archived',
     createdAt: new Date('2023-01-01'),
     updatedAt: new Date(),
+  };
+
+  return Promise.resolve({
+    goal: goal,
+    currentCarbonInKg: 850,
+    progressPercentage: 50,
+    isAchieved: false
   });
 });
 

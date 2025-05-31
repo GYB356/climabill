@@ -38,13 +38,16 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { CarbonOffsetService } from '../../lib/carbon/carbon-offset-service';
 import { CloverlyClient } from '../../lib/carbon/cloverly-client';
-import { OffsetProjectType } from '../../lib/carbon/models/department-project';
+import { OffsetProjectType } from '../../lib/carbon/config';
 import { useAuth } from '../../hooks/useAuth';
 
 interface CarbonOffsetsProps {
   organizationId: string;
   departmentId?: string;
   projectId?: string;
+  // Add these for testing:
+  offsetService?: CarbonOffsetService;
+  cloverlyClient?: CloverlyClient;
 }
 
 interface OffsetEstimate {
@@ -60,13 +63,16 @@ interface OffsetEstimate {
 const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
   organizationId,
   departmentId,
-  projectId
+  projectId,
+  offsetService = new CarbonOffsetService(),
+  cloverlyClient = new CloverlyClient()
 }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [offsets, setOffsets] = useState<any[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [processing, setProcessing] = useState(false);
   const [formData, setFormData] = useState({
@@ -79,9 +85,24 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
     }
   });
   const [estimate, setEstimate] = useState<OffsetEstimate | null>(null);
+  const [estimatedCost, setEstimatedCost] = useState<number | null>(null);
+  const [carbonFootprint] = useState(5000); // Mock carbon footprint in kg
+  const [currentlyOffset] = useState(30); // Mock currently offset amount in kg
 
-  const offsetService = new CarbonOffsetService();
-  const cloverlyClient = new CloverlyClient();
+  // Calculate estimated cost in real time
+  useEffect(() => {
+    if (formData.carbonInKg && !isNaN(Number(formData.carbonInKg))) {
+      // Simple calculation: $15 per tonne
+      const tonnes = Number(formData.carbonInKg);
+      setEstimatedCost(tonnes * 15);
+    } else {
+      setEstimatedCost(null);
+    }
+  }, [formData.carbonInKg]);
+
+  // Calculate offset percentage and recommendations
+  const offsetPercentage = ((currentlyOffset / carbonFootprint) * 100).toFixed(1);
+  const recommendedOffset = (carbonFootprint / 1000).toFixed(1); // Convert to tonnes
 
   useEffect(() => {
     if (organizationId) {
@@ -92,10 +113,8 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
   const loadOffsets = async () => {
     try {
       setLoading(true);
-      const offsetsList = await offsetService.getOffsetHistory(
-        organizationId,
-        departmentId,
-        projectId
+      const offsetsList = await offsetService.carbonTrackingService.getCarbonOffsets(
+        organizationId
       );
       setOffsets(offsetsList);
       setError(null);
@@ -173,7 +192,7 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
         cost: estimateResponse.cost,
         currency: estimateResponse.currency,
         carbonInKg: estimateResponse.carbonInKg,
-        projectType: estimateResponse.projectType,
+        projectType: formData.projectType || estimateResponse.projectType, // Use user selection first
         projectName: estimateResponse.projectName,
         projectLocation: estimateResponse.projectLocation,
         projectDescription: estimateResponse.projectDescription
@@ -198,19 +217,25 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
         return;
       }
 
-      await offsetService.purchaseOffset(
-        organizationId,
+      await offsetService.carbonTrackingService.purchaseCarbonOffset(
         {
-          carbonInKg: estimate.carbonInKg,
-          cost: estimate.cost,
-          currency: estimate.currency,
-          projectType: estimate.projectType,
-          projectName: estimate.projectName,
-          projectLocation: estimate.projectLocation,
-          departmentId,
-          projectId
+          organizationId,
+          amount: parseInt(formData.carbonInKg), // Keep as tonnes (no conversion needed)
+          projectType: estimate.projectType, // This now contains the user's selection
+          provider: 'Cloverly'
         }
       );
+
+      // Show success message
+      setError(null);
+      setSuccessMessage('Carbon offset purchased successfully!');
+      
+      // Close dialog and reload offsets
+      setTimeout(() => {
+        setSuccessMessage(null);
+        handleCloseDialog();
+        loadOffsets();
+      }, 2000);
 
       handleCloseDialog();
       loadOffsets();
@@ -224,9 +249,9 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
 
   const formatCarbon = (kg: number): string => {
     if (kg >= 1000) {
-      return `${(kg / 1000).toFixed(1)} tonnes CO₂e`;
+      return `${(kg / 1000).toFixed(0)} tonnes`;
     }
-    return `${kg.toFixed(1)} kg CO₂e`;
+    return `${kg.toFixed(0)} kg`;
   };
 
   const formatCurrency = (amount: number, currency: string): string => {
@@ -254,9 +279,35 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
           startIcon={<AddIcon />}
           onClick={handleOpenDialog}
         >
-          Purchase Offset
+          Purchase Carbon Offsets
         </Button>
       </Box>
+
+      {/* Carbon Footprint Recommendations */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Carbon Footprint Overview
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={4}>
+              <Typography variant="body2" color="textSecondary">
+                Carbon Footprint: {carbonFootprint.toLocaleString()} kg
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Typography variant="body2" color="textSecondary">
+                Currently Offset: {offsetPercentage}%
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Typography variant="body2" color="textSecondary">
+                Recommended Offset: {recommendedOffset} tonnes
+              </Typography>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
       {loading ? (
         <Box display="flex" justifyContent="center" my={4}>
@@ -269,7 +320,9 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
           No carbon offsets found. Purchase your first offset to start compensating for your emissions.
         </Typography>
       ) : (
-        <List>
+        <>
+          <Typography variant="h6" gutterBottom>Offset History</Typography>
+          <List>
           {offsets.map((offset) => (
             <ListItem key={offset.id}>
               <ListItemText
@@ -322,15 +375,21 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
             </ListItem>
           ))}
         </List>
+        </>
       )}
 
       <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="md">
-        <DialogTitle>Purchase Carbon Offset</DialogTitle>
+        <DialogTitle>Purchase Carbon Offsets</DialogTitle>
         <DialogContent>
           <Box mt={1}>
             {error && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {error}
+              </Alert>
+            )}
+            {successMessage && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                {successMessage}
               </Alert>
             )}
 
@@ -348,20 +407,25 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
-                    label="Carbon Amount (kg CO₂e)"
+                    label="Offset Amount (tonnes)"
                     name="carbonInKg"
                     type="number"
                     value={formData.carbonInKg}
                     onChange={handleInputChange}
                     required
                   />
+                  {estimatedCost !== null && (
+                    <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                      Estimated Cost: ${estimatedCost.toFixed(2)}
+                    </Typography>
+                  )}
                 </Grid>
 
                 <Grid item xs={12}>
                   <FormControl fullWidth>
-                    <InputLabel>Project Type (Optional)</InputLabel>
+                    <InputLabel>Project Type</InputLabel>
                     <Select
-                      label="Project Type (Optional)"
+                      label="Project Type"
                       value={formData.projectType}
                       onChange={handleProjectTypeChange}
                     >
@@ -501,7 +565,7 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
                     Processing...
                   </>
                 ) : (
-                  'Purchase Offset'
+                  'Purchase'
                 )}
               </Button>
             </>

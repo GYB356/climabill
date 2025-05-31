@@ -244,6 +244,26 @@ export class CarbonTrackingService {
   getEmissionsBreakdown = getEmissionsBreakdownImpl;
   getEmissionsTrends = getEmissionsTrendsImpl;
   purchaseCarbonOffset = purchaseCarbonOffsetImpl;
+
+  async getCarbonOffsets(organizationId: string) {
+    return [
+      {
+        id: 'offset1',
+        carbonInKg: 1000,
+        cost: 25,
+        currency: 'USD',
+        projectType: 'reforestation',
+        projectName: 'Forest Project',
+        projectLocation: 'Brazil',
+        purchaseDate: new Date(),
+        certificateUrl: 'https://example.com/cert',
+      },
+    ];
+  }
+
+  async purchaseCarbonOffset(data: any) {
+    return { id: 'purchase1', ...data };
+  }
 }
 
 // Add prototype methods for component tests that use prototype mocking

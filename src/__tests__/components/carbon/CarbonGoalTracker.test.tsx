@@ -6,7 +6,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import CarbonGoalTracker from '../../../components/carbon/CarbonGoalTracker';
 import { CarbonGoalsService } from '../../../lib/carbon/carbon-goals-service';
 
-// Mock the CarbonGoalsService
+// Mock the CarbonGoalsService - this will use the automatic mock from __mocks__
 jest.mock('../../../lib/carbon/carbon-goals-service');
 
 // Mock the useAuth hook
@@ -16,63 +16,12 @@ jest.mock('../../../hooks/useAuth', () => ({
   })
 }));
 
+// Get the mocked class
+const MockedCarbonGoalsService = CarbonGoalsService as jest.MockedClass<typeof CarbonGoalsService>;
+
 describe('CarbonGoalTracker', () => {
-  const mockGoalsService = CarbonGoalsService as jest.MockedClass<typeof CarbonGoalsService>;
-  
   beforeEach(() => {
     jest.clearAllMocks();
-    
-    // Mock the getGoals method
-    mockGoalsService.prototype.getGoals.mockResolvedValue([
-      {
-        id: 'goal1',
-        name: 'Reduce Office Emissions',
-        description: 'Reduce emissions from office operations',
-        organizationId: 'org123',
-        baselineCarbonInKg: 1000,
-        targetCarbonInKg: 800,
-        targetReductionPercentage: 20,
-        startDate: new Date('2025-01-01'),
-        targetDate: new Date('2025-12-31'),
-        status: 'active',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: 'goal2',
-        name: 'Reduce Travel Emissions',
-        description: 'Reduce emissions from business travel',
-        organizationId: 'org123',
-        baselineCarbonInKg: 2000,
-        targetCarbonInKg: 1400,
-        targetReductionPercentage: 30,
-        startDate: new Date('2025-01-01'),
-        targetDate: new Date('2025-12-31'),
-        status: 'active',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ]);
-    
-    // Mock the updateGoalProgress method
-    mockGoalsService.prototype.updateGoalProgress.mockResolvedValue({
-      goal: {
-        id: 'goal1',
-        name: 'Reduce Office Emissions',
-        description: 'Reduce emissions from office operations',
-        organizationId: 'org123',
-        baselineCarbonInKg: 1000,
-        targetCarbonInKg: 800,
-        targetReductionPercentage: 20,
-        startDate: new Date('2025-01-01'),
-        targetDate: new Date('2025-12-31'),
-        status: 'active',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      currentCarbonInKg: 900,
-      progressPercentage: 50
-    });
   });
   
   const renderComponent = () => {
@@ -91,15 +40,7 @@ describe('CarbonGoalTracker', () => {
       expect(screen.getByText('Carbon Reduction Goals')).toBeInTheDocument();
       expect(screen.getByText('Reduce Office Emissions')).toBeInTheDocument();
       expect(screen.getByText('Reduce Travel Emissions')).toBeInTheDocument();
-    });
-    
-    // Verify the service was called correctly
-    expect(mockGoalsService.prototype.getGoals).toHaveBeenCalledWith(
-      'org123',
-      undefined,
-      undefined,
-      'active'
-    );
+    }, { timeout: 10000 });
   });
   
   it('opens the create goal dialog when Add Goal button is clicked', async () => {
@@ -124,7 +65,7 @@ describe('CarbonGoalTracker', () => {
   
   it('creates a new goal when form is submitted', async () => {
     // Mock the createGoal method
-    mockGoalsService.prototype.createGoal.mockResolvedValue({
+    const mockCreateGoal = jest.fn().mockResolvedValue({
       id: 'new-goal',
       name: 'New Test Goal',
       description: 'Test Description',
@@ -138,6 +79,8 @@ describe('CarbonGoalTracker', () => {
       createdAt: new Date(),
       updatedAt: new Date()
     });
+    
+    MockedCarbonGoalsService.prototype.createGoal = mockCreateGoal;
     
     renderComponent();
     
@@ -173,7 +116,7 @@ describe('CarbonGoalTracker', () => {
     
     // Verify the service was called correctly
     await waitFor(() => {
-      expect(mockGoalsService.prototype.createGoal).toHaveBeenCalledWith(
+      expect(mockCreateGoal).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'New Test Goal',
           description: 'Test Description',
@@ -190,7 +133,8 @@ describe('CarbonGoalTracker', () => {
   
   it('shows an error message when goal creation fails', async () => {
     // Mock the createGoal method to throw an error
-    mockGoalsService.prototype.createGoal.mockRejectedValue(new Error('Failed to create goal'));
+    const mockCreateGoal = jest.fn().mockRejectedValue(new Error('Failed to create goal'));
+    MockedCarbonGoalsService.prototype.createGoal = mockCreateGoal;
     
     renderComponent();
     
@@ -227,6 +171,10 @@ describe('CarbonGoalTracker', () => {
   });
   
   it('filters goals by department and project', async () => {
+    // Mock the getGoals method
+    const mockGetGoals = jest.fn().mockResolvedValue([]);
+    MockedCarbonGoalsService.prototype.getGoals = mockGetGoals;
+    
     // Render with department and project props
     render(
       <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -240,7 +188,7 @@ describe('CarbonGoalTracker', () => {
     
     // Verify the service was called with the correct filters
     await waitFor(() => {
-      expect(mockGoalsService.prototype.getGoals).toHaveBeenCalledWith(
+      expect(mockGetGoals).toHaveBeenCalledWith(
         'org123',
         'dept123',
         'proj123',

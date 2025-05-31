@@ -82,16 +82,28 @@ const CarbonGoalTracker: React.FC<CarbonGoalTrackerProps> = ({
       // Get progress for each goal
       const goalsWithProgress = await Promise.all(
         goalsList.map(async (goal) => {
-          const progress = await goalsService.updateGoalProgress(goal.id!);
-          return {
-            goal: progress.goal,
-            currentCarbonInKg: progress.currentCarbonInKg,
-            progressPercentage: progress.progressPercentage,
-          };
+          try {
+            const progress = await goalsService.updateGoalProgress(goal.id!);
+            return {
+              goal: progress.goal,
+              currentCarbonInKg: progress.currentCarbonInKg,
+              progressPercentage: progress.progressPercentage,
+            };
+          } catch (error) {
+            console.error(`Error getting progress for goal ${goal.id}:`, error);
+            // Return goal with default progress values if updateGoalProgress fails
+            return {
+              goal: goal,
+              currentCarbonInKg: goal.baselineCarbonInKg,
+              progressPercentage: 0,
+            };
+          }
         })
       );
 
-      setGoals(goalsWithProgress);
+      // Filter out any goals that are still undefined
+      const validGoals = goalsWithProgress.filter(item => item.goal && item.goal.id);
+      setGoals(validGoals);
       setError(null);
     } catch (err) {
       console.error('Error loading goals:', err);

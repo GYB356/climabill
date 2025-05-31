@@ -2,6 +2,41 @@
 import { OffsetDonation, OffsetProject, OffsetPurchase } from '../lib/carbon/types';
 
 export class CarbonOffsetService {
+  // Mock carbonTrackingService property
+  public carbonTrackingService = {
+    getCarbonOffsets: jest.fn().mockResolvedValue([
+      {
+        id: 'offset-123',
+        amount: 500,
+        cost: 250,
+        date: new Date('2025-04-01'),
+        projectId: 'project-1',
+        projectName: 'Renewable Energy Project',
+        status: 'completed',
+        paymentMethod: 'credit_card',
+      },
+      {
+        id: 'offset-124',
+        amount: 300,
+        cost: 150,
+        date: new Date('2025-03-01'),
+        projectId: 'project-2',
+        projectName: 'Reforestation Project',
+        status: 'completed',
+        paymentMethod: 'paypal',
+      },
+    ]),
+    purchaseCarbonOffset: jest.fn().mockResolvedValue({
+      id: 'offset-125',
+      amount: 500,
+      cost: 250,
+      date: new Date(),
+      projectId: 'project-1',
+      projectName: 'Renewable Energy Project',
+      status: 'completed',
+      paymentMethod: 'credit_card',
+    }),
+  };
   // Create mock functions for all methods
   calculateOffsetCost = jest.fn().mockResolvedValue({
     amount: 500,

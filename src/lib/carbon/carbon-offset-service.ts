@@ -34,7 +34,7 @@ export interface OffsetDonation {
  * Service for handling carbon offset donations and payments
  */
 export class CarbonOffsetService {
-  private carbonTrackingService: CarbonTrackingService;
+  public carbonTrackingService: CarbonTrackingService;
   private stripeService: StripeService;
   private paypalService: PayPalService;
   private readonly DONATION_COLLECTION = 'carbonDonations';

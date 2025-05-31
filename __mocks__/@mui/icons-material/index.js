@@ -1,20 +1,26 @@
 import React from 'react';
 
-// Create a mock component factory
+// Create a mock component factory that returns a proper React component
 const createMockComponent = (name) => {
-  const Component = ({ children, ...props }) => {
+  const Component = React.forwardRef((props, ref) => {
     return React.createElement('span', {
       'data-testid': `mui-icon-${name.toLowerCase()}`,
+      ref,
       ...props,
-    }, children || name);
-  };
+    }, props.children || name);
+  });
   Component.displayName = name;
   return Component;
 };
 
 // Common icons used in the application
 export const Add = createMockComponent('Add');
-export const AddIcon = createMockComponent('AddIcon');
+
+const FileDownload = createMockComponent('FileDownload');
+export { FileDownload };
+
+const Info = createMockComponent('Info');
+export { Info };
 export const Edit = createMockComponent('Edit');
 export const Delete = createMockComponent('Delete');
 export const TrendingUp = createMockComponent('TrendingUp');
@@ -28,7 +34,6 @@ export const Close = createMockComponent('Close');
 export const Check = createMockComponent('Check');
 export const Error = createMockComponent('Error');
 export const Warning = createMockComponent('Warning');
-export const Info = createMockComponent('Info');
 export const Settings = createMockComponent('Settings');
 export const Dashboard = createMockComponent('Dashboard');
 export const Person = createMockComponent('Person');
@@ -55,7 +60,6 @@ export const ArrowDownward = createMockComponent('ArrowDownward');
 // Export default for components that use default export
 export default {
   Add,
-  AddIcon,
   Edit,
   Delete,
   TrendingUp,
@@ -70,6 +74,7 @@ export default {
   Error,
   Warning,
   Info,
+  FileDownload,
   Settings,
   Dashboard,
   Person,
