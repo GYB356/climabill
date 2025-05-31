@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -115,7 +117,7 @@ export function CarbonReductionInsights({
     recommendations.push({
       id: 'supplier-assessment',
       title: 'Low-carbon supplier assessment',
-      description: 'Evaluate your suppliers' carbon footprints and shift procurement to vendors with lower emissions profiles.',
+      description: 'Evaluate your suppliers\' carbon footprints and shift procurement to vendors with lower emissions profiles.',
       potentialReduction: Math.round(usageData.totalCarbonInKg * 0.15), // 15% reduction
       difficulty: 'hard',
       category: 'procurement',
