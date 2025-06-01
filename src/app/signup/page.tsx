@@ -61,40 +61,64 @@ export default function SignupPage() {
     setPasswordError('');
     
     try {
+      // Import and use the helper function to save callback URLs
+      import('@/lib/firebase/improved-auth').then(({ saveCallbackUrl }) => {
+        if (callbackUrl && callbackUrl !== '/dashboard') {
+          saveCallbackUrl(callbackUrl);
+        }
+      });
+      
       await signup(email, password);
       toast({
         title: "Account created successfully",
         description: "You have been registered and logged in.",
       });
-      router.push(callbackUrl);
+      // Auth context will handle redirection
     } catch (error) {
       console.error("Signup error:", error);
+      // Error state is handled by the auth context
     }
   };
 
   const handleGoogleSignup = async () => {
     try {
+      // Import and use the helper function to save callback URLs
+      import('@/lib/firebase/improved-auth').then(({ saveCallbackUrl }) => {
+        if (callbackUrl && callbackUrl !== '/dashboard') {
+          saveCallbackUrl(callbackUrl);
+        }
+      });
+      
       await loginWithGoogle();
       toast({
         title: "Account created successfully",
         description: "You have been registered with Google.",
       });
-      router.push(callbackUrl);
+      // Auth context will handle redirection
     } catch (error) {
       console.error("Google signup error:", error);
+      // Error state is handled by the auth context
     }
   };
 
   const handleGithubSignup = async () => {
     try {
+      // Import and use the helper function to save callback URLs
+      import('@/lib/firebase/improved-auth').then(({ saveCallbackUrl }) => {
+        if (callbackUrl && callbackUrl !== '/dashboard') {
+          saveCallbackUrl(callbackUrl);
+        }
+      });
+      
       await loginWithGithub();
       toast({
         title: "Account created successfully",
         description: "You have been registered with GitHub.",
       });
-      router.push(callbackUrl);
+      // Auth context will handle redirection
     } catch (error) {
       console.error("GitHub signup error:", error);
+      // Error state is handled by the auth context
     }
   };
 
@@ -199,6 +223,28 @@ export default function SignupPage() {
             </Button>
           </CardContent>
         </Card>
+        
+        {/* Development Test Credentials Helper */}
+        {process.env.NODE_ENV === 'development' && (
+          <Card className="bg-green-50 border-green-200">
+            <CardContent className="pt-4">
+              <div className="text-sm text-green-800">
+                <h4 className="font-semibold mb-2">🧪 Development Mode</h4>
+                <p className="text-xs text-green-600 mb-2">
+                  Create an account with any email/password (min. 6 characters).
+                </p>
+                <div className="text-xs">
+                  <strong>Existing test accounts:</strong>
+                  <div className="mt-1 space-y-1">
+                    <div>test@example.com / password123</div>
+                    <div>admin@climabill.com / admin123</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         <div className="mt-4 text-center text-sm">
           Already have an account?{' '}
           <Link href="/login" className="underline text-primary hover:text-primary/80">

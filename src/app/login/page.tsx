@@ -36,40 +36,68 @@ export default function LoginPage() {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Import and use the helper function to save callback URLs
+      // This ensures that all storage mechanisms are updated consistently
+      import('@/lib/firebase/improved-auth').then(({ saveCallbackUrl }) => {
+        if (callbackUrl && callbackUrl !== '/dashboard') {
+          saveCallbackUrl(callbackUrl);
+        }
+      });
+      
       const user = await login(email, password);
       toast({
         title: "Login successful",
         description: "You have been successfully logged in.",
       });
-      // Auth context will handle the redirect automatically
+      
+      // The redirect will be handled by the auth context's onAuthStateChanged effect
     } catch (error) {
       console.error("Login error:", error);
+      // We don't set error state here as it's already handled by the auth context
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
+      // Import and use the helper function to save callback URLs
+      import('@/lib/firebase/improved-auth').then(({ saveCallbackUrl }) => {
+        if (callbackUrl && callbackUrl !== '/dashboard') {
+          saveCallbackUrl(callbackUrl);
+        }
+      });
+      
       const user = await loginWithGoogle();
       toast({
         title: "Login successful",
         description: "You have been successfully logged in with Google.",
       });
-      // Auth context will handle the redirect automatically
+      
+      // The redirect will be handled by the auth context's onAuthStateChanged effect
     } catch (error) {
       console.error("Google login error:", error);
+      // We don't set error state here as it's already handled by the auth context
     }
   };
 
   const handleGithubLogin = async () => {
     try {
+      // Import and use the helper function to save callback URLs
+      import('@/lib/firebase/improved-auth').then(({ saveCallbackUrl }) => {
+        if (callbackUrl && callbackUrl !== '/dashboard') {
+          saveCallbackUrl(callbackUrl);
+        }
+      });
+      
       const user = await loginWithGithub();
       toast({
         title: "Login successful",
         description: "You have been successfully logged in with GitHub.",
       });
-      // Auth context will handle the redirect automatically
+      
+      // The redirect will be handled by the auth context's onAuthStateChanged effect
     } catch (error) {
       console.error("GitHub login error:", error);
+      // We don't set error state here as it's already handled by the auth context
     }
   };
 
@@ -156,6 +184,27 @@ export default function LoginPage() {
             </Button>
           </CardContent>
         </Card>
+        
+        {/* Development Test Credentials Helper */}
+        {process.env.NODE_ENV === 'development' && (
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="pt-4">
+              <div className="text-sm text-blue-800">
+                <h4 className="font-semibold mb-2">🧪 Development Test Credentials</h4>
+                <div className="space-y-1 text-xs">
+                  <div><strong>test@example.com</strong> / password123</div>
+                  <div><strong>admin@climabill.com</strong> / admin123</div>
+                  <div><strong>user@test.com</strong> / test123</div>
+                  <div><strong>demo@demo.com</strong> / demo123</div>
+                </div>
+                <p className="mt-2 text-xs text-blue-600">
+                  Or create a new account with any email/password combination.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         <div className="mt-4 text-center text-sm">
           Don&apos;t have an account?{' '}
           <Link href="/signup" className="underline text-primary hover:text-primary/80">
