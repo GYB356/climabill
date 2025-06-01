@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -27,6 +26,7 @@ const GoogleIcon = () => (
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const { login, loginWithGoogle, loginWithGithub, error, loading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
@@ -37,7 +37,6 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       // Import and use the helper function to save callback URLs
-      // This ensures that all storage mechanisms are updated consistently
       import('@/lib/firebase/improved-auth').then(({ saveCallbackUrl }) => {
         if (callbackUrl && callbackUrl !== '/dashboard') {
           saveCallbackUrl(callbackUrl);
@@ -45,15 +44,26 @@ export default function LoginPage() {
       });
       
       const user = await login(email, password);
+      console.log('Login successful, user:', user);
+      console.log('Redirecting to:', callbackUrl);
+      
+      // Show success toast
       toast({
         title: "Login successful",
-        description: "You have been successfully logged in.",
+        description: "Redirecting to dashboard...",
       });
       
-      // The redirect will be handled by the auth context's onAuthStateChanged effect
+      // Set redirecting state
+      setIsRedirecting(true);
+      
+      // Small delay to show the success message, then redirect
+      setTimeout(() => {
+        router.replace(callbackUrl);
+      }, 1000);
+      
     } catch (error) {
       console.error("Login error:", error);
-      // We don't set error state here as it's already handled by the auth context
+      setIsRedirecting(false);
     }
   };
 
@@ -67,15 +77,25 @@ export default function LoginPage() {
       });
       
       const user = await loginWithGoogle();
+      console.log('Google login successful, user:', user);
+      console.log('Redirecting to:', callbackUrl);
+      
       toast({
         title: "Login successful",
-        description: "You have been successfully logged in with Google.",
+        description: "Redirecting to dashboard...",
       });
       
-      // The redirect will be handled by the auth context's onAuthStateChanged effect
+      // Set redirecting state
+      setIsRedirecting(true);
+      
+      // Small delay to show the success message, then redirect
+      setTimeout(() => {
+        router.replace(callbackUrl);
+      }, 1000);
+      
     } catch (error) {
       console.error("Google login error:", error);
-      // We don't set error state here as it's already handled by the auth context
+      setIsRedirecting(false);
     }
   };
 
@@ -89,15 +109,25 @@ export default function LoginPage() {
       });
       
       const user = await loginWithGithub();
+      console.log('GitHub login successful, user:', user);
+      console.log('Redirecting to:', callbackUrl);
+      
       toast({
         title: "Login successful",
-        description: "You have been successfully logged in with GitHub.",
+        description: "Redirecting to dashboard...",
       });
       
-      // The redirect will be handled by the auth context's onAuthStateChanged effect
+      // Set redirecting state
+      setIsRedirecting(true);
+      
+      // Small delay to show the success message, then redirect
+      setTimeout(() => {
+        router.replace(callbackUrl);
+      }, 1000);
+      
     } catch (error) {
       console.error("GitHub login error:", error);
-      // We don't set error state here as it's already handled by the auth context
+      setIsRedirecting(false);
     }
   };
 
@@ -151,9 +181,9 @@ export default function LoginPage() {
               <Button 
                 type="submit" 
                 className="w-full mt-4" 
-                disabled={loading}
+                disabled={loading || isRedirecting}
               >
-                {loading ? 'Logging in...' : 'Login'}
+                {isRedirecting ? 'Redirecting...' : (loading ? 'Logging in...' : 'Login')}
               </Button>
             </form>
             <div className="relative my-2">
@@ -168,7 +198,7 @@ export default function LoginPage() {
               variant="outline" 
               className="w-full" 
               onClick={handleGoogleLogin}
-              disabled={loading}
+              disabled={loading || isRedirecting}
             >
               <GoogleIcon />
               Login with Google
@@ -177,7 +207,7 @@ export default function LoginPage() {
               variant="outline" 
               className="w-full" 
               onClick={handleGithubLogin}
-              disabled={loading}
+              disabled={loading || isRedirecting}
             >
               <Github className="mr-2 h-4 w-4" />
               Login with GitHub
