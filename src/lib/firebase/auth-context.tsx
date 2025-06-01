@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -78,10 +78,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('User authenticated on auth page, redirecting to dashboard');
           pendingRedirectRef.current = true;
 
-          // Redirect to dashboard immediately
+          // Check for callback URL in sessionStorage or use default
+          const callbackUrl = sessionStorage.getItem('auth_callback_url') || '/dashboard';
+          sessionStorage.removeItem('auth_callback_url');
+
           setTimeout(() => {
-            router.push('/dashboard');
-            // Reset redirect flag after navigation
+            router.push(callbackUrl);
             setTimeout(() => {
               pendingRedirectRef.current = false;
             }, 500);
@@ -155,8 +157,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return result.user;
     } catch (error: any) {
-      setError(error.message);
-      throw error;
+      console.error('Firebase signup error:', error.code, error.message);
+      let errorMessage = 'An error occurred during sign up';
+      
+      // Provide more user-friendly error messages
+      switch(error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'This email is already registered. Please log in instead.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email format.';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Password is too weak. Please use at least 6 characters.';
+          break;
+        case 'auth/operation-not-allowed':
+          errorMessage = 'Email/password accounts are not enabled.';
+          break;
+        default:
+          errorMessage = `Error: ${error.message}`;
+      }
+      
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
