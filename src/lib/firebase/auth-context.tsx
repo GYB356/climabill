@@ -181,6 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Updated loginWithGithub function without session cookie creation
   const loginWithGithub = async () => {
     try {
       setError(null);
@@ -191,8 +192,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Mark that a redirect is pending to prevent race conditions
       pendingRedirectRef.current = true;
       
-      // Create a session cookie for server-side authentication
-      await createSessionCookie(result.user);
+      // Removed server-side session cookie creation as it's no longer needed
+      // await createSessionCookie(result.user);
       
       return result.user;
     } catch (error: any) {
@@ -203,14 +204,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Updated logout function without session cookie deletion
   const logout = async () => {
     try {
       await signOut(auth);
       
-      // Clear the session cookie
-      await fetch('/api/auth/session', {
-        method: 'DELETE',
-      });
+      // Removed session cookie clearing logic as we're not using server-side sessions
+      // await fetch('/api/auth/session', {
+      //   method: 'DELETE',
+      // });
       
       router.push('/');
     } catch (error: any) {
