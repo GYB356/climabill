@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Info, Check, AlertTriangle, TreePine, Factory, PlugZap, Building2, Receipt, Mail, CloudComputing } from 'lucide-react';
+import { Loader2, Info, Check, AlertTriangle, TreePine, Factory, PlugZap, Building2, Receipt, Mail, Cloud } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
@@ -59,7 +59,7 @@ export function CarbonReductionInsights({
       case 'operations':
         return <Factory className="h-4 w-4" />;
       case 'it':
-        return <CloudComputing className="h-4 w-4" />;
+        return <Cloud className="h-4 w-4" />;
       default:
         return <Info className="h-4 w-4" />;
     }
@@ -97,7 +97,7 @@ export function CarbonReductionInsights({
         potentialReduction,
         difficulty: 'medium',
         category: 'it',
-        icon: <CloudComputing className="h-4 w-4" />
+        icon: <Cloud className="h-4 w-4" />
       });
       totalReduction += potentialReduction;
     }

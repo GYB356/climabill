@@ -225,6 +225,29 @@ const getEmissionsForProjectImpl = jest.fn().mockResolvedValue({
   ],
 });
 
+// Add missing methods needed by tests
+const getCarbonUsageSummaryImpl = jest.fn().mockResolvedValue({
+  totalCarbonInKg: 5000,
+  offsetCarbonInKg: 30,
+  offsetPercentage: 0.6,
+  sources: [
+    { source: 'Electricity', emissions: 2500, percentage: 50 },
+    { source: 'Transportation', emissions: 1500, percentage: 30 },
+    { source: 'Heating', emissions: 1000, percentage: 20 },
+  ],
+});
+
+const getCarbonFootprintSummaryImpl = jest.fn().mockResolvedValue({
+  totalCarbonInKg: 900,
+  offsetCarbonInKg: 30,
+  offsetPercentage: 3.3,
+  sources: [
+    { source: 'Electricity', emissions: 450, percentage: 50 },
+    { source: 'Transportation', emissions: 270, percentage: 30 },
+    { source: 'Heating', emissions: 180, percentage: 20 },
+  ],
+});
+
 // Create class with instance methods
 export class CarbonTrackingService {
   getCarbonUsageForPeriod = getCarbonUsageForPeriodImpl;
@@ -244,26 +267,8 @@ export class CarbonTrackingService {
   getEmissionsBreakdown = getEmissionsBreakdownImpl;
   getEmissionsTrends = getEmissionsTrendsImpl;
   purchaseCarbonOffset = purchaseCarbonOffsetImpl;
-
-  async getCarbonOffsets(organizationId: string) {
-    return [
-      {
-        id: 'offset1',
-        carbonInKg: 1000,
-        cost: 25,
-        currency: 'USD',
-        projectType: 'reforestation',
-        projectName: 'Forest Project',
-        projectLocation: 'Brazil',
-        purchaseDate: new Date(),
-        certificateUrl: 'https://example.com/cert',
-      },
-    ];
-  }
-
-  async purchaseCarbonOffset(data: any) {
-    return { id: 'purchase1', ...data };
-  }
+  getCarbonUsageSummary = getCarbonUsageSummaryImpl;
+  getCarbonFootprintSummary = getCarbonFootprintSummaryImpl;
 }
 
 // Add prototype methods for component tests that use prototype mocking
@@ -284,31 +289,3 @@ CarbonTrackingService.prototype.getEmissionsForProject = getEmissionsForProjectI
 CarbonTrackingService.prototype.getEmissionsBreakdown = getEmissionsBreakdownImpl;
 CarbonTrackingService.prototype.getEmissionsTrends = getEmissionsTrendsImpl;
 CarbonTrackingService.prototype.purchaseCarbonOffset = purchaseCarbonOffsetImpl;
-
-// Add missing methods needed by tests
-const getCarbonUsageSummaryImpl = jest.fn().mockResolvedValue({
-  totalCarbonInKg: 5000,
-  offsetCarbonInKg: 30,
-  offsetPercentage: 0.6,
-  sources: [
-    { source: 'Electricity', emissions: 2500, percentage: 50 },
-    { source: 'Transportation', emissions: 1500, percentage: 30 },
-    { source: 'Heating', emissions: 1000, percentage: 20 },
-  ],
-});
-
-CarbonTrackingService.prototype.getCarbonUsageSummary = getCarbonUsageSummaryImpl;
-
-// Add getCarbonFootprintSummary method needed by carbon-goals-service
-const getCarbonFootprintSummaryImpl = jest.fn().mockResolvedValue({
-  totalCarbonInKg: 900,
-  offsetCarbonInKg: 30,
-  offsetPercentage: 3.3,
-  sources: [
-    { source: 'Electricity', emissions: 450, percentage: 50 },
-    { source: 'Transportation', emissions: 270, percentage: 30 },
-    { source: 'Heating', emissions: 180, percentage: 20 },
-  ],
-});
-
-CarbonTrackingService.prototype.getCarbonFootprintSummary = getCarbonFootprintSummaryImpl;

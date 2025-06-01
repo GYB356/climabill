@@ -212,16 +212,20 @@ export class CarbonTrackingService {
    * @param startDate Start date of the period
    * @param endDate End date of the period
    * @param organizationId Optional organization ID
+   * @param departmentId Optional department ID for filtering
+   * @param projectId Optional project ID for filtering
    * @returns Carbon usage record or null if not found
    */
   async getCarbonUsageForPeriod(
     userId: string,
     startDate: Date,
     endDate: Date,
-    organizationId?: string
+    organizationId?: string,
+    departmentId?: string,
+    projectId?: string
   ): Promise<CarbonUsage | null> {
     try {
-      // Create query
+      // Create base query
       let q = query(
         collection(firestore, this.USAGE_COLLECTION),
         where('userId', '==', userId),
@@ -235,6 +239,31 @@ export class CarbonTrackingService {
           collection(firestore, this.USAGE_COLLECTION),
           where('userId', '==', userId),
           where('organizationId', '==', organizationId),
+          where('period.startDate', '==', Timestamp.fromDate(startDate)),
+          where('period.endDate', '==', Timestamp.fromDate(endDate))
+        );
+      }
+      
+      // Add department filter if provided
+      if (departmentId) {
+        q = query(
+          collection(firestore, this.USAGE_COLLECTION),
+          where('userId', '==', userId),
+          ...(organizationId ? [where('organizationId', '==', organizationId)] : []),
+          where('departmentId', '==', departmentId),
+          where('period.startDate', '==', Timestamp.fromDate(startDate)),
+          where('period.endDate', '==', Timestamp.fromDate(endDate))
+        );
+      }
+      
+      // Add project filter if provided
+      if (projectId) {
+        q = query(
+          collection(firestore, this.USAGE_COLLECTION),
+          where('userId', '==', userId),
+          ...(organizationId ? [where('organizationId', '==', organizationId)] : []),
+          ...(departmentId ? [where('departmentId', '==', departmentId)] : []),
+          where('projectId', '==', projectId),
           where('period.startDate', '==', Timestamp.fromDate(startDate)),
           where('period.endDate', '==', Timestamp.fromDate(endDate))
         );
@@ -451,13 +480,13 @@ export class CarbonTrackingService {
   /**
    * Get carbon offset purchase history
    * @param userId User ID
-   * @param limit Maximum number of records to return
+   * @param maxRecords Maximum number of records to return
    * @param organizationId Optional organization ID
    * @returns List of carbon offset purchases
    */
   async getCarbonOffsetHistory(
     userId: string,
-    limit = 10,
+    maxRecords = 10,
     organizationId?: string
   ): Promise<CarbonOffset[]> {
     try {
@@ -466,7 +495,7 @@ export class CarbonTrackingService {
         collection(firestore, this.OFFSET_COLLECTION),
         where('userId', '==', userId),
         orderBy('purchaseDate', 'desc'),
-        limit(limit)
+        limit(maxRecords)
       );
       
       // Add organization filter if provided
@@ -476,7 +505,7 @@ export class CarbonTrackingService {
           where('userId', '==', userId),
           where('organizationId', '==', organizationId),
           orderBy('purchaseDate', 'desc'),
-          limit(limit)
+          limit(maxRecords)
         );
       }
       
@@ -503,13 +532,13 @@ export class CarbonTrackingService {
   /**
    * Get carbon usage history
    * @param userId User ID
-   * @param limit Maximum number of records to return
+   * @param maxRecords Maximum number of records to return
    * @param organizationId Optional organization ID
    * @returns List of carbon usage records
    */
   async getCarbonUsageHistory(
     userId: string,
-    limit = 10,
+    maxRecords = 10,
     organizationId?: string
   ): Promise<CarbonUsage[]> {
     try {
@@ -518,7 +547,7 @@ export class CarbonTrackingService {
         collection(firestore, this.USAGE_COLLECTION),
         where('userId', '==', userId),
         orderBy('period.startDate', 'desc'),
-        limit(limit)
+        limit(maxRecords)
       );
       
       // Add organization filter if provided
@@ -528,7 +557,7 @@ export class CarbonTrackingService {
           where('userId', '==', userId),
           where('organizationId', '==', organizationId),
           orderBy('period.startDate', 'desc'),
-          limit(limit)
+          limit(maxRecords)
         );
       }
       
@@ -714,6 +743,278 @@ export class CarbonTrackingService {
       };
     } catch (error) {
       console.error('Error getting carbon footprint summary:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get emissions time series data for analytics
+   * @param organizationId Organization ID
+   * @param startDate Start date
+   * @param endDate End date
+   * @param departmentId Optional department filter
+   * @param projectId Optional project filter
+   * @returns Time series emissions data
+   */
+  async getEmissionsTimeSeries(
+    organizationId: string,
+    startDate: Date,
+    endDate: Date,
+    departmentId?: string,
+    projectId?: string
+  ): Promise<Array<{
+    date: Date;
+    totalEmissions: number;
+    offsetEmissions: number;
+  }>> {
+    try {
+      // Create query for carbon usage in the date range
+      let q = query(
+        collection(firestore, this.USAGE_COLLECTION),
+        where('organizationId', '==', organizationId),
+        where('period.startDate', '>=', Timestamp.fromDate(startDate)),
+        where('period.startDate', '<=', Timestamp.fromDate(endDate)),
+        orderBy('period.startDate', 'asc')
+      );
+
+      const querySnapshot = await getDocs(q);
+      const timeSeriesData: Array<{
+        date: Date;
+        totalEmissions: number;
+        offsetEmissions: number;
+      }> = [];
+
+      querySnapshot.forEach(doc => {
+        const usage = doc.data() as CarbonUsage;
+        const startDate = usage.period.startDate instanceof Timestamp 
+          ? usage.period.startDate.toDate() 
+          : usage.period.startDate;
+
+        timeSeriesData.push({
+          date: startDate,
+          totalEmissions: usage.totalCarbonInKg,
+          offsetEmissions: usage.offsetCarbonInKg,
+        });
+      });
+
+      return timeSeriesData;
+    } catch (error) {
+      console.error('Error getting emissions time series:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get emissions breakdown by source for analytics
+   * @param organizationId Organization ID
+   * @param startDate Start date
+   * @param endDate End date
+   * @param departmentId Optional department filter
+   * @param projectId Optional project filter
+   * @returns Emissions breakdown by source
+   */
+  async getEmissionsBreakdown(
+    organizationId: string,
+    startDate: Date,
+    endDate: Date,
+    departmentId?: string,
+    projectId?: string
+  ): Promise<Array<{
+    source: string;
+    emissions: number;
+    percentage: number;
+  }>> {
+    try {
+      // Create query for carbon usage in the date range
+      let q = query(
+        collection(firestore, this.USAGE_COLLECTION),
+        where('organizationId', '==', organizationId),
+        where('period.startDate', '>=', Timestamp.fromDate(startDate)),
+        where('period.startDate', '<=', Timestamp.fromDate(endDate))
+      );
+
+      const querySnapshot = await getDocs(q);
+      
+      // Aggregate emissions by source
+      const sourceTotals = {
+        invoices: 0,
+        emails: 0,
+        storage: 0,
+        apiCalls: 0,
+        custom: 0,
+      };
+
+      let totalEmissions = 0;
+
+      querySnapshot.forEach(doc => {
+        const usage = doc.data() as CarbonUsage;
+        
+        sourceTotals.invoices += usage.invoiceCount * CARBON_DEFAULTS.carbonPerInvoice;
+        sourceTotals.emails += usage.emailCount * CARBON_DEFAULTS.carbonPerEmail;
+        sourceTotals.storage += usage.storageGb * CARBON_DEFAULTS.carbonPerGbStorage;
+        sourceTotals.apiCalls += usage.apiCallCount * CARBON_DEFAULTS.carbonPerApiCall;
+        
+        if (usage.customUsage) {
+          for (const custom of usage.customUsage) {
+            sourceTotals.custom += custom.carbonInKg;
+          }
+        }
+
+        totalEmissions += usage.totalCarbonInKg;
+      });
+
+      // Convert to breakdown format
+      const breakdown = [
+        { source: 'Invoices', emissions: sourceTotals.invoices, percentage: 0 },
+        { source: 'Emails', emissions: sourceTotals.emails, percentage: 0 },
+        { source: 'Storage', emissions: sourceTotals.storage, percentage: 0 },
+        { source: 'API Calls', emissions: sourceTotals.apiCalls, percentage: 0 },
+        { source: 'Custom', emissions: sourceTotals.custom, percentage: 0 },
+      ].filter(item => item.emissions > 0);
+
+      // Calculate percentages
+      breakdown.forEach(item => {
+        item.percentage = totalEmissions > 0 ? (item.emissions / totalEmissions) * 100 : 0;
+      });
+
+      return breakdown;
+    } catch (error) {
+      console.error('Error getting emissions breakdown:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get emissions trends for analytics
+   * @param organizationId Organization ID
+   * @param startDate Start date
+   * @param endDate End date
+   * @param departmentId Optional department filter
+   * @param projectId Optional project filter
+   * @returns Emissions trends data
+   */
+  async getEmissionsTrends(
+    organizationId: string,
+    startDate: Date,
+    endDate: Date,
+    departmentId?: string,
+    projectId?: string
+  ): Promise<Array<{
+    period: string;
+    change: number;
+    percentageChange: number;
+  }>> {
+    try {
+      // Get current period data
+      const currentQuery = query(
+        collection(firestore, this.USAGE_COLLECTION),
+        where('organizationId', '==', organizationId),
+        where('period.startDate', '>=', Timestamp.fromDate(startDate)),
+        where('period.startDate', '<=', Timestamp.fromDate(endDate))
+      );
+
+      const currentSnapshot = await getDocs(currentQuery);
+      let currentTotal = 0;
+      currentSnapshot.forEach(doc => {
+        const usage = doc.data() as CarbonUsage;
+        currentTotal += usage.totalCarbonInKg;
+      });
+
+      // Calculate previous periods for comparison
+      const trends = [];
+      
+      // Week over Week (if applicable)
+      if (endDate.getTime() - startDate.getTime() <= 7 * 24 * 60 * 60 * 1000) {
+        const prevWeekStart = new Date(startDate);
+        prevWeekStart.setDate(startDate.getDate() - 7);
+        const prevWeekEnd = new Date(endDate);
+        prevWeekEnd.setDate(endDate.getDate() - 7);
+
+        const prevWeekQuery = query(
+          collection(firestore, this.USAGE_COLLECTION),
+          where('organizationId', '==', organizationId),
+          where('period.startDate', '>=', Timestamp.fromDate(prevWeekStart)),
+          where('period.startDate', '<=', Timestamp.fromDate(prevWeekEnd))
+        );
+
+        const prevWeekSnapshot = await getDocs(prevWeekQuery);
+        let prevWeekTotal = 0;
+        prevWeekSnapshot.forEach(doc => {
+          const usage = doc.data() as CarbonUsage;
+          prevWeekTotal += usage.totalCarbonInKg;
+        });
+
+        const weekChange = currentTotal - prevWeekTotal;
+        const weekPercentageChange = prevWeekTotal > 0 ? (weekChange / prevWeekTotal) * 100 : 0;
+
+        trends.push({
+          period: 'Week over Week',
+          change: weekChange,
+          percentageChange: weekPercentageChange,
+        });
+      }
+
+      // Month over Month
+      const prevMonthStart = new Date(startDate);
+      prevMonthStart.setMonth(startDate.getMonth() - 1);
+      const prevMonthEnd = new Date(endDate);
+      prevMonthEnd.setMonth(endDate.getMonth() - 1);
+
+      const prevMonthQuery = query(
+        collection(firestore, this.USAGE_COLLECTION),
+        where('organizationId', '==', organizationId),
+        where('period.startDate', '>=', Timestamp.fromDate(prevMonthStart)),
+        where('period.startDate', '<=', Timestamp.fromDate(prevMonthEnd))
+      );
+
+      const prevMonthSnapshot = await getDocs(prevMonthQuery);
+      let prevMonthTotal = 0;
+      prevMonthSnapshot.forEach(doc => {
+        const usage = doc.data() as CarbonUsage;
+        prevMonthTotal += usage.totalCarbonInKg;
+      });
+
+      const monthChange = currentTotal - prevMonthTotal;
+      const monthPercentageChange = prevMonthTotal > 0 ? (monthChange / prevMonthTotal) * 100 : 0;
+
+      trends.push({
+        period: 'Month over Month',
+        change: monthChange,
+        percentageChange: monthPercentageChange,
+      });
+
+      // Year over Year
+      const prevYearStart = new Date(startDate);
+      prevYearStart.setFullYear(startDate.getFullYear() - 1);
+      const prevYearEnd = new Date(endDate);
+      prevYearEnd.setFullYear(endDate.getFullYear() - 1);
+
+      const prevYearQuery = query(
+        collection(firestore, this.USAGE_COLLECTION),
+        where('organizationId', '==', organizationId),
+        where('period.startDate', '>=', Timestamp.fromDate(prevYearStart)),
+        where('period.startDate', '<=', Timestamp.fromDate(prevYearEnd))
+      );
+
+      const prevYearSnapshot = await getDocs(prevYearQuery);
+      let prevYearTotal = 0;
+      prevYearSnapshot.forEach(doc => {
+        const usage = doc.data() as CarbonUsage;
+        prevYearTotal += usage.totalCarbonInKg;
+      });
+
+      const yearChange = currentTotal - prevYearTotal;
+      const yearPercentageChange = prevYearTotal > 0 ? (yearChange / prevYearTotal) * 100 : 0;
+
+      trends.push({
+        period: 'Year over Year',
+        change: yearChange,
+        percentageChange: yearPercentageChange,
+      });
+
+      return trends;
+    } catch (error) {
+      console.error('Error getting emissions trends:', error);
       throw error;
     }
   }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { expect, jest, describe, beforeEach, it } from '@jest/globals';
 import { AuthProvider, useAuth } from '@/lib/firebase/auth-context';
 
 // Create a simplified mock auth object

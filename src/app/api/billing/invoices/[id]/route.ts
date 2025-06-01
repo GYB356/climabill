@@ -5,9 +5,9 @@ import { InvoiceService, InvoiceStatus } from '@/lib/billing/invoices/invoice-se
 import { StripeService } from '@/lib/billing/stripe/stripe-service';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 /**
@@ -29,7 +29,7 @@ export async function GET(
     }
     
     const userId = session.user.id;
-    const invoiceId = params.id;
+    const invoiceId = (await params).id;
     
     // Get the invoice
     const invoice = await InvoiceService.getInvoice(invoiceId);
@@ -78,7 +78,7 @@ export async function PATCH(
     }
     
     const userId = session.user.id;
-    const invoiceId = params.id;
+    const invoiceId = (await params).id;
     
     // Get the invoice
     const invoice = await InvoiceService.getInvoice(invoiceId);

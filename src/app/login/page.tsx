@@ -36,13 +36,12 @@ export default function LoginPage() {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
+      const user = await login(email, password);
       toast({
         title: "Login successful",
         description: "You have been successfully logged in.",
       });
-      // Explicit redirect to the callback URL or dashboard
-      router.push(callbackUrl);
+      // Auth context will handle the redirect automatically
     } catch (error) {
       console.error("Login error:", error);
     }
@@ -50,13 +49,12 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
-      await loginWithGoogle();
+      const user = await loginWithGoogle();
       toast({
         title: "Login successful",
         description: "You have been successfully logged in with Google.",
       });
-      // Explicit redirect to the callback URL or dashboard
-      router.push(callbackUrl);
+      // Auth context will handle the redirect automatically
     } catch (error) {
       console.error("Google login error:", error);
     }
@@ -64,13 +62,12 @@ export default function LoginPage() {
 
   const handleGithubLogin = async () => {
     try {
-      await loginWithGithub();
+      const user = await loginWithGithub();
       toast({
         title: "Login successful",
         description: "You have been successfully logged in with GitHub.",
       });
-      // Explicit redirect to the callback URL or dashboard
-      router.push(callbackUrl);
+      // Auth context will handle the redirect automatically
     } catch (error) {
       console.error("GitHub login error:", error);
     }

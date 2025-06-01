@@ -10,7 +10,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Grid,
   CircularProgress,
   FormControl,
   InputLabel,
@@ -289,23 +288,26 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
           <Typography variant="h6" gutterBottom>
             Carbon Footprint Overview
           </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={4}>
-              <Typography variant="body2" color="textSecondary">
-                Carbon Footprint: {carbonFootprint.toLocaleString()} kg
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Typography variant="body2" color="textSecondary">
-                Currently Offset: {offsetPercentage}%
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Typography variant="body2" color="textSecondary">
-                Recommended Offset: {recommendedOffset} tonnes
-              </Typography>
-            </Grid>
-          </Grid>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(3, 1fr)'
+              },
+              gap: 2
+            }}
+          >
+            <Typography variant="body2" color="textSecondary">
+              Carbon Footprint: {carbonFootprint.toLocaleString()} kg
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Currently Offset: {offsetPercentage}%
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Recommended Offset: {recommendedOffset} tonnes
+            </Typography>
+          </Box>
         </CardContent>
       </Card>
 
@@ -340,8 +342,18 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
                   </Box>
                 }
                 secondary={
-                  <Grid container spacing={2} mt={1}>
-                    <Grid item xs={12} sm={6}>
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: {
+                        xs: '1fr',
+                        sm: 'repeat(2, 1fr)'
+                      },
+                      gap: 2,
+                      mt: 1
+                    }}
+                  >
+                    <Box>
                       <Typography variant="body2" component="div">
                         Project: {offset.projectName}
                       </Typography>
@@ -351,8 +363,8 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
                       <Typography variant="body2" component="div">
                         Date: {formatDate(offset.purchaseDate)}
                       </Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
+                    </Box>
+                    <Box>
                       <Typography variant="body2" component="div">
                         Cost: {formatCurrency(offset.cost, offset.currency)}
                       </Typography>
@@ -368,8 +380,8 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
                           View Certificate
                         </Button>
                       )}
-                    </Grid>
-                  </Grid>
+                    </Box>
+                  </Box>
                 }
               />
             </ListItem>
@@ -403,43 +415,48 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
             </Stepper>
 
             {activeStep === 0 ? (
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Offset Amount (tonnes)"
-                    name="carbonInKg"
-                    type="number"
-                    value={formData.carbonInKg}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  {estimatedCost !== null && (
-                    <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-                      Estimated Cost: ${estimatedCost.toFixed(2)}
-                    </Typography>
-                  )}
-                </Grid>
+              <Stack spacing={3}>
+                <TextField
+                  fullWidth
+                  label="Offset Amount (tonnes)"
+                  name="carbonInKg"
+                  type="number"
+                  value={formData.carbonInKg}
+                  onChange={handleInputChange}
+                  required
+                />
+                {estimatedCost !== null && (
+                  <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                    Estimated Cost: ${estimatedCost.toFixed(2)}
+                  </Typography>
+                )}
 
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>Project Type</InputLabel>
-                    <Select
-                      label="Project Type"
-                      value={formData.projectType}
-                      onChange={handleProjectTypeChange}
-                    >
-                      <MenuItem value="">Any Type</MenuItem>
-                      {Object.values(OffsetProjectType).map((type) => (
-                        <MenuItem key={type} value={type}>
-                          {type}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
+                <FormControl fullWidth>
+                  <InputLabel>Project Type</InputLabel>
+                  <Select
+                    label="Project Type"
+                    value={formData.projectType}
+                    onChange={handleProjectTypeChange}
+                  >
+                    <MenuItem value="">Any Type</MenuItem>
+                    {Object.values(OffsetProjectType).map((type) => (
+                      <MenuItem key={type} value={type}>
+                        {type}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
 
-                <Grid item xs={12} sm={6}>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                      xs: '1fr',
+                      sm: 'repeat(2, 1fr)'
+                    },
+                    gap: 2
+                  }}
+                >
                   <TextField
                     fullWidth
                     label="Country (Optional)"
@@ -447,9 +464,6 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
                     value={formData.location.country}
                     onChange={handleLocationChange}
                   />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
                     label="State (Optional)"
@@ -457,18 +471,16 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
                     value={formData.location.state}
                     onChange={handleLocationChange}
                   />
-                </Grid>
+                </Box>
 
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Postal Code (Optional)"
-                    name="postal_code"
-                    value={formData.location.postal_code}
-                    onChange={handleLocationChange}
-                  />
-                </Grid>
-              </Grid>
+                <TextField
+                  fullWidth
+                  label="Postal Code (Optional)"
+                  name="postal_code"
+                  value={formData.location.postal_code}
+                  onChange={handleLocationChange}
+                />
+              </Stack>
             ) : (
               estimate && (
                 <Card variant="outlined">
@@ -477,8 +489,17 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
                       Offset Estimate
                     </Typography>
 
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                          xs: '1fr',
+                          sm: 'repeat(2, 1fr)'
+                        },
+                        gap: 2
+                      }}
+                    >
+                      <Box>
                         <Typography variant="subtitle2" color="textSecondary">
                           Carbon Amount
                         </Typography>
@@ -499,9 +520,9 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
                         <Typography variant="body1" gutterBottom>
                           {estimate.projectType}
                         </Typography>
-                      </Grid>
+                      </Box>
 
-                      <Grid item xs={12} sm={6}>
+                      <Box>
                         <Typography variant="subtitle2" color="textSecondary">
                           Project Name
                         </Typography>
@@ -515,17 +536,17 @@ const CarbonOffsets: React.FC<CarbonOffsetsProps> = ({
                         <Typography variant="body1" gutterBottom>
                           {estimate.projectLocation}
                         </Typography>
-                      </Grid>
+                      </Box>
+                    </Box>
 
-                      <Grid item xs={12}>
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Project Description
-                        </Typography>
-                        <Typography variant="body1">
-                          {estimate.projectDescription}
-                        </Typography>
-                      </Grid>
-                    </Grid>
+                    <Box>
+                      <Typography variant="subtitle2" color="textSecondary">
+                        Project Description
+                      </Typography>
+                      <Typography variant="body1">
+                        {estimate.projectDescription}
+                      </Typography>
+                    </Box>
                   </CardContent>
                 </Card>
               )

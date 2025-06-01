@@ -46,7 +46,7 @@ const nextConfig: NextConfig = {
           },
           lib: {
             test: /[\\/]node_modules[\\/]/,
-            name(module) {
+            name(module: any) {
               const packageName = module.context.match(
                 /[\\/]node_modules[\\/](.*?)([\\]|$)/
               )[1];

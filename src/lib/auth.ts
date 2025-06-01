@@ -1,17 +1,19 @@
-// Mock auth options for testing
-export const authOptions = {
-  providers: [],
-  callbacks: {
-    async session({ session, token }) {
-      return session;
-    },
-    async jwt({ token, user }) {
-      return token;
-    }
-  },
-  pages: {
-    signIn: '/auth/signin',
-    error: '/auth/error',
-  },
-  secret: 'test-secret',
-};
+/**
+ * Authentication configuration and utilities
+ * 
+ * This file provides compatibility with existing code that imports from @/lib/auth
+ * It re-exports the Firebase auth configuration and utilities.
+ */
+
+// Re-export the main auth configuration
+export { authOptions } from './auth/auth-config';
+
+// Re-export auth utilities
+export { hasRole, getAuthAdmin, getFirestoreAdmin } from './auth/auth-config';
+
+// Re-export Firebase auth helpers
+export { getServerUser } from './firebase/get-server-user';
+export { withAuth, withAuthRole } from './firebase/api-auth';
+
+// For backward compatibility with NextAuth imports
+export { getServerSession } from './firebase/next-auth-compat';

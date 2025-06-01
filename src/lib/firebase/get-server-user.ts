@@ -19,7 +19,7 @@ export async function getServerUser(): Promise<DecodedIdToken | null> {
   }
   
   try {
-    const { auth } = getFirebaseAdmin();
+    const { auth } = await getFirebaseAdmin();
     const decodedToken = await auth.verifySessionCookie(sessionCookie.value, true);
     return decodedToken;
   } catch (error) {

@@ -1,9 +1,9 @@
 // Mock implementation of the StandardsComplianceService
-import { StandardCompliance } from '../../../lib/carbon/types';
+import { StandardsCompliance } from '../../../lib/carbon/types';
 
 export class StandardsComplianceService {
   // Create mock functions for all methods
-  setStandardCompliance = jest.fn().mockImplementation((compliance: Omit<StandardCompliance, 'id' | 'createdAt' | 'updatedAt'>) => {
+  setStandardCompliance = jest.fn().mockImplementation((compliance: Omit<StandardsCompliance, 'id' | 'createdAt' | 'updatedAt'>) => {
     const id = `compliance-${Math.random().toString(36).substring(2, 9)}`;
     const now = new Date();
     return Promise.resolve({
@@ -55,7 +55,7 @@ export class StandardsComplianceService {
     });
   });
 
-  updateStandardCompliance = jest.fn().mockImplementation((id: string, compliance: Partial<StandardCompliance>) => {
+  updateStandardCompliance = jest.fn().mockImplementation((id: string, compliance: Partial<StandardsCompliance>) => {
     return Promise.resolve({
       id,
       ...compliance,

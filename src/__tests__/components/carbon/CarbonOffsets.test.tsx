@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { expect, jest, describe, beforeEach, it } from '@jest/globals';
 import CarbonOffsets from '../../../components/carbon/CarbonOffsets';
 
 // Mock the services

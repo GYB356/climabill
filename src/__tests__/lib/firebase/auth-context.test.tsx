@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { expect, jest, describe, beforeEach, afterEach, it } from '@jest/globals';
 import { AuthProvider, useAuth } from '@/lib/firebase/auth-context';
 import { useRouter } from 'next/navigation';
 import * as firebaseAuth from 'firebase/auth';
@@ -716,3 +717,4 @@ describe('AuthContext', () => {
       expect(mockRouter.push).toHaveBeenCalledWith('/dashboard');
     }, { timeout: 2000 });
   });
+});

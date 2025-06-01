@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Grid,
+  Stack,
   Button,
   Dialog,
   DialogTitle,
@@ -254,18 +254,28 @@ const CarbonGoalTracker: React.FC<CarbonGoalTrackerProps> = ({
           No carbon reduction goals found. Create your first goal to start tracking progress.
         </Typography>
       ) : (
-        <Grid container spacing={3}>
+        <Box 
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { 
+              xs: '1fr', 
+              md: 'repeat(2, 1fr)', 
+              lg: 'repeat(3, 1fr)' 
+            },
+            gap: 3
+          }}
+        >
           {goals.map(({ goal, currentCarbonInKg, progressPercentage }) => (
-            <Grid item xs={12} md={6} lg={4} key={goal.id}>
+            <Box key={goal.id}>
               <CarbonGoalCard
                 goal={goal}
                 currentCarbonInKg={currentCarbonInKg}
                 progressPercentage={progressPercentage}
                 onEdit={() => handleOpenDialog(goal)}
               />
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
       )}
 
       <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
@@ -357,4 +367,5 @@ const CarbonGoalTracker: React.FC<CarbonGoalTrackerProps> = ({
   );
 };
 
+export { CarbonGoalTracker };
 export default CarbonGoalTracker;

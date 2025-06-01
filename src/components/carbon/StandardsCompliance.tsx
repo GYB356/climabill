@@ -10,7 +10,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Grid,
   CircularProgress,
   FormControl,
   InputLabel,
@@ -202,10 +201,18 @@ const StandardsCompliance: React.FC<StandardsComplianceProps> = ({ organizationI
           No carbon accounting standards configured. Add your first standard to start tracking compliance.
         </Typography>
       ) : (
-        <Grid container spacing={3}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              md: 'repeat(2, 1fr)'
+            },
+            gap: 3
+          }}
+        >
           {standards.map((standard) => (
-            <Grid item xs={12} md={6} key={standard.id}>
-              <Card>
+            <Card key={standard.id}>
                 <CardContent>
                   <Box display="flex" justifyContent="space-between" alignItems="flex-start">
                     <Box>
@@ -262,9 +269,8 @@ const StandardsCompliance: React.FC<StandardsComplianceProps> = ({ organizationI
                   )}
                 </CardContent>
               </Card>
-            </Grid>
           ))}
-        </Grid>
+        </Box>
       )}
 
       <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">

@@ -1,5 +1,5 @@
 // Mock implementation of the CarbonGoalsService
-import { CarbonReductionGoal } from '../lib/carbon/models/carbon-goals';
+import { CarbonReductionGoal } from '../lib/carbon/models/department-project';
 
 // Mock instance methods
 const createGoalImpl = jest.fn().mockResolvedValue({

@@ -1,282 +1,237 @@
-// Service Worker for ClimaBill PWA
-const CACHE_NAME = 'climabill-cache-v1';
+/**
+ * ClimaBill Service Worker
+ * Provides offline capabilities and caching for better performance
+ */
 
-// Assets to cache for offline access
+// Cache names
+const STATIC_CACHE = 'climabill-static-v1';
+const DYNAMIC_CACHE = 'climabill-dynamic-v1';
+const IMAGE_CACHE = 'climabill-images-v1';
+const FONT_CACHE = 'climabill-fonts-v1';
+
+// Resources to cache on install
 const STATIC_ASSETS = [
   '/',
-  '/dashboard',
-  '/carbon/dashboard',
-  '/carbon/offset',
-  '/manifest.json',
-  '/favicon.ico',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
-  '/icons/maskable-icon-192x192.png',
-  '/icons/maskable-icon-512x512.png'
+  '/offline',
+  '/login',
+  '/signup',
+  '/static/favicon.ico',
+  '/static/logo.png',
 ];
 
-// Carbon data-related URLs to cache for offline use
-const CARBON_API_ROUTES = [
-  '/api/carbon/summary',
-  '/api/carbon/emissions',
-  '/api/carbon/offsets',
-  '/api/carbon/goals'
-];
-
-// Install event - cache static assets
+// Install event - precache static assets
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing Service Worker...');
-  
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[Service Worker] Caching app shell and static assets');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .then(() => self.skipWaiting())
+    caches.open(STATIC_CACHE).then((cache) => {
+      return cache.addAll(STATIC_ASSETS);
+    })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activating Service Worker...');
-  
+  const currentCaches = [STATIC_CACHE, DYNAMIC_CACHE, IMAGE_CACHE, FONT_CACHE];
   event.waitUntil(
-    caches.keys().then((keyList) => {
-      return Promise.all(keyList.map((key) => {
-        if (key !== CACHE_NAME) {
-          console.log('[Service Worker] Removing old cache', key);
-          return caches.delete(key);
-        }
-      }));
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (!currentCaches.includes(cacheName)) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
     })
-    .then(() => self.clients.claim())
   );
-  
-  return self.clients.claim();
 });
 
-// Background sync for pending carbon data
-self.addEventListener('sync', (event) => {
-  console.log('[Service Worker] Background Syncing:', event.tag);
-  
-  if (event.tag === 'sync-carbon-data') {
-    event.waitUntil(syncCarbonData());
-  } else if (event.tag === 'sync-carbon-offset-purchase') {
-    event.waitUntil(syncCarbonOffsetPurchase());
-  }
-});
-
-// Handle push notifications
-self.addEventListener('push', (event) => {
-  console.log('[Service Worker] Push Notification received', event);
-  
-  let data = {};
-  if (event.data) {
-    data = JSON.parse(event.data.text());
+// Helper function to determine if a request should be cached
+const shouldCache = (url) => {
+  // Don't cache API requests
+  if (url.pathname.startsWith('/api/')) {
+    return false;
   }
   
-  const options = {
-    body: data.body || 'New update from ClimaBill',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-96x96.png',
-    data: {
-      url: data.url || '/'
-    }
-  };
-  
-  event.waitUntil(
-    self.registration.showNotification(
-      data.title || 'ClimaBill Update', 
-      options
-    )
-  );
-});
+  // Don't cache authentication-related endpoints
+  if (url.pathname.includes('/auth/')) {
+    return false;
+  }
 
-// Click event on push notification
-self.addEventListener('notificationclick', (event) => {
-  console.log('[Service Worker] Notification click received', event);
-  
-  event.notification.close();
-  
-  event.waitUntil(
-    clients.openWindow(event.notification.data.url)
-  );
-});
+  // Don't cache blockchain API calls
+  if (url.pathname.includes('/blockchain/api/')) {
+    return false;
+  }
 
-// Fetch event - network first with cache fallback for API, cache first for static assets
-self.addEventListener('fetch', (event) => {
-  const request = event.request;
+  return true;
+};
+
+// Helper to determine which cache to use
+const getCacheForRequest = (request) => {
   const url = new URL(request.url);
   
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
+  if (request.destination === 'image') {
+    return IMAGE_CACHE;
+  }
+  
+  if (request.destination === 'font') {
+    return FONT_CACHE;
+  }
+  
+  if (url.pathname.startsWith('/_next/static/') || 
+      url.pathname.startsWith('/static/')) {
+    return STATIC_CACHE;
+  }
+  
+  return DYNAMIC_CACHE;
+};
+
+// Fetch event - network first with cache fallback strategy
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // Skip if not cacheable
+  if (!shouldCache(url)) {
     return;
   }
   
-  // For API requests, use network first with cache fallback
-  if (url.pathname.startsWith('/api/')) {
-    const isCarbonApiRoute = CARBON_API_ROUTES.some(route => 
-      url.pathname.startsWith(route)
-    );
-    
-    if (isCarbonApiRoute) {
-      // Network first with cache fallback for carbon data API routes
-      event.respondWith(
-        fetch(request)
-          .then(response => {
-            // Cache the response for offline use
-            const clonedResponse = response.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(request, clonedResponse);
-            });
-            return response;
-          })
-          .catch(() => {
-            console.log('[Service Worker] Serving cached carbon data for:', url.pathname);
-            return caches.match(request);
-          })
-      );
-    } else {
-      // For other API routes, just try network
-      return;
-    }
-  } else {
-    // For static assets, use cache first with network fallback
+  // Apply different strategies based on resource type
+  if (event.request.destination === 'image') {
+    // Cache-first for images
     event.respondWith(
-      caches.match(request)
-        .then(response => {
-          if (response) {
+      caches.match(event.request).then((cachedResponse) => {
+        return cachedResponse || fetch(event.request).then((response) => {
+          return caches.open(IMAGE_CACHE).then((cache) => {
+            cache.put(event.request, response.clone());
             return response;
-          }
-          
-          // If not in cache, fetch from network
-          return fetch(request)
-            .then(networkResponse => {
-              // Add the new response to cache
-              const clonedResponse = networkResponse.clone();
-              caches.open(CACHE_NAME).then(cache => {
-                cache.put(request, clonedResponse);
-              });
-              return networkResponse;
-            });
+          });
+        });
+      })
+    );
+  } else if (
+    event.request.destination === 'style' ||
+    event.request.destination === 'script' ||
+    event.request.destination === 'font'
+  ) {
+    // Stale-while-revalidate for static resources
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
+          const cacheName = getCacheForRequest(event.request);
+          caches.open(cacheName).then((cache) => {
+            cache.put(event.request, networkResponse.clone());
+          });
+          return networkResponse;
+        });
+        return cachedResponse || fetchPromise;
+      })
+    );
+  } else {
+    // Network-first for everything else
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const cacheName = getCacheForRequest(event.request);
+          caches.open(cacheName).then((cache) => {
+            cache.put(event.request, response.clone());
+          });
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            // If it's a navigation request, show offline page
+            if (event.request.mode === 'navigate') {
+              return caches.match('/offline');
+            }
+            return new Response('Network error', { status: 408 });
+          });
         })
     );
   }
 });
 
-// Helper function to sync pending carbon data
-async function syncCarbonData() {
-  // Retrieve carbon data from IndexedDB that needs to be synced
-  const db = await openIndexedDB();
-  const pendingData = await getAllPendingData(db, 'carbonData');
+// Background sync for offline actions
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-invoices') {
+    event.waitUntil(syncInvoices());
+  }
+});
+
+// Push notifications
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
   
-  // Process each pending data entry
-  for (const data of pendingData) {
-    try {
-      const response = await fetch('/api/carbon/sync', {
+  try {
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: '/static/notification-icon.png',
+      badge: '/static/badge-icon.png',
+      data: data.data,
+    };
+    
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  } catch (error) {
+    console.error('Push notification error:', error);
+  }
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  
+  if (event.notification.data && event.notification.data.url) {
+    event.waitUntil(
+      clients.openWindow(event.notification.data.url)
+    );
+  }
+});
+
+// Helper function to sync invoices when online
+async function syncInvoices() {
+  try {
+    const db = await openDB();
+    const offlineInvoices = await db.getAll('offlineInvoices');
+    
+    for (const invoice of offlineInvoices) {
+      await fetch('/api/invoices', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(invoice),
       });
       
-      if (response.ok) {
-        // Remove synced data from IndexedDB
-        await deletePendingData(db, 'carbonData', data.id);
-      }
-    } catch (error) {
-      console.error('[Service Worker] Sync failed for carbon data:', error);
+      await db.delete('offlineInvoices', invoice.id);
     }
+    
+    return Promise.resolve();
+  } catch (error) {
+    return Promise.reject(error);
   }
 }
 
-// Helper function to sync pending carbon offset purchases
-async function syncCarbonOffsetPurchase() {
-  // Retrieve offset purchase data from IndexedDB that needs to be synced
-  const db = await openIndexedDB();
-  const pendingPurchases = await getAllPendingData(db, 'offsetPurchases');
-  
-  // Process each pending purchase
-  for (const purchase of pendingPurchases) {
-    try {
-      const response = await fetch('/api/carbon/offset/purchase', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(purchase)
-      });
-      
-      if (response.ok) {
-        // Remove synced purchase from IndexedDB
-        await deletePendingData(db, 'offsetPurchases', purchase.id);
-      }
-    } catch (error) {
-      console.error('[Service Worker] Sync failed for offset purchase:', error);
-    }
-  }
-}
-
-// Helper function to open IndexedDB
-function openIndexedDB() {
+// IndexedDB helper for offline storage
+function openDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('ClimaBillOfflineDB', 1);
     
-    request.onerror = (event) => {
-      reject('IndexedDB error: ' + request.error);
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains('offlineInvoices')) {
+        db.createObjectStore('offlineInvoices', { keyPath: 'id' });
+      }
     };
     
     request.onsuccess = (event) => {
-      resolve(request.result);
+      resolve(event.target.result);
     };
     
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      
-      // Create object stores if they don't exist
-      if (!db.objectStoreNames.contains('carbonData')) {
-        db.createObjectStore('carbonData', { keyPath: 'id' });
-      }
-      
-      if (!db.objectStoreNames.contains('offsetPurchases')) {
-        db.createObjectStore('offsetPurchases', { keyPath: 'id' });
-      }
-    };
-  });
-}
-
-// Helper function to get all pending data from IndexedDB
-function getAllPendingData(db, storeName) {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, 'readonly');
-    const store = transaction.objectStore(storeName);
-    const request = store.getAll();
-    
-    request.onerror = () => {
-      reject(request.error);
-    };
-    
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
-  });
-}
-
-// Helper function to delete pending data from IndexedDB
-function deletePendingData(db, storeName, id) {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, 'readwrite');
-    const store = transaction.objectStore(storeName);
-    const request = store.delete(id);
-    
-    request.onerror = () => {
-      reject(request.error);
-    };
-    
-    request.onsuccess = () => {
-      resolve();
+    request.onerror = (event) => {
+      reject(event.target.error);
     };
   });
 }

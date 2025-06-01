@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid,
   CircularProgress,
   FormControl,
   InputLabel,
@@ -247,23 +246,23 @@ const CarbonAnalytics: React.FC<CarbonAnalyticsProps> = ({
       ) : error ? (
         <Typography color="error">{error}</Typography>
       ) : (
-        <Grid container spacing={3}>
+        <Stack spacing={3}>
           {/* Emissions Trends */}
-          <Grid item xs={12}>
+          <Box>
             <Typography variant="h6" gutterBottom>
               Emissions Trends
             </Typography>
-            <Grid container spacing={2}>
+            <Stack direction="row" spacing={2} flexWrap="wrap">
               {emissionsTrends.map((trend, index) => (
-                <Grid item xs={12} sm={6} md={3} key={index}>
+                <Box key={index} sx={{ minWidth: '200px', flex: '1 1 auto' }}>
                   {renderTrendCard(trend)}
-                </Grid>
+                </Box>
               ))}
-            </Grid>
-          </Grid>
+            </Stack>
+          </Box>
 
           {/* Emissions Over Time Chart */}
-          <Grid item xs={12}>
+          <Box>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -303,74 +302,78 @@ const CarbonAnalytics: React.FC<CarbonAnalyticsProps> = ({
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
-          {/* Emissions Breakdown */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Emissions Breakdown
-                </Typography>
-                <Box height={400}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={emissionsBreakdown}
-                        dataKey="emissions"
-                        nameKey="source"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={150}
-                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
-                      >
-                        {emissionsBreakdown.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={CHART_COLORS[index % CHART_COLORS.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <ChartTooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+          {/* Charts Container */}
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+            {/* Emissions Breakdown */}
+            <Box sx={{ flex: 1 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Emissions Breakdown
+                  </Typography>
+                  <Box height={400}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={emissionsBreakdown}
+                          dataKey="emissions"
+                          nameKey="source"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={150}
+                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
+                        >
+                          {emissionsBreakdown.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={CHART_COLORS[index % CHART_COLORS.length]}
+                            />
+                          ))}
+                        </Pie>
+                        <ChartTooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
 
-          {/* Emissions by Source */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Emissions by Source
-                </Typography>
-                <Box height={400}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={emissionsBreakdown} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="source" />
-                      <YAxis />
-                      <ChartTooltip />
-                      <Bar dataKey="emissions" name="Emissions (kg CO₂e)">
-                        {emissionsBreakdown.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={CHART_COLORS[index % CHART_COLORS.length]}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+            {/* Emissions by Source */}
+            <Box sx={{ flex: 1 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Emissions by Source
+                  </Typography>
+                  <Box height={400}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={emissionsBreakdown} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="source" />
+                        <YAxis />
+                        <ChartTooltip />
+                        <Bar dataKey="emissions" name="Emissions (kg CO₂e)">
+                          {emissionsBreakdown.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={CHART_COLORS[index % CHART_COLORS.length]}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
+          </Stack>
+        </Stack>
       )}
     </Box>
   );
 };
 
+export { CarbonAnalytics };
 export default CarbonAnalytics;

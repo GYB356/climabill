@@ -7,7 +7,8 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
     // Handle module aliases
     '^@/(.*)$': '<rootDir>/src/$1',
@@ -35,6 +36,9 @@ const customJestConfig = {
     '^@mui/x-date-pickers/(.*)$': '<rootDir>/__mocks__/@mui/x-date-pickers/DatePicker.js',
     '^recharts$': '<rootDir>/__mocks__/recharts/index.js',
     '^recharts/(.*)$': '<rootDir>/__mocks__/recharts/index.js',
+    // Mock Firebase Admin to avoid jose import issues
+    'firebase-admin': '<rootDir>/__mocks__/firebase-admin.js',
+    'firebase-admin/(.*)': '<rootDir>/__mocks__/firebase-admin.js',
   },
   moduleDirectories: ['node_modules', '<rootDir>'],
   testEnvironment: 'jest-environment-jsdom',
@@ -61,6 +65,9 @@ const customJestConfig = {
     '<rootDir>/node_modules/',
     '<rootDir>/.next/',
     '<rootDir>/cypress/',
+  ],
+  transformIgnorePatterns: [
+    'node_modules/(?!(jose|@panva)/)',
   ],
 };
 

@@ -77,13 +77,15 @@ export class CachedCarbonTrackingService {
     userId: string,
     startDate: Date,
     endDate: Date,
-    organizationId?: string
+    organizationId?: string,
+    departmentId?: string,
+    projectId?: string
   ): Promise<CarbonUsage | null> {
-    const cacheKey = `carbon-usage:${userId}:${startDate.toISOString()}:${endDate.toISOString()}:${organizationId || 'no-org'}`;
+    const cacheKey = `carbon-usage:${userId}:${startDate.toISOString()}:${endDate.toISOString()}:${organizationId || 'no-org'}:${departmentId || 'no-dept'}:${projectId || 'no-proj'}`;
     
     return cachedApiCall<CarbonUsage | null>(
       cacheKey,
-      () => this.service.getCarbonUsageForPeriod(userId, startDate, endDate, organizationId),
+      () => this.service.getCarbonUsageForPeriod(userId, startDate, endDate, organizationId, departmentId, projectId),
       CachedCarbonTrackingService.USAGE_CACHE_EXPIRY
     );
   }

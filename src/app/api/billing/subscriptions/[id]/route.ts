@@ -28,7 +28,7 @@ export async function GET(
     }
     
     const userId = session.user.id;
-    const subscriptionId = params.id;
+    const subscriptionId = (await params).id;
     
     // Get the subscription
     const subscription = await SubscriptionService.getSubscription(subscriptionId);
@@ -77,7 +77,7 @@ export async function PATCH(
     }
     
     const userId = session.user.id;
-    const subscriptionId = params.id;
+    const subscriptionId = (await params).id;
     
     // Get the subscription
     const subscription = await SubscriptionService.getSubscription(subscriptionId);

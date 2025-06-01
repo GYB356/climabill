@@ -1,5 +1,6 @@
 // Mock implementation of SustainabilityReportingService for testing
-import { SustainabilityReport, StandardsCompliance } from '../lib/carbon/models/department-project';
+import { SustainabilityReport } from '../lib/carbon/models/department-project';
+import { StandardsCompliance } from '../lib/carbon/types';
 
 // Create a properly mocked class with Jest functions
 const mockGenerateReport = jest.fn();

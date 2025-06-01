@@ -1,17 +1,3 @@
-// This is a simple hook for authentication
-export const useAuth = () => {
-  return {
-    user: {
-      uid: 'test-user-id',
-      email: 'test@example.com',
-      displayName: 'Test User',
-    },
-    isLoading: false,
-    error: null,
-    signIn: async () => {},
-    signOut: async () => {},
-    createUser: async () => {},
-  };
-};
-
-export default useAuth;
+// Re-export useAuth from the Firebase auth context for backward compatibility
+export { useAuth } from '@/lib/firebase/auth-context';
+export { useAuth as default } from '@/lib/firebase/auth-context';

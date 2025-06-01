@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ProtectedRoute } from '@/components/protected-route';
 import {
   Card,
   CardContent,
@@ -316,8 +317,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
+    <ProtectedRoute>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {overviewMetrics.map((metric) => (
@@ -521,6 +523,7 @@ export default function DashboardPage() {
           </Card>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
     

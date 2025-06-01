@@ -10,7 +10,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Grid,
   CircularProgress,
   FormControl,
   InputLabel,
@@ -244,8 +243,18 @@ const SustainabilityReports: React.FC<SustainabilityReportsProps> = ({
                     </Box>
                   }
                   secondary={
-                    <Grid container spacing={2} mt={1}>
-                      <Grid item xs={12} sm={6}>
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                          xs: '1fr',
+                          sm: 'repeat(2, 1fr)'
+                        },
+                        gap: 2,
+                        mt: 1
+                      }}
+                    >
+                      <Box>
                         <Typography variant="body2" component="div">
                           Period: {formatDate(report.period.startDate as Date)} - {formatDate(report.period.endDate as Date)}
                         </Typography>
@@ -255,8 +264,8 @@ const SustainabilityReports: React.FC<SustainabilityReportsProps> = ({
                         <Typography variant="body2" component="div">
                           Offset Carbon: {formatCarbon(report.offsetCarbonInKg)} ({report.offsetPercentage.toFixed(1)}%)
                         </Typography>
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
+                      </Box>
+                      <Box>
                         {report.reductionFromPreviousPeriod !== undefined && (
                           <Typography variant="body2" component="div">
                             Reduction: {formatCarbon(report.reductionFromPreviousPeriod)} ({report.reductionPercentage?.toFixed(1)}%)
@@ -273,8 +282,8 @@ const SustainabilityReports: React.FC<SustainabilityReportsProps> = ({
                             />
                           ))}
                         </Box>
-                      </Grid>
-                    </Grid>
+                      </Box>
+                    </Box>
                   }
                 />
                 <ListItemSecondaryAction>

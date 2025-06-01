@@ -1,3 +1,4 @@
+import { expect, jest, describe, beforeEach, it } from '@jest/globals';
 import { SustainabilityReportingService } from '../../../lib/carbon/sustainability-reporting-service';
 import { CarbonTrackingService } from '../../../lib/carbon/carbon-tracking-service';
 import { 

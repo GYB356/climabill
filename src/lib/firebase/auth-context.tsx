@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -45,53 +45,47 @@ export const useAuth = () => {
   return context;
 };
 
+// Alias for compatibility with existing code
+export const useAuthContext = useAuth;
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   
-  // Helper function to create a session cookie (non-blocking)
-  const createSessionCookie = async (user: User) => {
-    try {
-      // Get the ID token
-      const idToken = await getIdToken(user);
-      
-      // Call the session API to create a session cookie (non-blocking)
-      // We don't await this to avoid blocking the UI
-      fetch('/api/auth/session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ idToken }),
-      }).catch(err => {
-        // Silently handle errors
-      });
-      
-      return true;
-    } catch (error) {
-      return false;
-    }
-  };
+  // Session cookies removed - using client-side authentication only
+  // This simplifies the auth flow and removes dependency on Firebase Admin SDK
+
+  // Track pending redirects to prevent race conditions
+  const pendingRedirectRef = React.useRef(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      // Set user state without excessive logging
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       setLoading(false);
-      
-      // Redirect logic with setTimeout to avoid blocking rendering
-      if (user) {
+
+      // Handle automatic redirect for authenticated users on auth pages
+      if (user && !pendingRedirectRef.current) {
         const currentPath = window.location.pathname;
-        if (currentPath === '/auth/signin' || 
-            currentPath === '/login' || 
-            currentPath === '/signup' || 
-            currentPath === '/auth/signup') {
-          // Use setTimeout to defer navigation until after render
+        const isAuthPage =
+          currentPath === '/auth/signin' ||
+          currentPath === '/login' ||
+          currentPath === '/signup' ||
+          currentPath === '/auth/signup';
+
+        if (isAuthPage) {
+          console.log('User authenticated on auth page, redirecting to dashboard');
+          pendingRedirectRef.current = true;
+
+          // Redirect to dashboard immediately
           setTimeout(() => {
             router.push('/dashboard');
-          }, 0);
+            // Reset redirect flag after navigation
+            setTimeout(() => {
+              pendingRedirectRef.current = false;
+            }, 500);
+          }, 200);
         }
       }
     });
@@ -103,11 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       setLoading(true);
-      // Remove excessive logging
       const result = await signInWithEmailAndPassword(auth, email, password);
       
-      // Create a session cookie for server-side authentication (don't await)
-      createSessionCookie(result.user);
+      // Mark that a redirect is pending to prevent race conditions
+      pendingRedirectRef.current = true;
       
       return result.user;
     } catch (error: any) {
@@ -157,13 +150,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         timestamp: new Date().toISOString()
       });
       
-      // Create a session cookie for server-side authentication
-      const sessionCreated = await createSessionCookie(result.user);
-      console.log('Session cookie creation result:', sessionCreated);
-      
-      // Explicitly redirect to dashboard after successful signup
-      console.log('Redirecting to dashboard after signup at:', new Date().toISOString());
-      router.push('/dashboard');
+      // Mark that a redirect is pending to prevent race conditions
+      pendingRedirectRef.current = true;
       
       return result.user;
     } catch (error: any) {
@@ -181,8 +169,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       
-      // Create a session cookie for server-side authentication
-      await createSessionCookie(result.user);
+      // Mark that a redirect is pending to prevent race conditions
+      pendingRedirectRef.current = true;
       
       return result.user;
     } catch (error: any) {
@@ -199,6 +187,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       const provider = new GithubAuthProvider();
       const result = await signInWithPopup(auth, provider);
+      
+      // Mark that a redirect is pending to prevent race conditions
+      pendingRedirectRef.current = true;
       
       // Create a session cookie for server-side authentication
       await createSessionCookie(result.user);

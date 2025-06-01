@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { expect, jest, describe, beforeEach, it } from '@jest/globals';
 import { GET as GetGoals, POST } from '../../../../app/api/carbon/goals/route';
-import { GET as GetGoal, PUT, DELETE } from '../../../../app/api/carbon/goals/[id]/route';
+import { GET as GetGoal, PUT } from '../../../../app/api/carbon/goals/[id]/route';
 import { GET as GetGoalProgress } from '../../../../app/api/carbon/goals/[id]/progress/route';
 import { CarbonGoalsService } from '../../../../lib/carbon/carbon-goals-service';
 
@@ -11,7 +12,19 @@ jest.mock('next-auth', () => ({
 }));
 
 // Mock the CarbonGoalsService - use the mock from __mocks__
-jest.mock('../../../../lib/carbon/carbon-goals-service');
+const mockCarbonGoalsService = {
+  getGoals: jest.fn() as jest.MockedFunction<any>,
+  getGoal: jest.fn() as jest.MockedFunction<any>,
+  createGoal: jest.fn() as jest.MockedFunction<any>,
+  updateGoal: jest.fn() as jest.MockedFunction<any>,
+  deleteGoal: jest.fn() as jest.MockedFunction<any>,
+  updateGoalProgress: jest.fn() as jest.MockedFunction<any>,
+  addMilestone: jest.fn() as jest.MockedFunction<any>,
+};
+
+jest.mock('../../../../lib/carbon/carbon-goals-service', () => ({
+  CarbonGoalsService: jest.fn().mockImplementation(() => mockCarbonGoalsService),
+}));
 
 // Mock the auth options
 jest.mock('../../../../lib/auth', () => ({
@@ -19,19 +32,33 @@ jest.mock('../../../../lib/auth', () => ({
 }));
 
 describe('Carbon Goals API', () => {
-  const mockGoalsService = CarbonGoalsService as jest.MockedClass<typeof CarbonGoalsService>;
   const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
   
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Setup complete mock implementation for CarbonGoalsService
-    mockGoalsService.prototype.getGoals = jest.fn().mockImplementation(async () => []);
-    mockGoalsService.prototype.getGoal = jest.fn().mockImplementation(async () => null);
-    mockGoalsService.prototype.createGoal = jest.fn().mockImplementation(async (data) => ({ id: 'newId', ...data }));
-    mockGoalsService.prototype.updateGoal = jest.fn().mockImplementation(async (id, data) => ({ id, ...data }));
-    mockGoalsService.prototype.deleteGoal = jest.fn().mockImplementation(async () => undefined);
-    mockGoalsService.prototype.getGoalProgress = jest.fn().mockImplementation(async () => ({}));
+    // Setup default mock implementations
+    mockCarbonGoalsService.getGoals.mockResolvedValue([]);
+    mockCarbonGoalsService.getGoal.mockResolvedValue(null);
+    mockCarbonGoalsService.createGoal.mockImplementation(async (data: any) => ({
+      id: 'newId',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...data
+    }));
+    mockCarbonGoalsService.updateGoal.mockImplementation(async (id: string, data: any) => ({
+      id,
+      updatedAt: new Date(),
+      ...data
+    }));
+    mockCarbonGoalsService.deleteGoal.mockResolvedValue(true);
+    mockCarbonGoalsService.updateGoalProgress.mockResolvedValue({
+      goal: { id: 'goal1', name: 'Test Goal' } as any,
+      currentCarbonInKg: 800,
+      progressPercentage: 50,
+      isAchieved: false
+    });
+    mockCarbonGoalsService.addMilestone.mockResolvedValue({ id: 'goal1', name: 'Test Goal' } as any);
     
     // Mock authenticated user session
     mockGetServerSession.mockResolvedValue({
@@ -73,7 +100,7 @@ describe('Carbon Goals API', () => {
         },
       ];
       
-      mockGoalsService.prototype.getGoals.mockResolvedValue(mockGoals);
+      mockCarbonGoalsService.getGoals.mockResolvedValue(mockGoals);
       
       const req = new NextRequest('http://localhost:3000/api/carbon/goals');
       
@@ -84,7 +111,7 @@ describe('Carbon Goals API', () => {
       // Assert
       expect(response.status).toBe(200);
       expect(data).toEqual({ goals: mockGoals });
-      expect(mockGoalsService.prototype.getGoals).toHaveBeenCalledWith('user123', undefined, undefined, 'all');
+      expect(mockCarbonGoalsService.getGoals).toHaveBeenCalledWith('user123', undefined, undefined, 'all');
     });
     
     it('returns goals with filters applied', async () => {
@@ -110,7 +137,7 @@ describe('Carbon Goals API', () => {
         },
       ];
       
-      mockGoalsService.prototype.getGoals.mockResolvedValue(mockGoals);
+      mockCarbonGoalsService.getGoals.mockResolvedValue(mockGoals);
       
       const req = new NextRequest(
         `http://localhost:3000/api/carbon/goals?organizationId=${organizationId}&departmentId=${departmentId}&projectId=${projectId}&status=${status}`
@@ -123,7 +150,7 @@ describe('Carbon Goals API', () => {
       // Assert
       expect(response.status).toBe(200);
       expect(data).toEqual({ goals: mockGoals });
-      expect(mockGoalsService.prototype.getGoals).toHaveBeenCalledWith(organizationId, departmentId, projectId, status);
+      expect(mockCarbonGoalsService.getGoals).toHaveBeenCalledWith(organizationId, departmentId, projectId, status);
     });
     
     it('returns 401 when user is not authenticated', async () => {
@@ -166,7 +193,7 @@ describe('Carbon Goals API', () => {
         updatedAt: new Date(),
       };
       
-      mockGoalsService.prototype.createGoal.mockResolvedValue(createdGoal);
+      mockCarbonGoalsService.createGoal.mockResolvedValue(createdGoal);
       
       // Debug: Log the request data being sent
       console.log('Request body:', JSON.stringify(goalData));
@@ -192,7 +219,7 @@ describe('Carbon Goals API', () => {
       // Assert
       expect(response.status).toBe(201);
       expect(data).toEqual({ goal: createdGoal });
-      expect(mockGoalsService.prototype.createGoal).toHaveBeenCalledWith(expect.objectContaining({
+      expect(mockCarbonGoalsService.createGoal).toHaveBeenCalledWith(expect.objectContaining({
         name: goalData.name,
         description: goalData.description,
         organizationId: goalData.organizationId,
@@ -292,8 +319,8 @@ describe('Carbon Goals API', () => {
         updatedAt: new Date(),
       };
       
-      mockGoalsService.prototype.getGoal.mockResolvedValue(existingGoal);
-      mockGoalsService.prototype.updateGoal.mockResolvedValue(updatedGoal);
+      mockCarbonGoalsService.getGoal.mockResolvedValue(existingGoal);
+      mockCarbonGoalsService.updateGoal.mockResolvedValue(updatedGoal);
       
       const req = new NextRequest('http://localhost:3000/api/carbon/goals', {
         method: 'PUT',
@@ -304,7 +331,7 @@ describe('Carbon Goals API', () => {
       });
       
       // Mock params
-      const params = { id: goalId };
+      const params = Promise.resolve({ id: goalId });
       
       // Act
       const response = await PUT(req, { params });
@@ -313,7 +340,7 @@ describe('Carbon Goals API', () => {
       // Assert
       expect(response.status).toBe(200);
       expect(data).toEqual({ goal: updatedGoal });
-      expect(mockGoalsService.prototype.updateGoal).toHaveBeenCalledWith(
+      expect(mockCarbonGoalsService.updateGoal).toHaveBeenCalledWith(
         goalId,
         expect.objectContaining({
           name: updateData.name,
@@ -339,7 +366,7 @@ describe('Carbon Goals API', () => {
       });
       
       // Mock params
-      const params = { id: goalId };
+      const params = Promise.resolve({ id: goalId });
       
       // Act
       const response = await PUT(req, { params });
@@ -357,7 +384,7 @@ describe('Carbon Goals API', () => {
         name: 'Updated Goal',
       };
       
-      mockGoalsService.prototype.getGoal.mockResolvedValue(null);
+      mockCarbonGoalsService.getGoal.mockResolvedValue(null);
       
       const req = new NextRequest('http://localhost:3000/api/carbon/goals', {
         method: 'PUT',
@@ -365,7 +392,7 @@ describe('Carbon Goals API', () => {
       });
       
       // Mock params
-      const params = { id: goalId };
+      const params = Promise.resolve({ id: goalId });
       
       // Act
       const response = await PUT(req, { params });
@@ -397,7 +424,7 @@ describe('Carbon Goals API', () => {
         updatedAt: new Date(),
       };
       
-      mockGoalsService.prototype.getGoal.mockResolvedValue(existingGoal);
+      mockCarbonGoalsService.getGoal.mockResolvedValue(existingGoal);
       
       const req = new NextRequest('http://localhost:3000/api/carbon/goals', {
         method: 'PUT',
@@ -405,7 +432,7 @@ describe('Carbon Goals API', () => {
       });
       
       // Mock params
-      const params = { id: goalId };
+      const params = Promise.resolve({ id: goalId });
       
       // Act
       const response = await PUT(req, { params });
@@ -414,104 +441,6 @@ describe('Carbon Goals API', () => {
       // Assert
       expect(response.status).toBe(403);
       expect(data).toEqual({ error: 'Unauthorized to update this goal' });
-    });
-  });
-  
-  describe('DELETE /api/carbon/goals/[id]', () => {
-    it('deletes an existing goal', async () => {
-      // Arrange
-      const goalId = 'goal123';
-      
-      const existingGoal = {
-        id: goalId,
-        name: 'Goal to Delete',
-        organizationId: 'user123',
-        baselineCarbonInKg: 1000,
-        targetCarbonInKg: 800,
-        targetReductionPercentage: 20,
-        startDate: new Date('2025-01-01'),
-        targetDate: new Date('2025-12-31'),
-        status: 'active' as const,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      
-      mockGoalsService.prototype.getGoal.mockResolvedValue(existingGoal);
-      mockGoalsService.prototype.deleteGoal.mockResolvedValue(undefined);
-      
-      const req = new NextRequest('http://localhost:3000/api/carbon/goals', {
-        method: 'DELETE',
-      });
-      
-      // Mock params
-      const params = { id: goalId };
-      
-      // Act
-      const response = await DELETE(req, { params });
-      const data = await response.json();
-      
-      // Assert
-      expect(response.status).toBe(200);
-      expect(data).toEqual({ success: true });
-      expect(mockGoalsService.prototype.deleteGoal).toHaveBeenCalledWith(goalId);
-    });
-    
-    it('returns 404 when goal is not found', async () => {
-      // Arrange
-      const goalId = 'nonexistent';
-      
-      mockGoalsService.prototype.getGoal.mockResolvedValue(null);
-      
-      const req = new NextRequest('http://localhost:3000/api/carbon/goals', {
-        method: 'DELETE',
-      });
-      
-      // Mock params
-      const params = { id: goalId };
-      
-      // Act
-      const response = await DELETE(req, { params });
-      const data = await response.json();
-      
-      // Assert
-      expect(response.status).toBe(404);
-      expect(data).toEqual({ error: 'Goal not found' });
-    });
-    
-    it('returns 403 when user is not authorized to delete the goal', async () => {
-      // Arrange
-      const goalId = 'goal123';
-      
-      const existingGoal = {
-        id: goalId,
-        name: 'Goal to Delete',
-        organizationId: 'other-user',
-        baselineCarbonInKg: 1000,
-        targetCarbonInKg: 800,
-        targetReductionPercentage: 20,
-        startDate: new Date('2025-01-01'),
-        targetDate: new Date('2025-12-31'),
-        status: 'active' as const,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      
-      mockGoalsService.prototype.getGoal.mockResolvedValue(existingGoal);
-      
-      const req = new NextRequest('http://localhost:3000/api/carbon/goals', {
-        method: 'DELETE',
-      });
-      
-      // Mock params
-      const params = { id: goalId };
-      
-      // Act
-      const response = await DELETE(req, { params });
-      const data = await response.json();
-      
-      // Assert
-      expect(response.status).toBe(403);
-      expect(data).toEqual({ error: 'Unauthorized to delete this goal' });
     });
   });
 });

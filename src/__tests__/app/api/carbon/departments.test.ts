@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { expect, jest, describe, beforeEach, it } from '@jest/globals';
 import { GET, POST, PUT, DELETE } from '../../../../app/api/carbon/departments/route';
 import { DepartmentProjectService } from '../../../../lib/carbon/department-project-service';
 
@@ -44,12 +45,16 @@ describe('Departments API', () => {
           name: 'Department 1',
           description: 'Description 1',
           organizationId: 'user123',
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
         {
           id: 'dept2',
           name: 'Department 2',
           description: 'Description 2',
           organizationId: 'user123',
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ];
       
@@ -69,13 +74,14 @@ describe('Departments API', () => {
     
     it('returns departments for a specific organization', async () => {
       // Arrange
-      const organizationId = 'org123';
-      const mockDepartments = [
+      const organizationId = 'org123';        const mockDepartments = [
         {
           id: 'dept1',
           name: 'Department 1',
           description: 'Description 1',
           organizationId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ];
       
@@ -326,7 +332,7 @@ describe('Departments API', () => {
       };
       
       mockDepartmentService.prototype.getDepartment.mockResolvedValue(existingDepartment);
-      mockDepartmentService.prototype.deleteDepartment.mockResolvedValue(undefined);
+      mockDepartmentService.prototype.deleteDepartment.mockResolvedValue(true);
       
       const req = new NextRequest(`http://localhost:3000/api/carbon/departments?id=${departmentId}`, {
         method: 'DELETE',

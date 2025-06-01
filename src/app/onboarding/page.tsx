@@ -19,7 +19,7 @@ export default async function OnboardingPage() {
   }
 
   // Get user ID
-  const userId = session.user.id || '';
+  const userId = user.uid || '';
 
   return (
     <div className="min-h-screen bg-background">

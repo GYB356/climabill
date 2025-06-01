@@ -1,3 +1,4 @@
+import { expect, jest, describe, beforeEach, it } from '@jest/globals';
 import { DepartmentProjectService } from '../../../lib/carbon/department-project-service';
 import { Department, Project } from '../../../lib/carbon/models/department-project';
 

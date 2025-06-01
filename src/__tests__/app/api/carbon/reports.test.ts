@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { expect, jest, describe, beforeEach, it } from '@jest/globals';
 import { GET, POST, DELETE } from '../../../../app/api/carbon/reports/route';
 import { SustainabilityReportingService } from '../../../../lib/carbon/sustainability-reporting-service';
 
@@ -9,7 +10,17 @@ jest.mock('next-auth', () => ({
 }));
 
 // Mock the SustainabilityReportingService
-jest.mock('../../../../lib/carbon/sustainability-reporting-service');
+const mockSustainabilityReportingService = {
+  getReports: jest.fn() as jest.MockedFunction<any>,
+  getReport: jest.fn() as jest.MockedFunction<any>,
+  generateReport: jest.fn() as jest.MockedFunction<any>,
+  deleteReport: jest.fn() as jest.MockedFunction<any>,
+  setStandardCompliance: jest.fn() as jest.MockedFunction<any>,
+};
+
+jest.mock('../../../../lib/carbon/sustainability-reporting-service', () => ({
+  SustainabilityReportingService: jest.fn().mockImplementation(() => mockSustainabilityReportingService),
+}));
 
 // Mock the auth options
 jest.mock('../../../../lib/auth', () => ({
@@ -17,7 +28,6 @@ jest.mock('../../../../lib/auth', () => ({
 }));
 
 describe('Carbon Reports API', () => {
-  const mockReportingService = SustainabilityReportingService as jest.MockedClass<typeof SustainabilityReportingService>;
   const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
   
   beforeEach(() => {
@@ -50,6 +60,7 @@ describe('Carbon Reports API', () => {
           },
           totalCarbonInKg: 1000,
           offsetCarbonInKg: 300,
+          remainingCarbonInKg: 700,
           offsetPercentage: 30,
           reductionFromPreviousPeriod: 200,
           reductionPercentage: 16.67,
@@ -58,7 +69,9 @@ describe('Carbon Reports API', () => {
             { name: 'ISO 14064', compliant: false }
           ],
           reportUrl: 'https://example.com/report1.pdf',
-          createdAt: new Date('2025-06-01')
+          generatedAt: new Date('2025-06-01'),
+          createdAt: new Date('2025-06-01'),
+          updatedAt: new Date('2025-06-01'),
         },
         {
           id: 'report2',
@@ -71,16 +84,19 @@ describe('Carbon Reports API', () => {
           },
           totalCarbonInKg: 1200,
           offsetCarbonInKg: 200,
+          remainingCarbonInKg: 1000,
           offsetPercentage: 16.67,
           standards: [
             { name: 'GHG Protocol', compliant: true }
           ],
           reportUrl: 'https://example.com/report2.pdf',
-          createdAt: new Date('2025-05-01')
+          generatedAt: new Date('2025-05-01'),
+          createdAt: new Date('2025-05-01'),
+          updatedAt: new Date('2025-05-01'),
         }
       ];
       
-      mockReportingService.prototype.getReports.mockResolvedValue(mockReports);
+      mockSustainabilityReportingService.getReports.mockResolvedValue(mockReports);
       
       const req = new NextRequest('http://localhost:3000/api/carbon/reports');
       
@@ -91,7 +107,7 @@ describe('Carbon Reports API', () => {
       // Assert
       expect(response.status).toBe(200);
       expect(data).toEqual({ reports: mockReports });
-      expect(mockReportingService.prototype.getReports).toHaveBeenCalledWith('user123', undefined, undefined, undefined, 20);
+      expect(mockSustainabilityReportingService.getReports).toHaveBeenCalledWith('user123', undefined, undefined, undefined, 20);
     });
     
     it('returns reports with filters applied', async () => {
@@ -115,15 +131,18 @@ describe('Carbon Reports API', () => {
           },
           totalCarbonInKg: 1000,
           offsetCarbonInKg: 300,
+          remainingCarbonInKg: 700,
           offsetPercentage: 30,
           reductionFromPreviousPeriod: 200,
           reductionPercentage: 16.67,
           standards: [],
-          createdAt: new Date('2025-06-01')
+          generatedAt: new Date('2025-06-01'),
+          createdAt: new Date('2025-06-01'),
+          updatedAt: new Date('2025-06-01'),
         }
       ];
       
-      mockReportingService.prototype.getReports.mockResolvedValue(mockReports);
+      mockSustainabilityReportingService.getReports.mockResolvedValue(mockReports);
       
       const req = new NextRequest(
         `http://localhost:3000/api/carbon/reports?organizationId=${organizationId}&departmentId=${departmentId}&projectId=${projectId}&limit=${limit}`
@@ -136,7 +155,7 @@ describe('Carbon Reports API', () => {
       // Assert
       expect(response.status).toBe(200);
       expect(data).toEqual({ reports: mockReports });
-      expect(mockReportingService.prototype.getReports).toHaveBeenCalledWith(organizationId, undefined, departmentId, projectId, limit);
+      expect(mockSustainabilityReportingService.getReports).toHaveBeenCalledWith(organizationId, undefined, departmentId, projectId, limit);
     });
     
     it('returns 401 when user is not authenticated', async () => {
@@ -180,6 +199,7 @@ describe('Carbon Reports API', () => {
         },
         totalCarbonInKg: 1000,
         offsetCarbonInKg: 300,
+        remainingCarbonInKg: 700,
         offsetPercentage: 30,
         reductionFromPreviousPeriod: 200,
         reductionPercentage: 16.67,
@@ -187,10 +207,12 @@ describe('Carbon Reports API', () => {
           { name: 'GHG Protocol', compliant: true }
         ],
         reportUrl: 'https://example.com/new-report.pdf',
-        createdAt: new Date()
+        generatedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       
-      mockReportingService.prototype.generateReport.mockResolvedValue(createdReport);
+      mockSustainabilityReportingService.generateReport.mockResolvedValue(createdReport);
       
       const req = new NextRequest('http://localhost:3000/api/carbon/reports', {
         method: 'POST',
@@ -204,7 +226,7 @@ describe('Carbon Reports API', () => {
       // Assert
       expect(response.status).toBe(201);
       expect(data).toEqual({ report: createdReport });
-      expect(mockReportingService.prototype.generateReport).toHaveBeenCalledWith(
+      expect(mockSustainabilityReportingService.generateReport).toHaveBeenCalledWith(
         reportData.organizationId,
         reportData.reportType,
         expect.any(Date),
@@ -275,12 +297,16 @@ describe('Carbon Reports API', () => {
         },
         totalCarbonInKg: 1000,
         offsetCarbonInKg: 300,
+        remainingCarbonInKg: 700,
         offsetPercentage: 30,
-        createdAt: new Date()
+        standards: [],
+        generatedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       
-      mockReportingService.prototype.getReport.mockResolvedValue(existingReport);
-      mockReportingService.prototype.deleteReport.mockResolvedValue(undefined);
+      mockSustainabilityReportingService.getReport.mockResolvedValue(existingReport);
+      mockSustainabilityReportingService.deleteReport.mockResolvedValue(undefined);
       
       const req = new NextRequest('http://localhost:3000/api/carbon/reports', {
         method: 'DELETE',
@@ -296,14 +322,14 @@ describe('Carbon Reports API', () => {
       // Assert
       expect(response.status).toBe(200);
       expect(data).toEqual({ success: true });
-      expect(mockReportingService.prototype.deleteReport).toHaveBeenCalledWith(reportId);
+      expect(mockSustainabilityReportingService.deleteReport).toHaveBeenCalledWith(reportId);
     });
     
     it('returns 404 when report is not found', async () => {
       // Arrange
       const reportId = 'nonexistent';
       
-      mockReportingService.prototype.getReport.mockResolvedValue(null);
+      mockSustainabilityReportingService.getReport.mockResolvedValue(null);
       
       const req = new NextRequest('http://localhost:3000/api/carbon/reports', {
         method: 'DELETE',
@@ -336,11 +362,15 @@ describe('Carbon Reports API', () => {
         },
         totalCarbonInKg: 1000,
         offsetCarbonInKg: 300,
+        remainingCarbonInKg: 700,
         offsetPercentage: 30,
-        createdAt: new Date()
+        standards: [],
+        generatedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       
-      mockReportingService.prototype.getReport.mockResolvedValue(existingReport);
+      mockSustainabilityReportingService.getReport.mockResolvedValue(existingReport);
       
       const req = new NextRequest('http://localhost:3000/api/carbon/reports', {
         method: 'DELETE',
