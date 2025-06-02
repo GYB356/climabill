@@ -1,0 +1,230 @@
+{
+  "dashboard": {
+    "pageTitle": "Carbon Dashboard",
+    "pageDescription": "Track, analyze, and reduce your carbon footprint with gamification",
+    "tabs": {
+      "overview": "Overview",
+      "insights": "Insights",
+      "achievements": "Achievements",
+      "scenarios": "Scenarios",
+      "goals": "Goals",
+      "reports": "Reports",
+      "leaderboard": "Leaderboard"
+    }
+  },
+  "header": {
+    "totalEmissions": "Total Emissions",
+    "offsetEmissions": "Offset Emissions",
+    "netEmissions": "Net Emissions",
+    "shareButton": "Share",
+    "exportButton": "Export",
+    "timeRanges": {
+      "week": "This Week",
+      "month": "This Month",
+      "quarter": "This Quarter",
+      "year": "This Year",
+      "custom": "Custom"
+    },
+    "trends": {
+      "up": "Increased by",
+      "down": "Decreased by",
+      "same": "No change"
+    }
+  },
+  "achievements": {
+    "title": "Achievements",
+    "tabs": {
+      "achievements": "Achievements",
+      "challenges": "Challenges"
+    },
+    "unlocked": "Unlocked",
+    "locked": "Locked",
+    "progress": "Progress",
+    "points": "Points",
+    "viewAll": "View All",
+    "shareButton": "Share",
+    "noAchievements": "No achievements yet. Start reducing your carbon footprint to earn achievements!",
+    "level": "Level"
+  },
+  "challenges": {
+    "title": "Challenges",
+    "active": "Active",
+    "completed": "Completed",
+    "upcoming": "Upcoming",
+    "participants": "Participants",
+    "daysLeft": "Days Left",
+    "joinButton": "Join Challenge",
+    "leaveButton": "Leave Challenge",
+    "shareButton": "Share Challenge",
+    "viewAll": "View All Challenges",
+    "noChallenges": "No active challenges at the moment. Check back soon!",
+    "reward": "Reward",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "status": {
+      "notJoined": "Not Joined",
+      "joined": "Joined",
+      "completed": "Completed",
+      "failed": "Failed"
+    }
+  },
+  "insights": {
+    "title": "Insights",
+    "tabs": {
+      "recommendations": "Recommendations",
+      "trends": "Trends",
+      "breakdown": "Breakdown"
+    },
+    "recommendations": {
+      "title": "Personalized Recommendations",
+      "difficulty": "Difficulty",
+      "impact": "Impact",
+      "potential": "Potential Savings",
+      "implementButton": "Implement",
+      "saveButton": "Save for Later",
+      "dismissButton": "Dismiss",
+      "noRecommendations": "No recommendations available at the moment.",
+      "difficulty_levels": {
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
+      },
+      "impact_levels": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      }
+    },
+    "trends": {
+      "title": "Emissions Trends",
+      "timeRanges": {
+        "week": "Weekly",
+        "month": "Monthly",
+        "quarter": "Quarterly",
+        "year": "Yearly"
+      },
+      "yAxis": "Carbon Emissions (kg CO2e)",
+      "xAxis": "Time Period",
+      "legend": {
+        "emissions": "Emissions",
+        "offsets": "Offsets",
+        "net": "Net"
+      }
+    },
+    "breakdown": {
+      "title": "Emissions Breakdown",
+      "bySource": "By Source",
+      "byDepartment": "By Department",
+      "byActivity": "By Activity",
+      "legend": {
+        "energy": "Energy",
+        "transportation": "Transportation",
+        "waste": "Waste",
+        "water": "Water",
+        "paper": "Paper",
+        "other": "Other"
+      }
+    }
+  },
+  "scenarios": {
+    "title": "Scenario Modeling",
+    "createNew": "Create New Scenario",
+    "baseline": "Baseline",
+    "modified": "Modified",
+    "reduction": "Reduction",
+    "parameterGroups": "Parameters",
+    "saveButton": "Save Scenario",
+    "shareButton": "Share Scenario",
+    "exportButton": "Export Scenario",
+    "deleteButton": "Delete Scenario",
+    "noScenarios": "No scenarios created yet. Create your first scenario to see what-if analysis.",
+    "units": {
+      "kWh": "kWh",
+      "km": "km",
+      "sheets": "sheets",
+      "liters": "liters",
+      "kg": "kg",
+      "trips": "trips"
+    },
+    "parameterTypes": {
+      "energyUsage": "Energy Usage",
+      "transportation": "Transportation",
+      "paperUsage": "Paper Usage",
+      "waterUsage": "Water Usage",
+      "wasteProduction": "Waste Production",
+      "meatConsumption": "Meat Consumption",
+      "flights": "Flights"
+    }
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "rank": "Rank",
+    "user": "User",
+    "points": "Points",
+    "carbonReduced": "Carbon Reduced",
+    "periods": {
+      "week": "This Week",
+      "month": "This Month",
+      "year": "This Year",
+      "all": "All Time"
+    },
+    "rankChange": {
+      "up": "Moved up",
+      "down": "Moved down",
+      "same": "No change"
+    },
+    "shareButton": "Share Leaderboard",
+    "viewAll": "View Full Leaderboard",
+    "noData": "No leaderboard data available yet."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAsRead": "Mark as Read",
+    "markAllAsRead": "Mark All as Read",
+    "dismiss": "Dismiss",
+    "noNotifications": "No notifications at the moment.",
+    "types": {
+      "achievement": "Achievement",
+      "challenge": "Challenge",
+      "recommendation": "Recommendation",
+      "alert": "Alert",
+      "goal": "Goal"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "level": "Level",
+    "points": "Points",
+    "achievements": "Achievements",
+    "challenges": "Challenges",
+    "carbonReduced": "Carbon Reduced",
+    "nextLevel": "Next Level",
+    "pointsToNextLevel": "Points to Next Level"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred. Please try again.",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "share": "Share",
+    "export": "Export",
+    "view": "View",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "yes": "Yes",
+    "no": "No",
+    "kgCO2e": "kg CO2e",
+    "percentage": "%",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "days_ago": "{{count}} days ago",
+    "hours_ago": "{{count}} hours ago",
+    "minutes_ago": "{{count}} minutes ago",
+    "just_now": "Just now"
+  }
+}
