@@ -8,6 +8,7 @@ import { SUBSCRIPTION_TIERS } from '@/lib/billing/stripe/config';
 import { StripeProvider } from '@/lib/billing/stripe/stripe-provider';
 import { PayPalProvider } from '@/lib/billing/paypal/paypal-provider';
 import { ProtectedRoute } from '@/components/protected-route';
+import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, generateCsrfToken } from '@/lib/auth/csrf';
 
 interface Subscription {
   id: string;
@@ -121,10 +122,17 @@ export default function BillingPage() {
       setIsProcessing(true);
       setError(null);
 
+      // Get CSRF token from cookie
+      let csrfToken = document.cookie.split('; ').find(row => row.startsWith(CSRF_COOKIE_NAME + '='))?.split('=')[1];
+      if (!csrfToken) {
+        csrfToken = generateCsrfToken();
+        document.cookie = `${CSRF_COOKIE_NAME}=${csrfToken}; path=/; SameSite=Lax`;
+      }
       const response = await fetch('/api/billing/subscriptions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          [CSRF_HEADER_NAME]: csrfToken || '',
         },
         body: JSON.stringify({
           provider: selectedProvider,
@@ -155,10 +163,17 @@ export default function BillingPage() {
       setIsProcessing(true);
       setError(null);
 
+      // Get CSRF token from cookie
+      let csrfToken = document.cookie.split('; ').find(row => row.startsWith(CSRF_COOKIE_NAME + '='))?.split('=')[1];
+      if (!csrfToken) {
+        csrfToken = generateCsrfToken();
+        document.cookie = `${CSRF_COOKIE_NAME}=${csrfToken}; path=/; SameSite=Lax`;
+      }
       const response = await fetch(`/api/billing/subscriptions/${subscription.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          [CSRF_HEADER_NAME]: csrfToken || '',
         },
         body: JSON.stringify({
           action: 'cancel',
@@ -188,10 +203,17 @@ export default function BillingPage() {
       setIsProcessing(true);
       setError(null);
 
+      // Get CSRF token from cookie
+      let csrfToken = document.cookie.split('; ').find(row => row.startsWith(CSRF_COOKIE_NAME + '='))?.split('=')[1];
+      if (!csrfToken) {
+        csrfToken = generateCsrfToken();
+        document.cookie = `${CSRF_COOKIE_NAME}=${csrfToken}; path=/; SameSite=Lax`;
+      }
       const response = await fetch(`/api/billing/subscriptions/${subscription.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          [CSRF_HEADER_NAME]: csrfToken || '',
         },
         body: JSON.stringify({
           action: 'change_tier',

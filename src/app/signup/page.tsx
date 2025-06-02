@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -14,6 +13,7 @@ import { useAuth } from '@/lib/firebase/auth-context';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { z } from 'zod';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -43,23 +43,29 @@ export default function SignupPage() {
     }
   }, [user, router]);
 
+  // Password validation schema
+  const passwordSchema = z.object({
+    password: z.string()
+      .min(8, 'Password must be at least 8 characters long')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+      .regex(/[0-9]/, 'Password must contain at least one number')
+      .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+    confirmPassword: z.string()
+  }).refine(data => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword']
+  });
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate passwords match
-    if (password !== confirmPassword) {
-      setPasswordError('Passwords do not match');
+    // Validate password using schema
+    const validationResult = passwordSchema.safeParse({ password, confirmPassword });
+    if (!validationResult.success) {
+      setPasswordError(validationResult.error.errors[0].message);
       return;
     }
-    
-    // Validate password strength
-    if (password.length < 8) {
-      setPasswordError('Password must be at least 8 characters long');
-      return;
-    }
-    
     setPasswordError('');
-    
     try {
       // Import and use the helper function to save callback URLs
       import('@/lib/firebase/improved-auth').then(({ saveCallbackUrl }) => {
@@ -67,7 +73,6 @@ export default function SignupPage() {
           saveCallbackUrl(callbackUrl);
         }
       });
-      
       await signup(email, password);
       toast({
         title: "Account created successfully",
