@@ -547,7 +547,7 @@ export default function CarbonDashboard() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">{goal.title}</CardTitle>
-                    <span className={`px-2 py-1 text-xs bg-${goal.status === 'on-track' ? 'green-100 text-green-800' : goal.status === 'at-risk' ? 'yellow-100 text-yellow-800' : 'red-100 text-red-800'} rounded-full`}>
+                    <span className={`px-2 py-1 text-xs rounded-full ${goal.status === 'on-track' ? 'bg-green-100 text-green-800' : goal.status === 'at-risk' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
                       {goal.status.replace('-', ' ')}
                     </span>
                   </div>

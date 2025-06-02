@@ -56,6 +56,7 @@ const navItems = [
     icon: Leaf,
     subItems: [
       { href: "/carbon/dashboard", label: "Dashboard", icon: BarChart3 },
+      { href: "/carbon/gamified-dashboard", label: "Gamified Dashboard", icon: Sparkles },
       { href: "/carbon/management", label: "Management", icon: SettingsIcon },
       { href: "/carbon/offset", label: "Offset", icon: Trees },
     ]
