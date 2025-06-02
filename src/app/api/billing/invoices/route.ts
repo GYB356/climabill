@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
 import { InvoiceService, InvoiceStatus, Invoice } from '@/lib/billing/invoices/invoice-service';
 import { TaxService } from '@/lib/billing/tax/taxjar-service';
+import { logAuditEvent } from '@/lib/log/audit';
 
 /**
  * GET handler for retrieving user invoices
@@ -13,6 +14,12 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
     
     if (!session || !session.user) {
+      logAuditEvent({
+        eventType: 'billing:action',
+        metadata: { error: 'Unauthorized', action: 'get-invoices' },
+        ip: request.headers.get('x-forwarded-for') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+      });
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -33,6 +40,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ invoices });
   } catch (error) {
     console.error('Error retrieving invoices:', error);
+    logAuditEvent({
+      eventType: 'billing:action',
+      metadata: { error: error instanceof Error ? error.message : String(error), action: 'get-invoices' },
+      ip: request.headers.get('x-forwarded-for') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -49,6 +62,12 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     
     if (!session || !session.user) {
+      logAuditEvent({
+        eventType: 'billing:action',
+        metadata: { error: 'Unauthorized', action: 'create-invoice' },
+        ip: request.headers.get('x-forwarded-for') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+      });
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -60,6 +79,13 @@ export async function POST(request: NextRequest) {
     
     // Validate required fields
     if (!data.customerName || !data.customerEmail || !data.items || !data.items.length) {
+      logAuditEvent({
+        eventType: 'billing:action',
+        userId,
+        metadata: { error: 'Missing required fields', data },
+        ip: request.headers.get('x-forwarded-for') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+      });
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -145,10 +171,22 @@ export async function POST(request: NextRequest) {
     };
     
     const createdInvoice = await InvoiceService.createInvoice(invoice);
-    
+    logAuditEvent({
+      eventType: 'billing:action',
+      userId,
+      metadata: { action: 'create-invoice', invoiceNumber, total },
+      ip: request.headers.get('x-forwarded-for') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
     return NextResponse.json({ invoice: createdInvoice });
   } catch (error) {
     console.error('Error creating invoice:', error);
+    logAuditEvent({
+      eventType: 'billing:action',
+      metadata: { error: error instanceof Error ? error.message : String(error), action: 'create-invoice' },
+      ip: request.headers.get('x-forwarded-for') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

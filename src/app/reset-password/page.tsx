@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { authService } from '@/lib/firebase/auth';
 import { z } from 'zod';
+import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, generateCsrfToken } from '@/lib/auth/csrf';
 
 // Password validation schema
 const passwordSchema = z.object({
@@ -62,11 +63,18 @@ export default function ResetPasswordPage() {
 
   const verifyResetCode = async (code: string) => {
     try {
+      // Get CSRF token from cookie
+      let csrfToken = document.cookie.split('; ').find(row => row.startsWith(CSRF_COOKIE_NAME + '='))?.split('=')[1];
+      if (!csrfToken) {
+        csrfToken = generateCsrfToken();
+        document.cookie = `${CSRF_COOKIE_NAME}=${csrfToken}; path=/; SameSite=Lax`;
+      }
       // Call our new API endpoint for token verification
       const response = await fetch('/api/auth/password/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          [CSRF_HEADER_NAME]: csrfToken || '',
         },
         body: JSON.stringify({ oobCode: code }),
       });
@@ -107,12 +115,19 @@ export default function ResetPasswordPage() {
     if (oobCode) {
       try {
         setLoading(true);
+        // Get CSRF token from cookie
+        let csrfToken = document.cookie.split('; ').find(row => row.startsWith(CSRF_COOKIE_NAME + '='))?.split('=')[1];
+        if (!csrfToken) {
+          csrfToken = generateCsrfToken();
+          document.cookie = `${CSRF_COOKIE_NAME}=${csrfToken}; path=/; SameSite=Lax`;
+        }
         
         // Call our new API endpoint for confirming password resets
         const response = await fetch('/api/auth/password/confirm', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            [CSRF_HEADER_NAME]: csrfToken || '',
           },
           body: JSON.stringify({ oobCode, password }),
         });

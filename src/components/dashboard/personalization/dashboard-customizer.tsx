@@ -14,6 +14,7 @@ import { toast } from '@/components/ui/use-toast';
 import { WidgetGallery } from './widget-gallery';
 import { LayoutEditor } from './layout-editor';
 import { Settings, Palette, LayoutGrid, Plus, Save, Loader2 } from 'lucide-react';
+import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, generateCsrfToken } from '@/lib/auth/csrf';
 
 interface DashboardCustomizerProps {
   userId: string;
@@ -40,12 +41,18 @@ export function DashboardCustomizer({ userId, dashboardId, onSave }: DashboardCu
   const handleSaveDashboard = async () => {
     try {
       setIsSaving(true);
-
+      // Get CSRF token from cookie
+      let csrfToken = document.cookie.split('; ').find(row => row.startsWith(CSRF_COOKIE_NAME + '='))?.split('=')[1];
+      if (!csrfToken) {
+        csrfToken = generateCsrfToken();
+        document.cookie = `${CSRF_COOKIE_NAME}=${csrfToken}; path=/; SameSite=Lax`;
+      }
       // Call API to save dashboard settings
       const response = await fetch('/api/dashboard/personalization', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          [CSRF_HEADER_NAME]: csrfToken || '',
         },
         body: JSON.stringify({
           userId,

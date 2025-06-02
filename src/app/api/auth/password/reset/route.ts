@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { authService } from "@/lib/firebase/auth";
 import { isRateLimited, getRemainingAttempts } from "@/lib/auth/rate-limiter";
+import { logAuditEvent } from "@/lib/log/audit";
 
 // Schema for password reset request validation
 const resetPasswordSchema = z.object({
@@ -19,6 +20,12 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const validationResult = resetPasswordSchema.safeParse(body);
     if (!validationResult.success) {
+      logAuditEvent({
+        eventType: 'auth:password-reset',
+        metadata: { error: 'Invalid email address', body },
+        ip: request.headers.get('x-forwarded-for') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+      });
       return NextResponse.json(
         { error: "Invalid email address" },
         { status: 400 }
@@ -39,6 +46,12 @@ export async function POST(request: NextRequest) {
     // Check if rate limited
     if (isRateLimited(rateLimitKey, "passwordReset")) {
       const remainingTime = Math.ceil(getRemainingAttempts(rateLimitKey, "passwordReset") / 60000);
+      logAuditEvent({
+        eventType: 'auth:password-reset',
+        metadata: { error: 'Rate limited', email, clientIp, retryAfter: remainingTime },
+        ip: clientIp,
+        userAgent: request.headers.get('user-agent') || undefined,
+      });
       return NextResponse.json(
         { 
           error: "Too many password reset attempts",
@@ -51,7 +64,12 @@ export async function POST(request: NextRequest) {
     
     // Send password reset email
     await authService.resetPassword(email);
-    
+    logAuditEvent({
+      eventType: 'auth:password-reset',
+      metadata: { email, clientIp, status: 'success' },
+      ip: clientIp,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
     // Return success response
     return NextResponse.json({
       success: true,
@@ -59,6 +77,12 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Password reset error:", error);
+    logAuditEvent({
+      eventType: 'auth:password-reset',
+      metadata: { error: error instanceof Error ? error.message : String(error) },
+      ip: request.headers.get('x-forwarded-for') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "An unexpected error occurred",

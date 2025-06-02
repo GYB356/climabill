@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, generateCsrfToken } from '@/lib/auth/csrf';
 
 export default function MFASetupPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -35,10 +36,17 @@ export default function MFASetupPage() {
     setError(null);
     
     try {
+      // Get CSRF token from cookie
+      let csrfToken = document.cookie.split('; ').find(row => row.startsWith(CSRF_COOKIE_NAME + '='))?.split('=')[1];
+      if (!csrfToken) {
+        csrfToken = generateCsrfToken();
+        document.cookie = `${CSRF_COOKIE_NAME}=${csrfToken}; path=/; SameSite=Lax`;
+      }
       const response = await fetch('/api/auth/mfa/setup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          [CSRF_HEADER_NAME]: csrfToken || '',
         },
         body: JSON.stringify({
           userId: session?.user?.id,
@@ -84,10 +92,17 @@ export default function MFASetupPage() {
         formattedPhoneNumber = `+${phoneNumber}`;
       }
       
+      // Get CSRF token from cookie
+      let csrfToken = document.cookie.split('; ').find(row => row.startsWith(CSRF_COOKIE_NAME + '='))?.split('=')[1];
+      if (!csrfToken) {
+        csrfToken = generateCsrfToken();
+        document.cookie = `${CSRF_COOKIE_NAME}=${csrfToken}; path=/; SameSite=Lax`;
+      }
       const response = await fetch('/api/auth/mfa/setup-sms', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          [CSRF_HEADER_NAME]: csrfToken || '',
         },
         body: JSON.stringify({
           userId: session?.user?.id,
@@ -127,10 +142,17 @@ export default function MFASetupPage() {
         throw new Error('Verification code is required');
       }
       
+      // Get CSRF token from cookie
+      let csrfToken = document.cookie.split('; ').find(row => row.startsWith(CSRF_COOKIE_NAME + '='))?.split('=')[1];
+      if (!csrfToken) {
+        csrfToken = generateCsrfToken();
+        document.cookie = `${CSRF_COOKIE_NAME}=${csrfToken}; path=/; SameSite=Lax`;
+      }
       const response = await fetch('/api/auth/mfa/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          [CSRF_HEADER_NAME]: csrfToken || '',
         },
         body: JSON.stringify({
           userId: session?.user?.id,

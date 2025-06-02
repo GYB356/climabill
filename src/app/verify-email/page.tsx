@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { authService } from '@/lib/firebase/auth';
 import { z } from 'zod';
+import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, generateCsrfToken } from '@/lib/auth/csrf';
 
 // Email validation schema
 const emailSchema = z.object({
@@ -85,11 +86,18 @@ export default function VerifyEmailPage() {
     setIsResendSuccess(false);
 
     try {
+      // Get CSRF token from cookie
+      let csrfToken = document.cookie.split('; ').find(row => row.startsWith(CSRF_COOKIE_NAME + '='))?.split('=')[1];
+      if (!csrfToken) {
+        csrfToken = generateCsrfToken();
+        document.cookie = `${CSRF_COOKIE_NAME}=${csrfToken}; path=/; SameSite=Lax`;
+      }
       // Call our new API endpoint
       const response = await fetch('/api/auth/email/verify/resend', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          [CSRF_HEADER_NAME]: csrfToken || '',
         },
         body: JSON.stringify({ email }),
       });

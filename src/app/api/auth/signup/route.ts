@@ -1,10 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcrypt";
 import prisma from "../../../../lib/db/prisma";
+import { isRateLimited, getRemainingAttempts } from "@/lib/auth/rate-limiter";
+import { verifyCsrfToken } from "@/lib/auth/csrf";
 
 export async function POST(request: NextRequest) {
   try {
+    // CSRF protection
+    if (!verifyCsrfToken(request)) {
+      return NextResponse.json(
+        { error: "Invalid or missing CSRF token" },
+        { status: 403 }
+      );
+    }
+
     const { name, email, password } = await request.json();
+
+    // Get client IP for rate limiting
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const clientIp = forwardedFor ? forwardedFor.split(",")[0] : "unknown";
+    const rateLimitKey = `signup:${email}:${clientIp}`;
+
+    // Check if rate limited
+    if (isRateLimited(rateLimitKey, "login")) {
+      return NextResponse.json(
+        { error: "Too many signup attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
 
     // Validate input
     if (!name || !email || !password) {
