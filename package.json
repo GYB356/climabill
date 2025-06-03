@@ -15,7 +15,8 @@
     "analyze": "ANALYZE=true next build",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:carbon": "jest carbon",
+    "test:carbon": "jest --testPathPattern=.*carbon.*",
+    "test:gamification": "jest gamified-carbon-dashboard carbon-gamification-api",
     "emulators": "firebase emulators:start --only auth,firestore",
     "dev:with-emulators": "concurrently \"npm run emulators\" \"npm run dev\""
   },

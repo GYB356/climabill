@@ -1,0 +1,132 @@
+/* Accessibility Styles
+ * These styles are applied based on user preferences
+ * via the accessibility context
+ */
+
+/* Screen reader only class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.focus\:not-sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* High Contrast Mode */
+:root.high-contrast {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #0f0f0f;
+  --card-foreground: #ffffff;
+  --popover: #0f0f0f;
+  --popover-foreground: #ffffff;
+  --primary: #ffff00;
+  --primary-foreground: #000000;
+  --secondary: #ffffff;
+  --secondary-foreground: #000000;
+  --muted: #1a1a1a;
+  --muted-foreground: #ffffff;
+  --accent: #ffff00;
+  --accent-foreground: #000000;
+  --destructive: #ff0000;
+  --destructive-foreground: #ffffff;
+  --border: #ffffff;
+  --input: #1a1a1a;
+  --ring: #ffff00;
+}
+
+:root.high-contrast button,
+:root.high-contrast .button,
+:root.high-contrast a {
+  text-decoration: underline;
+  outline: 2px solid transparent;
+}
+
+:root.high-contrast button:focus,
+:root.high-contrast .button:focus,
+:root.high-contrast a:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Text Size Adjustments */
+:root.text-normal {
+  font-size: 16px;
+}
+
+:root.text-large {
+  font-size: 18px;
+}
+
+:root.text-larger {
+  font-size: 20px;
+}
+
+/* Reduced Motion */
+:root.reduce-motion * {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Keyboard Navigation Mode */
+:root.keyboard-mode:not(.focus-high) a:focus,
+:root.keyboard-mode:not(.focus-high) button:focus,
+:root.keyboard-mode:not(.focus-high) [tabindex]:focus {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* High Focus Indicator */
+:root.focus-high a:focus,
+:root.focus-high button:focus,
+:root.focus-high [tabindex]:focus {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(255, 255, 0, 0.3);
+}
+
+/* Font for Dyslexic Users */
+:root.font-dyslexic {
+  --font-sans: 'OpenDyslexic', sans-serif;
+}
+
+.font-dyslexic {
+  font-family: 'OpenDyslexic', sans-serif;
+}
+
+/* Color Blind Modes using CSS filters */
+:root.filter-protanopia {
+  filter: url('#protanopia-filter');
+}
+
+:root.filter-deuteranopia {
+  filter: url('#deuteranopia-filter');
+}
+
+:root.filter-tritanopia {
+  filter: url('#tritanopia-filter');
+}
+
+/* SVG filters for color blindness - these will be inserted by JS */
+.color-filters {
+  position: absolute;
+  height: 0;
+  width: 0;
+  overflow: hidden;
+}

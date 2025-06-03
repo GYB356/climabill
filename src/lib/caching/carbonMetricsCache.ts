@@ -260,3 +260,24 @@ export async function cachedApiCall<T>(
     return apiFn();
   }
 }
+
+/**
+ * Invalidate a specific cache entry by key
+ * This removes the entry from both memory cache and IndexedDB
+ */
+export async function invalidateCache(key: string): Promise<void> {
+  try {
+    // Remove from memory cache
+    memoryCache.put(key, null);
+    
+    // Remove from IndexedDB
+    await saveToIndexedDB(key, null);
+    
+    console.log(`[Cache] Invalidated cache for ${key}`);
+  } catch (error) {
+    console.error(`[Cache] Error invalidating cache for ${key}:`, error);
+  }
+}
+
+// Add invalidate method to cachedApiCall for convenience
+cachedApiCall.invalidate = invalidateCache;

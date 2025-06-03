@@ -1,38 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../../lib/firebase/auth-context';
+import { notificationService } from '../../lib/carbon/notification-service';
+import { achievementService } from '../../lib/carbon/achievement-service';
+import { useLoading, useLoadingOperation } from '../../lib/ui/loading-context';
+import { useAccessibility } from '../../lib/a11y/accessibility-context';
+import { createServiceError, ErrorType } from '../../lib/carbon/error-handling';
+import LoadingSpinner from '../ui/LoadingSpinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertCircle, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'next-i18next';
-import { useRouter } from 'next/router';
-import { useAuth } from '@/lib/auth/auth-context';
-
-// Import services
-import { CachedCarbonTrackingService } from '@/lib/carbon/cached-carbon-tracking-service';
-import { AchievementService } from '@/lib/carbon/achievement-service';
-import { NotificationService, Notification } from '@/lib/carbon/notification-service';
-import { LeaderboardService, LeaderboardEntry, LeaderboardPeriod } from '@/lib/carbon/leaderboard-service';
-
-// Import components
-import DashboardHeader from './DashboardHeader';
-import UserProfileCard from './UserProfileCard';
-import LeaderboardCard from './LeaderboardCard';
-import NotificationCenter, { Notification } from './NotificationCenter';
-import ScenarioModeler from './ScenarioModeler';
-import InsightsSection from './InsightsSection';
-import AchievementsSection from './AchievementsSection';
-
-// Import types
-import { 
-  Achievement, 
-  Challenge, 
-  UserProfile, 
-  PersonalizedRecommendation,
-  ScenarioModel
-} from '@/lib/carbon/gamification-types';
-import { CarbonUsage } from '@/lib/carbon/carbon-tracking-service';
 
 /**
  * GameifiedCarbonDashboard - An enhanced carbon dashboard with gamification elements
@@ -46,9 +26,10 @@ import { CarbonUsage } from '@/lib/carbon/carbon-tracking-service';
  * - Real-time notifications
  */
 export default function GameifiedCarbonDashboard() {
+  const { user } = useAuth();
+  const userId = user?.uid || 'guest-user';
   const { t } = useTranslation('common');
   const router = useRouter();
-  const { user } = useAuth();
   
   // Initialize services
   const carbonService = new CachedCarbonTrackingService();
@@ -56,11 +37,18 @@ export default function GameifiedCarbonDashboard() {
   const notificationService = new NotificationService();
   const leaderboardService = new LeaderboardService();
   
-  // State - Loading and errors
-  const [loading, setLoading] = useState(true);
+  // Use our loading and accessibility contexts
+  const { announce } = useAccessibility();
+  const { isLoading: dashboardLoading } = useLoadingOperation('dashboard');
+  const { isLoading: gamificationLoading } = useLoadingOperation('gamification');
+  const { isLoading: notificationsLoading } = useLoadingOperation('notifications');
+  const { isLoading: leaderboardLoading } = useLoadingOperation('leaderboard');
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedTimeRange, setSelectedTimeRange] = useState<string>('thisMonth');
+  
+  // Computed loading state
+  const loading = dashboardLoading || gamificationLoading || notificationsLoading || leaderboardLoading;
   
   // State - Carbon data
   const [carbonSummary, setCarbonSummary] = useState({
@@ -107,15 +95,23 @@ export default function GameifiedCarbonDashboard() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<LeaderboardPeriod>('month');
   
-  // Load leaderboard
+  // Load leaderboard with proper loading state and error handling
+  const { withLoading: withLeaderboardLoading } = useLoadingOperation('leaderboard');
+  
   const loadLeaderboard = useCallback(async (period: LeaderboardPeriod = 'month') => {
-    try {
-      const leaderboardData = await leaderboardService.getLeaderboard(period);
-      setLeaderboard(leaderboardData);
-    } catch (error) {
-      console.error('Error loading leaderboard:', error);
-    }
-  }, []);
+    await withLeaderboardLoading(async () => {
+      try {
+        const leaderboardData = await leaderboardService.getLeaderboard(period);
+        setLeaderboard(leaderboardData);
+        announce(`Leaderboard for ${period} loaded`, false);
+      } catch (err) {
+        const serviceError = createServiceError(err, ErrorType.API_ERROR);
+        console.error('Error loading leaderboard:', serviceError);
+        setError(`Failed to load leaderboard: ${serviceError.message}`);
+        announce(`Error loading leaderboard: ${serviceError.message}`, true);
+      }
+    });
+  }, [withLeaderboardLoading, announce]);
   
   useEffect(() => {
     loadLeaderboard(leaderboardPeriod);
@@ -129,7 +125,6 @@ export default function GameifiedCarbonDashboard() {
   // Load notifications
   const loadNotifications = useCallback(async () => {
     try {
-      const userId = 'current-user'; // In a real app, get this from auth context
       const userNotifications = await notificationService.getUserNotifications(userId);
       setNotifications(userNotifications);
       
@@ -139,7 +134,7 @@ export default function GameifiedCarbonDashboard() {
     } catch (error) {
       console.error('Error loading notifications:', error);
     }
-  }, []);
+  }, [userId]);
   
   useEffect(() => {
     loadNotifications();
@@ -212,14 +207,14 @@ export default function GameifiedCarbonDashboard() {
       
       // Load carbon usage data
       const carbonUsage = await carbonService.getCarbonUsageForPeriod(
-        user.id,
+        userId,
         startDate,
         endDate
       );
       
       // Load offset data
       const offsetCarbon = await carbonService.getOffsetCarbonForPeriod(
-        user.id,
+        userId,
         startDate,
         endDate
       );
@@ -244,7 +239,7 @@ export default function GameifiedCarbonDashboard() {
         }
         
         const previousUsage = await carbonService.getCarbonUsageForPeriod(
-          user.id,
+          userId,
           previousStartDate,
           previousEndDate
         );
@@ -329,19 +324,19 @@ export default function GameifiedCarbonDashboard() {
     
     try {
       // Load user profile
-      const profile = await achievementService.getUserProfile(user.id);
+      const profile = await achievementService.getUserProfile(userId);
       setUserProfile(profile);
       
       // Load achievements
-      const userAchievements = await achievementService.getUserAchievements(user.id);
+      const userAchievements = await achievementService.getUserAchievements(userId);
       setAchievements(userAchievements);
       
       // Load challenges
-      const activeChallenges = await achievementService.getActiveChallenges(user.id);
+      const activeChallenges = await achievementService.getActiveChallenges(userId);
       setChallenges(activeChallenges);
       
       // Load scenarios
-      const userScenarios = await achievementService.getUserScenarioModels(user.id);
+      const userScenarios = await achievementService.getUserScenarioModels(userId);
       setScenarios(userScenarios);
       
       // Generate sample leaderboard data
@@ -355,7 +350,7 @@ export default function GameifiedCarbonDashboard() {
       const mockUsageData: CarbonUsage[] = [
         {
           id: 'usage-1',
-          userId: user.id,
+          userId: userId,
           totalCarbonInKg: 1200,
           period: {
             startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -372,7 +367,7 @@ export default function GameifiedCarbonDashboard() {
       ];
       
       const personalizedRecommendations = await achievementService.getPersonalizedRecommendations(
-        user.id,
+        userId,
         mockUsageData
       );
       
@@ -469,7 +464,7 @@ export default function GameifiedCarbonDashboard() {
         isCurrentUser: false
       },
       {
-        userId: user.id,
+        userId: userId,
         name: user.name || 'You',
         rank: 3,
         previousRank: 5,
@@ -560,31 +555,65 @@ export default function GameifiedCarbonDashboard() {
     setActiveTab(value);
   };
   
-  // Handle notification actions
-  const handleMarkNotificationAsRead = (id: string) => {
-    setNotifications(prevNotifications =>
-      prevNotifications.map(notification =>
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
+  // Handler for marking a notification as read
+  const handleMarkNotificationAsRead = async (notificationId: string) => {
+    try {
+      await notificationService.markAsRead(userId, notificationId);
+      
+      // Update local state
+      setNotifications(prevNotifications =>
+        prevNotifications.map(notification =>
+          notification.id === notificationId
+            ? { ...notification, read: true }
+            : notification
+        )
+      );
+      
+      // Update unread count
+      setUnreadNotificationsCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error(`Error marking notification ${notificationId} as read:`, error);
+    }
   };
   
-  const handleMarkAllNotificationsAsRead = () => {
-    setNotifications(prevNotifications =>
-      prevNotifications.map(notification => ({ ...notification, read: true }))
-    );
+  const handleMarkAllNotificationsAsRead = async () => {
+    try {
+      await notificationService.markAllAsRead(userId);
+      
+      // Update local state
+      setNotifications(prevNotifications =>
+        prevNotifications.map(notification => ({ ...notification, read: true }))
+      );
+      
+      // Reset unread count
+      setUnreadNotificationsCount(0);
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
   };
   
-  const handleDismissNotification = (id: string) => {
-    setNotifications(prevNotifications =>
-      prevNotifications.filter(notification => notification.id !== id)
-    );
+  const handleDismissNotification = async (notificationId: string) => {
+    try {
+      await notificationService.dismissNotification(userId, notificationId);
+      
+      // Update local state
+      const notification = notifications.find(n => n.id === notificationId);
+      setNotifications(prevNotifications =>
+        prevNotifications.filter(n => n.id !== notificationId)
+      );
+      
+      // Update unread count if the notification was unread
+      if (notification && !notification.read) {
+        setUnreadNotificationsCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error(`Error dismissing notification ${notificationId}:`, error);
+    }
   };
   
   // Handler for implementing a recommendation
   const handleImplementRecommendation = async (recommendationId: string) => {
     try {
-      const userId = 'current-user'; // In a real app, get this from auth context
       await achievementService.implementRecommendation(userId, recommendationId);
       
       // Refresh recommendations data
@@ -612,7 +641,6 @@ export default function GameifiedCarbonDashboard() {
   // Handler for saving a recommendation for later
   const handleSaveRecommendation = async (recommendationId: string) => {
     try {
-      const userId = 'current-user'; // In a real app, get this from auth context
       await achievementService.saveRecommendation(userId, recommendationId);
     } catch (error) {
       console.error(`Error saving recommendation ${recommendationId}:`, error);
@@ -623,7 +651,6 @@ export default function GameifiedCarbonDashboard() {
   // Handler for dismissing a recommendation
   const handleDismissRecommendation = async (recommendationId: string) => {
     try {
-      const userId = 'current-user'; // In a real app, get this from auth context
       await achievementService.dismissRecommendation(userId, recommendationId);
       
       // Refresh recommendations data
@@ -644,7 +671,6 @@ export default function GameifiedCarbonDashboard() {
   // Handler for joining a challenge
   const handleJoinChallenge = async (challengeId: string) => {
     try {
-      const userId = 'current-user'; // In a real app, get this from auth context
       await achievementService.joinChallenge(userId, challengeId);
       
       // Refresh challenges data
@@ -662,7 +688,6 @@ export default function GameifiedCarbonDashboard() {
   // Handler for leaving a challenge
   const handleLeaveChallenge = async (challengeId: string) => {
     try {
-      const userId = 'current-user'; // In a real app, get this from auth context
       await achievementService.leaveChallenge(userId, challengeId);
       
       // Refresh challenges data
@@ -701,13 +726,12 @@ export default function GameifiedCarbonDashboard() {
     }
   };
   
-  // Handle scenario actions
+  // Handler for scenario actions
   const handleSaveScenario = async (scenarioData: {
     baselineCarbonInKg: number;
     parameters: Record<string, number>;
   }) => {
     try {
-      const userId = 'current-user'; // In a real app, get this from auth context
       
       // Create a new scenario or update existing one
       if (scenarioData.scenarioId) {
@@ -790,66 +814,8 @@ export default function GameifiedCarbonDashboard() {
     linkElement.click();
   };
   
-  // Handler for marking a notification as read
-  const handleMarkNotificationAsRead = async (notificationId: string) => {
-    try {
-      const userId = 'current-user'; // In a real app, get this from auth context
-      await notificationService.markAsRead(userId, notificationId);
-      
-      // Update local state
-      setNotifications(prevNotifications =>
-        prevNotifications.map(notification =>
-          notification.id === notificationId
-            ? { ...notification, read: true }
-            : notification
-        )
-      );
-      
-      // Update unread count
-      setUnreadNotificationsCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error(`Error marking notification ${notificationId} as read:`, error);
-    }
-  };
+
   
-  // Handler for dismissing a notification
-  const handleDismissNotification = async (notificationId: string) => {
-    try {
-      const userId = 'current-user'; // In a real app, get this from auth context
-      await notificationService.dismissNotification(userId, notificationId);
-      
-      // Update local state
-      const notification = notifications.find(n => n.id === notificationId);
-      setNotifications(prevNotifications =>
-        prevNotifications.filter(n => n.id !== notificationId)
-      );
-      
-      // Update unread count if the notification was unread
-      if (notification && !notification.read) {
-        setUnreadNotificationsCount(prev => Math.max(0, prev - 1));
-      }
-    } catch (error) {
-      console.error(`Error dismissing notification ${notificationId}:`, error);
-    }
-  };
-  
-  // Handler for marking all notifications as read
-  const handleMarkAllNotificationsAsRead = async () => {
-    try {
-      const userId = 'current-user'; // In a real app, get this from auth context
-      await notificationService.markAllAsRead(userId);
-      
-      // Update local state
-      setNotifications(prevNotifications =>
-        prevNotifications.map(notification => ({ ...notification, read: true }))
-      );
-      
-      // Reset unread count
-      setUnreadNotificationsCount(0);
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-    }
-  };
   
   // Load data when component mounts or time range changes
   useEffect(() => {
@@ -1085,3 +1051,4 @@ export default function GameifiedCarbonDashboard() {
       </div>
     </div>
   );
+}
