@@ -7,7 +7,7 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
     // Handle module aliases
@@ -23,6 +23,10 @@ const customJestConfig = {
     '^.*/lib/carbon/carbon-goals-service$': '<rootDir>/src/__mocks__/lib/carbon/carbon-goals-service.ts',
     '^.*/lib/carbon/department-project-service$': '<rootDir>/src/__mocks__/lib/carbon/department-project-service.ts',
     '^.*/lib/carbon/standards-compliance-service$': '<rootDir>/src/__mocks__/lib/carbon/standards-compliance-service.ts',
+    '^.*/lib/carbon/achievement-service$': '<rootDir>/src/__mocks__/lib/carbon/achievement-service.ts',
+    '^.*/lib/carbon/notification-service$': '<rootDir>/src/__mocks__/lib/carbon/notification-service.ts',
+    '^.*/lib/carbon/leaderboard-service$': '<rootDir>/src/__mocks__/lib/carbon/leaderboard-service.ts',
+    '^.*/lib/api/gamification-api$': '<rootDir>/src/__mocks__/lib/api/gamification-api.ts',
     '^.*/billing/stripe-service$': '<rootDir>/src/__mocks__/billing/stripe-service.ts',
     '^.*/billing/paypal-service$': '<rootDir>/src/__mocks__/billing/paypal-service.ts',
     '^@mui/material$': '<rootDir>/__mocks__/@mui/material/index.js',
@@ -47,6 +51,9 @@ const customJestConfig = {
     'src/__tests__/app/api/carbon/**/*.{js,jsx,ts,tsx}',
     'src/__tests__/components/carbon/**/*.{js,jsx,ts,tsx}',
     'src/__tests__/lib/carbon/**/*.{js,jsx,ts,tsx}',
+    'src/components/carbon/**/*.{js,jsx,ts,tsx}',
+    'src/lib/carbon/**/*.{js,jsx,ts,tsx}',
+    'src/lib/api/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
     '!src/**/_*.{js,jsx,ts,tsx}',
     '!src/**/*.stories.{js,jsx,ts,tsx}',
@@ -67,7 +74,7 @@ const customJestConfig = {
     '<rootDir>/cypress/',
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(jose|@panva)/)',
+    'node_modules/(?!(jose|@panva|lucide-react)/)',
   ],
 };
 

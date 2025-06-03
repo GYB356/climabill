@@ -1,5 +1,6 @@
 import { cachedApiCall } from '../caching/carbonMetricsCache';
 import { gamificationApi } from '../api/gamification-api';
+import { CacheKeys, InvalidationGroups } from './cache-management';
 
 // Feature flag to toggle between mock data and API calls
 const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
@@ -22,14 +23,32 @@ export type LeaderboardPeriod = 'week' | 'month' | 'year' | 'all';
  * Service for managing leaderboard data
  */
 export class LeaderboardService {
+  // Singleton instance
+  private static instance: LeaderboardService;
+  
   // Cache expiry time (in milliseconds)
   private static readonly LEADERBOARD_CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
+  
+  /**
+   * Private constructor to prevent direct instantiation
+   */
+  private constructor() {}
+  
+  /**
+   * Get the singleton instance
+   */
+  public static getInstance(): LeaderboardService {
+    if (!LeaderboardService.instance) {
+      LeaderboardService.instance = new LeaderboardService();
+    }
+    return LeaderboardService.instance;
+  }
   
   /**
    * Get leaderboard data for a specific period
    */
   async getLeaderboard(period: LeaderboardPeriod = 'month'): Promise<LeaderboardEntry[]> {
-    const cacheKey = `leaderboard:${period}`;
+    const cacheKey = CacheKeys.leaderboard.global(period);
     
     return cachedApiCall<LeaderboardEntry[]>(
       cacheKey,
@@ -117,7 +136,38 @@ export class LeaderboardService {
     
     return `${firstName} ${lastName.charAt(0)}.`;
   }
+
+  /**
+   * Get a user's current rank in the leaderboard
+   */
+  async getUserRank(userId: string, period: LeaderboardPeriod = 'month'): Promise<number> {
+    const cacheKey = CacheKeys.leaderboard.rank(userId);
+    
+    return cachedApiCall<number>(
+      cacheKey,
+      async () => {
+        // Use the API client if mock data is disabled
+        if (!USE_MOCK_DATA) {
+          try {
+            const response = await gamificationApi.getUserRank(userId, period);
+            return response.rank;
+          } catch (error) {
+            console.error('Error fetching user rank from API:', error);
+            // Fall back to mock data if API fails
+          }
+        }
+        
+        // For mock data, find the user in the leaderboard and return their rank
+        const leaderboard = await this.getLeaderboard(period);
+        const userEntry = leaderboard.find(entry => entry.userId === userId || entry.isCurrentUser);
+        
+        // Return the rank if found, otherwise a default value
+        return userEntry?.rank || 0;
+      },
+      LeaderboardService.LEADERBOARD_CACHE_EXPIRY
+    );
+  }
 }
 
 // Export a singleton instance
-export const leaderboardService = new LeaderboardService();
+export const leaderboardService = LeaderboardService.getInstance();

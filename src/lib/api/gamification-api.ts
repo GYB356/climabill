@@ -11,12 +11,22 @@ import { API_BASE_URL } from './config';
 /**
  * API client for gamification-related endpoints
  */
-export class GamificationApi {
-  private readonly baseUrl: string;
-  
-  constructor() {
+export class GamificationApiClient {
+  private static instance: GamificationApiClient;
+
+  public static getInstance(): GamificationApiClient {
+    if (!GamificationApiClient.instance) {
+      GamificationApiClient.instance = new GamificationApiClient();
+    }
+    return GamificationApiClient.instance;
+  }
+
+  private constructor() {
     this.baseUrl = `${API_BASE_URL}/gamification`;
   }
+  private readonly baseUrl: string;
+  
+
   
   /**
    * Generic method to handle API requests
@@ -276,7 +286,16 @@ export class GamificationApi {
   async getLeaderboard(period: string = 'month'): Promise<any[]> {
     return this.request<any[]>(`/leaderboard?period=${period}`);
   }
+  
+  /**
+   * Get a user's current rank in the leaderboard
+   */
+  async getUserRank(userId: string, period: string = 'month'): Promise<{rank: number, totalUsers: number}> {
+    return this.request<{rank: number, totalUsers: number}>(
+      `/users/${userId}/rank?period=${period}`
+    );
+  }
 }
 
-// Export a singleton instance
-export const gamificationApi = new GamificationApi();
+// Export singleton instance getter
+export const gamificationApi = GamificationApiClient.getInstance();

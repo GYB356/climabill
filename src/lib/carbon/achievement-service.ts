@@ -9,6 +9,9 @@ import {
 import { cachedApiCall } from '../caching/carbonMetricsCache';
 import { CarbonUsage } from './carbon-tracking-service';
 import { gamificationApi } from '../api/gamification-api';
+import { CacheKeys, InvalidationGroups } from './cache-management';
+import { createServiceError, ErrorType, safeServiceOperation, logServiceError, ServiceError } from './error-handling';
+import { generateAchievementCacheKey, generateChallengeCacheKey, generateRecommendationCacheKey, generateScenarioCacheKey, invalidateAchievementCaches } from './cache-management';
 
 // Feature flag to toggle between mock data and API calls
 const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
@@ -17,10 +20,28 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
  * Service for managing user achievements, challenges, and gamification elements
  */
 export class AchievementService {
+  // Singleton instance
+  private static instance: AchievementService;
+  
   // Cache expiry times (in milliseconds)
   private static readonly ACHIEVEMENTS_CACHE_EXPIRY = 10 * 60 * 1000; // 10 minutes
   private static readonly PROFILE_CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
   private static readonly RECOMMENDATIONS_CACHE_EXPIRY = 15 * 60 * 1000; // 15 minutes
+  
+  /**
+   * Private constructor to prevent direct instantiation
+   */
+  private constructor() {}
+  
+  /**
+   * Get the singleton instance
+   */
+  public static getInstance(): AchievementService {
+    if (!AchievementService.instance) {
+      AchievementService.instance = new AchievementService();
+    }
+    return AchievementService.instance;
+  }
   
   /**
    * Get all available achievements
@@ -36,15 +57,43 @@ export class AchievementService {
   }
   
   /**
-   * Get user's achievements
+   * Get user achievements
+   * @param userId User ID
+   * @returns List of user achievements
    */
   async getUserAchievements(userId: string): Promise<Achievement[]> {
-    const cacheKey = `user-achievements:${userId}`;
+    const cacheKey = generateAchievementCacheKey(userId);
     
-    return cachedApiCall<Achievement[]>(
-      cacheKey,
-      () => this.fetchUserAchievements(userId),
-      AchievementService.ACHIEVEMENTS_CACHE_EXPIRY
+    // Try to get from cache first
+    const cachedData = this.cache.get<Achievement[]>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+    
+    return await safeServiceOperation(
+      async () => {
+        let achievements: Achievement[];
+        
+        if (USE_MOCK_DATA) {
+          // Use mock data for development
+          achievements = this.getMockAchievements(userId);
+        } else {
+          // Call the API
+          achievements = await gamificationApi.getUserAchievements(userId);
+        }
+        
+        // Cache the results
+        this.cache.set(cacheKey, achievements);
+        return achievements;
+      },
+      (error) => {
+        // Log the error with context
+        logServiceError(
+          createServiceError(error, ErrorType.API_ERROR),
+          'AchievementService.getUserAchievements'
+        );
+      },
+      [] // Return empty array as fallback on error
     );
   }
   
@@ -815,3 +864,6 @@ export class AchievementService {
     ];
   }
 }
+
+// Export a singleton instance
+export const achievementService = AchievementService.getInstance();

@@ -1,5 +1,6 @@
 import { cachedApiCall } from '../caching/carbonMetricsCache';
 import { gamificationApi } from '../api/gamification-api';
+import { CacheKeys, InvalidationGroups } from './cache-management';
 
 // Feature flag to toggle between mock data and API calls
 const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
@@ -20,14 +21,32 @@ export interface Notification {
  * Service for managing user notifications
  */
 export class NotificationService {
+  // Singleton instance
+  private static instance: NotificationService;
+  
   // Cache expiry time (in milliseconds)
   private static readonly NOTIFICATIONS_CACHE_EXPIRY = 2 * 60 * 1000; // 2 minutes
+  
+  /**
+   * Private constructor to prevent direct instantiation
+   */
+  private constructor() {}
+  
+  /**
+   * Get the singleton instance
+   */
+  public static getInstance(): NotificationService {
+    if (!NotificationService.instance) {
+      NotificationService.instance = new NotificationService();
+    }
+    return NotificationService.instance;
+  }
   
   /**
    * Get user's notifications
    */
   async getUserNotifications(userId: string): Promise<Notification[]> {
-    const cacheKey = `notifications:${userId}`;
+    const cacheKey = CacheKeys.notifications.user(userId);
     
     return cachedApiCall<Notification[]>(
       cacheKey,
@@ -49,9 +68,8 @@ export class NotificationService {
       }
     }
     
-    // Invalidate cache
-    const cacheKey = `notifications:${userId}`;
-    await cachedApiCall.invalidate(cacheKey);
+    // Invalidate related caches
+    await InvalidationGroups.notifications(userId);
   }
   
   /**
@@ -67,9 +85,8 @@ export class NotificationService {
       }
     }
     
-    // Invalidate cache
-    const cacheKey = `notifications:${userId}`;
-    await cachedApiCall.invalidate(cacheKey);
+    // Invalidate related caches
+    await InvalidationGroups.notifications(userId);
   }
   
   /**
@@ -85,9 +102,8 @@ export class NotificationService {
       }
     }
     
-    // Invalidate cache
-    const cacheKey = `notifications:${userId}`;
-    await cachedApiCall.invalidate(cacheKey);
+    // Invalidate related caches
+    await InvalidationGroups.notifications(userId);
   }
   
   /**
@@ -211,4 +227,4 @@ export class NotificationService {
 }
 
 // Export a singleton instance
-export const notificationService = new NotificationService();
+export const notificationService = NotificationService.getInstance();
